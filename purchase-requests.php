@@ -2,8 +2,6 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.2.0/css/searchPanes.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/select/1.7.0/css/select.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css">
-
-
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/searchpanes/2.2.0/js/dataTables.searchPanes.min.js"></script>
@@ -44,7 +42,8 @@
         width: calc(100% - 110px);
         /* Sesuaikan lebar input di sini */
         margin: 0 5px;
-    }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+    }
+
     /* Ensure that the demo table scrolls */
     th,
     td {
@@ -105,7 +104,7 @@
                             $CreatedTiket = mysqli_num_rows($sql1);
                         } else {
                             // Menghitung total permintaan yang masih dalam status tertentu
-                            $sqlPending = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Pending' AND id_nik_request='$niklogin' ");
+                            $sqlPending = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Pending' AND nik_request ='$niklogin' ");
                             $pendingRequests = mysqli_fetch_assoc($sqlPending);
                         }
                         ?>
@@ -137,7 +136,7 @@
                             $sql2 = mysqli_query($koneksi, "SELECT proc_request_details.id_request, user.lokasi FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik  WHERE status = 'Closed' AND user.lokasi IN ($lokasi) ");
                             $closedRequests = mysqli_num_rows($sql2);
                         } else {
-                            $sql2 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Closed' AND id_nik_request='$niklogin' ");
+                            $sql2 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Closed' AND nik_request ='$niklogin' ");
                             $closedRequests = mysqli_num_rows($sql2);
                         }
                         ?>
@@ -169,7 +168,7 @@
                             $sql3 = mysqli_query($koneksi, "SELECT proc_request_details.id_request, user.lokasi FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik  WHERE status = 'Process' AND user.lokasi IN ($lokasi) ");
                             $processRequests = mysqli_num_rows($sql3);
                         } else {
-                            $sql3 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Process' AND id_nik_request='$niklogin' ");
+                            $sql3 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Process' AND nik_request ='$niklogin' ");
                             $processRequests = mysqli_num_rows($sql3);
                         }
                         ?>
@@ -258,8 +257,17 @@
                             </div>
                             <div class="mb-3">
                                 <label for="category" class="form-label">Category:</label>
-                                <input type="text" class="form-control" id="category" name="category" required>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Furniture">Furniture</option>
+                                    <option value="Office Supplies">Office Supplies</option>
+                                    <option value="Stationery">Stationery</option>
+                                    <option value="Machinery">Machinery</option>
+                                    <!-- Tambahkan opsi lainnya sesuai kebutuhan -->
+                                </select>
                             </div>
+
                             <div class="mb-3">
                                 <label for="urgencies" class="form-label">Urgencies:</label>
                                 <select class="form-select" id="urgencies" name="urgencies" required>
@@ -278,24 +286,39 @@
                             </div>
                             <div class="mb-3">
                                 <label for="qty" class="form-label">Quantity:</label>
-                                <div class="input-step light">
-                                    <button type="button" class="minus">–</button>
-                                    <input type="number" class="product-quantity" value="0" min="0" max="100" name="qty">
-                                    <button type="button" class="plus">+</button>
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-primary minus">–</button>
+                                    <input type="number" class="form-control product-quantity" value="0" min="0" max="100" name="qty">
+                                    <button type="button" class="btn btn-primary plus">+</button>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label for="uom" class="form-label">Unit of Measure (UoM):</label>
-                                <input type="text" class="form-control" id="uom" name="uom" required>
+                                <label for="uom" class="form-label">Unit of Measurement (UoM):</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="uom" name="uom" required>
+                                        <option value="">Select UoM</option>
+                                        <option value="kg">Kilogram (kg)</option>
+                                        <option value="cm">Centimeter (cm)</option>
+                                        <option value="m">Meter (m)</option>
+                                    </select>
+                                    <div class="input-group-append uom-details" style="display: none;">
+                                        <input type="number" class="form-control" id="kg" name="kg" placeholder="Kilograms(kg)">
+                                        <input type="number" class="form-control" id="width" name="width" placeholder="Width (cm)">
+                                        <input type="number" class="form-control" id="height" name="height" placeholder="Height (cm)">
+                                        <input type="number" class="form-control" id="length" name="length" placeholder="Length (cm)">
+                                    </div>
+                                </div>
                             </div>
+                            <div class="mb-3">
+                                <label for="unit_price" class="form-label">Unit Price:</label>
+                                <input type="text" class="form-control" id="unit_price" name="unit_price" step="0.01" oninput="formatInputAsRupiah(this)" required>
+                            </div>
+
                             <div class="mb-3">
                                 <label for="remarks" class="form-label">Remarks:</label>
                                 <textarea class="form-control" id="remarks" name="remarks" rows="3"></textarea>
                             </div>
-                            <div class="mb-3">
-                                <label for="unit_price" class="form-label">Unit Price:</label>
-                                <input type="number" class="form-control" id="unit_price" name="unit_price" step="0.01" required>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -310,28 +333,90 @@
     </div>
 </div>
 
-
-
 <script src="https://cdn.datatables.net/1.11.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.1.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/searchpanes/2.1.4/js/dataTables.searchPanes.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.1.2/js/buttons.html5.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('.minus').click(function() {
-            var $input = $(this).parent().find('input');
-            var count = parseInt($input.val()) - 1;
-            count = count < 0 ? 0 : count;
-            $input.val(count);
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mendapatkan elemen input quantity
+        var quantityInput = document.querySelector('.product-quantity');
+
+        // Mendapatkan tombol plus dan minus
+        var plusButton = document.querySelector('.plus');
+        var minusButton = document.querySelector('.minus');
+
+        // Menambahkan event listener untuk tombol plus
+        plusButton.addEventListener('click', function() {
+            var currentValue = parseInt(quantityInput.value);
+            // Mengecek apakah nilai saat ini kurang dari 100
+            if (currentValue < 100) {
+                // Menambahkan 1 ke nilai saat ini
+                quantityInput.value = currentValue + 1;
+            }
         });
 
-        $('.plus').click(function() {
-            var $input = $(this).parent().find('input');
-            $input.val(parseInt($input.val()) + 1);
+        // Menambahkan event listener untuk tombol minus
+        minusButton.addEventListener('click', function() {
+            var currentValue = parseInt(quantityInput.value);
+            // Mengecek apakah nilai saat ini lebih dari 0
+            if (currentValue > 0) {
+                // Mengurangkan 1 dari nilai saat ini
+                quantityInput.value = currentValue - 1;
+            }
+        });
+
+        // Menambahkan event listener untuk mengontrol nilai yang dimasukkan secara manual
+        quantityInput.addEventListener('change', function() {
+            var currentValue = parseInt(quantityInput.value);
+            // Memastikan nilai tetap di dalam rentang 0 hingga 100
+            if (currentValue < 0 || isNaN(currentValue)) {
+                quantityInput.value = 0;
+            } else if (currentValue > 100) {
+                quantityInput.value = 100;
+            }
         });
     });
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var uomSelect = document.getElementById('uom');
+        var uomDetails = document.querySelector('.uom-details');
+        var kgInput = document.getElementById('kg');
 
+        // Tampilkan detail UoM yang sesuai saat memilih UoM dari dropdown
+        uomSelect.addEventListener('change', function() {
+            if (uomSelect.value === 'kg') {
+                uomDetails.style.display = 'block';
+                kgInput.placeholder = 'Kilograms (kg)';
+            } else if (uomSelect.value === 'm') {
+                uomDetails.style.display = 'block';
+                kgInput.placeholder = 'Meters (m)';
+            } else if (uomSelect.value === 'cm') {
+                uomDetails.style.display = 'block';
+                kgInput.placeholder = 'Centimeters (cm)';
+            } else {
+                uomDetails.style.display = 'none';
+            }
+        });
+    });
+</script>
+<script>
+    function formatRupiah(angka) {
+        // Hapus karakter selain angka
+        var clean = angka.replace(/\D/g, '');
+
+        // Ubah ke format Rupiah
+        var reverse = clean.toString().split('').reverse().join('');
+        var ribuan = reverse.match(/\d{1,3}/g);
+        var formatted = ribuan.join('.').split('').reverse().join('');
+        return 'Rp ' + formatted;
+    }
+
+    function formatInputAsRupiah(input) {
+        input.value = formatRupiah(input.value);
+    }
+</script>
 <script>
     $(document).ready(function() {
         $('#procurementTable').DataTable({
@@ -374,7 +459,7 @@
             "columnDefs": [{
                     "targets": [0, 3],
                     "visible": false
-                } // Sembunyikan kolom ID dan qty dari searchPanes
+                }
             ]
         });
     });
