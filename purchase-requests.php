@@ -40,6 +40,11 @@
 </script>
 
 <style>
+    .input-step.light input[type="number"] {
+        width: calc(100% - 110px);
+        /* Sesuaikan lebar input di sini */
+        margin: 0 5px;
+    }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
     /* Ensure that the demo table scrolls */
     th,
     td {
@@ -84,27 +89,101 @@
     </div>
     <!--end col-->
 
+    <!-- (Created, Closed, Process) -->
     <div class="col-xxl-3 col-sm-6">
         <div class="card card-animate">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <?php
-                        $sqlTotalPurchase = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM proc_purchase_requests");
-                        $totalPurchaseRequests = mysqli_fetch_assoc($sqlTotalPurchase)['total'];
+                        <p class="fw-medium text-muted mb-0">Pending Requests</p>
+                        <?php if (isset($row7['admin']) && ($row7['admin'] == '1')) {
+                            // Menghitung total permintaan yang masih dalam status tertentu
+                            $sqlPending = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Pending'");
+                            $pendingRequests = mysqli_fetch_assoc($sqlPending);
+                        } elseif (isset($row7['proc_pic']) && ($row7['proc_pic'] == '1')) {
+                            $sql1 = mysqli_query($koneksi, "SELECT proc_request_details.id_request, user.lokasi FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik  WHERE status = 'Pending' AND user.lokasi IN ($lokasi) ");
+                            $CreatedTiket = mysqli_num_rows($sql1);
+                        } else {
+                            // Menghitung total permintaan yang masih dalam status tertentu
+                            $sqlPending = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Pending' AND id_nik_request='$niklogin' ");
+                            $pendingRequests = mysqli_fetch_assoc($sqlPending);
+                        }
                         ?>
-                        <p class="fw-medium text-muted mb-0">Approved Purchase Orders</p>
-                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="<?= $totalPurchaseRequests ?>"></span></h2>
+                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="<?= $pendingRequests ?>">0</span></h2>
                     </div>
                     <div>
                         <div class="avatar-sm flex-shrink-0">
                             <span class="avatar-title bg-soft-info text-info rounded-circle fs-4">
-                                <i class="ri-file-text-line"></i>
+                                <i class="mdi mdi-timer-sand"></i>
                             </span>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div><!-- end card body -->
+        </div>
+    </div>
+
+    <div class="col-xxl-3 col-sm-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Closed Requests</p>
+                        <?php
+                        if (isset($row7['admin']) && $row7['admin'] == '1') {
+                            $sql2 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Closed' ");
+                            $closedRequests = mysqli_num_rows($sql2);
+                        } elseif (isset($row7['proc_pic']) && $row7['proc_pic'] == '1') {
+                            $sql2 = mysqli_query($koneksi, "SELECT proc_request_details.id_request, user.lokasi FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik  WHERE status = 'Closed' AND user.lokasi IN ($lokasi) ");
+                            $closedRequests = mysqli_num_rows($sql2);
+                        } else {
+                            $sql2 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Closed' AND id_nik_request='$niklogin' ");
+                            $closedRequests = mysqli_num_rows($sql2);
+                        }
+                        ?>
+                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="<?= $closedRequests ?>">0</span></h2>
+                    </div>
+                    <div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-soft-info text-info rounded-circle fs-4">
+                                <i class="ri-mail-close-line"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div>
+    </div>
+
+    <div class="col-xxl-3 col-sm-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Process Requests</p>
+                        <?php
+                        if (isset($row7['admin']) && $row7['admin'] == '1') {
+                            $sql3 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Process' ");
+                            $processRequests = mysqli_num_rows($sql3);
+                        } elseif (isset($row7['proc_pic']) && $row7['proc_pic'] == '1') {
+                            $sql3 = mysqli_query($koneksi, "SELECT proc_request_details.id_request, user.lokasi FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik  WHERE status = 'Process' AND user.lokasi IN ($lokasi) ");
+                            $processRequests = mysqli_num_rows($sql3);
+                        } else {
+                            $sql3 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Process' AND id_nik_request='$niklogin' ");
+                            $processRequests = mysqli_num_rows($sql3);
+                        }
+                        ?>
+                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="<?= $processRequests ?>">0</span></h2>
+                    </div>
+                    <div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-soft-info text-info rounded-circle fs-4">
+                                <i class="ri-delete-bin-line"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- end card body -->
         </div>
     </div>
 </div>
@@ -183,7 +262,13 @@
                             </div>
                             <div class="mb-3">
                                 <label for="urgencies" class="form-label">Urgencies:</label>
-                                <input type="text" class="form-control" id="urgencies" name="urgencies" required>
+                                <select class="form-select" id="urgencies" name="urgencies" required>
+                                    <option value="">Select Urgency</option>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Critical">Critical</option>
+                                </select>
                             </div>
                         </div>
                         <div class="col-lg-6">
@@ -193,10 +278,10 @@
                             </div>
                             <div class="mb-3">
                                 <label for="qty" class="form-label">Quantity:</label>
-                                <div class="input-group">
-                                    <button class="btn btn-outline-secondary" type="button" id="btnMinus">-</button>
-                                    <input type="number" class="form-control" id="qty" name="qty" required>
-                                    <button class="btn btn-outline-secondary" type="button" id="btnPlus">+</button>
+                                <div class="input-step light">
+                                    <button type="button" class="minus">–</button>
+                                    <input type="number" class="product-quantity" value="0" min="0" max="100" name="qty">
+                                    <button type="button" class="plus">+</button>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -231,6 +316,21 @@
 <script src="https://cdn.datatables.net/buttons/2.1.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/searchpanes/2.1.4/js/dataTables.searchPanes.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.1.2/js/buttons.html5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.minus').click(function() {
+            var $input = $(this).parent().find('input');
+            var count = parseInt($input.val()) - 1;
+            count = count < 0 ? 0 : count;
+            $input.val(count);
+        });
+
+        $('.plus').click(function() {
+            var $input = $(this).parent().find('input');
+            $input.val(parseInt($input.val()) + 1);
+        });
+    });
+</script>
 
 <script>
     $(document).ready(function() {
