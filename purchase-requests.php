@@ -208,6 +208,7 @@
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-body">
+
                                 <table id="procurementTable" class="stripe row-border order-column" style="width:100%">
                                     <thead>
                                         <tr>
@@ -219,11 +220,17 @@
                                             <th>Status</th>
                                             <th>Category</th>
                                             <th>Urgencies</th>
-                                            <th>Action</th>
+                                            <th>Nama Barang</th>
+                                            <th>Quantity</th>
+                                            <th>Unit of Measurement</th>
+                                            <th>Remarks</th>
+                                            <th>Unit Prices</th>
+                                            <th>Attachment Files</th>
                                         </tr>
                                     </thead>
-                                    <tbody></tbody>
+
                                 </table>
+
                             </div>
                         </div>
                     </div>
@@ -337,6 +344,8 @@
 <script src="https://cdn.datatables.net/buttons/2.1.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/searchpanes/2.1.4/js/dataTables.searchPanes.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.1.2/js/buttons.html5.min.js"></script>
+
+<!-- script quantity -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Mendapatkan elemen input quantity
@@ -378,6 +387,8 @@
         });
     });
 </script>
+
+<!-- script unit of measurement -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         var uomSelect = document.getElementById('uom');
@@ -401,6 +412,8 @@
         });
     });
 </script>
+
+<!-- script format rupiah -->
 <script>
     function formatRupiah(angka) {
         // Hapus karakter selain angka
@@ -417,6 +430,8 @@
         input.value = formatRupiah(input.value);
     }
 </script>
+
+<!-- script datatable ajax -->
 <script>
     $(document).ready(function() {
         $('#procurementTable').DataTable({
@@ -433,6 +448,9 @@
                     "data": "created_request"
                 },
                 {
+                    "data": "nik_request"
+                }, // Memperbarui kolom ini sesuai dengan kolom yang diambil dari query
+                {
                     "data": "proc_pic"
                 },
                 {
@@ -440,27 +458,74 @@
                 },
                 {
                     "data": "category"
-                }
+                },
+                {
+                    "data": "urgencies"
+                }, // Menambahkan kolom urgencies yang diambil dari query
+                {
+                    "data": "nama_barang"
+                }, // Menambahkan kolom nama_barang yang diambil dari query
+                {
+                    "data": "qty"
+                }, // Menambahkan kolom qty yang diambil dari query
+                {
+                    "data": "uom"
+                }, // Menambahkan kolom uom yang diambil dari query
+                {
+                    "data": "remarks"
+                }, // Menambahkan kolom remarks yang diambil dari query
+                {
+                    "data": "unit_price"
+                }, // Menambahkan kolom unit_price yang diambil dari query
+                {
+                    "data": "lampiran"
+                }, // Menambahkan kolom unit_price yang diambil dari query
             ],
-            "order": [
-                [2, 'desc'] // Sesuaikan dengan indeks kolom tanggal pembuatan
+            scrollX: true,
+            scrollCollapse: !0,
+            order: [
+
+                [2, 'desc'],
+                [1, 'desc']
             ],
-            "lengthMenu": [
+            lengthMenu: [
                 [10, 25, 50, 100, -1],
                 ['10 rows', '25 rows', '50 rows', '100 rows', 'Show all']
             ],
-            "dom": 'Bfrtip',
-            "buttons": [
-                'pageLength',
-                'colvis',
-                'searchPanes',
-                'excelHtml5'
-            ],
-            "columnDefs": [{
-                    "targets": [0, 3],
-                    "visible": false
+            buttons: ['pageLength',
+                {
+                    extend: 'colvis',
+                    text: 'Column View',
+                },
+                {
+                    extend: 'searchPanes',
+                    text: 'Filter',
+                    config: {
+                        cascadePanes: true
+                    }
+                }, {
+                    extend: 'excelHtml5',
+                    title: 'Data Export Ticketing IT',
+                    text: 'Export Excel'
                 }
-            ]
+
+            ],
+            dom: 'Bfrtip',
+
+            columnDefs: [{
+                    searchPanes: {
+                        show: false
+                    },
+                    targets: [0, 1, 3, 4, 5, 8] // Semua kolom kecuali kolom 2 (Kategori Tiket)
+                },
+                {
+                    searchPanes: {
+                        show: true
+                    },
+                    targets: [2, 6, 7] // Hanya untuk kolom 2 (Kategori Tiket)
+                }
+            ],
+            deferRender: true
         });
     });
 </script>

@@ -12,16 +12,23 @@ if (!$koneksi) {
 
 $query = "SELECT
             proc_purchase_requests.id_request,
-            proc_purchase_requests.created_request,
+            proc_request_details.created_request,
             proc_request_details.nik_request,
             proc_request_details.title,
             proc_request_details.proc_pic,
             proc_request_details.status,
             proc_request_details.category,
+            proc_request_details.urgencies,
+            proc_request_details.lampiran,
+            proc_purchase_requests.nama_barang,
+            proc_purchase_requests.qty,
+            proc_purchase_requests.uom,
+            proc_purchase_requests.remarks,
+            proc_purchase_requests.unit_price
         FROM
-            proc_purchase_requests
+            proc_request_details
         INNER JOIN
-            proc_request_details ON proc_purchase_requests.id_request = proc_request_details.request_id";
+            proc_purchase_requests ON proc_purchase_requests.id_request = proc_request_details.id_request";
 $result = mysqli_query($koneksi, $query);
 
 if (!$result) {

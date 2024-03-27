@@ -14,10 +14,10 @@ function generateRequestId()
 {
     $currentDateTime = new DateTime('now', new DateTimeZone('Asia/Jakarta'));
     $timestamp = $currentDateTime->format('ymdHis');
-    return "PROC" . $timestamp . str_pad(1, '0', STR_PAD_LEFT);
+    return "PR" . $timestamp . str_pad(1, '0', STR_PAD_LEFT);
 }
 
-if (isset($_POST['add-proc'])) {
+if (isset($_POST['add_purchase_request'])) {
     // Get form data
     $id_request = generateRequestId();
     $title = $_POST["title"];
@@ -28,7 +28,7 @@ if (isset($_POST['add-proc'])) {
     $lampiran = $_FILES["lampiran"]["name"];
 
     // Insert data into proc_purchase_requests
-    $sql1 = "INSERT INTO proc_purchase_requests (id_request, title, created_request, nik_request, category, urgencies, lampiran) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $sql1 = "INSERT INTO proc_request_details (id_request, title, created_request, nik_request, category, urgencies, lampiran) VALUES (?, ?, ?, ?, ?, ?, ?)";
     $stmt1 = $koneksi->prepare($sql1);
     $stmt1->bind_param("sssssss", $id_request, $title, $created_request, $nik_request, $category, $urgencies, $lampiran);
 
@@ -39,7 +39,7 @@ if (isset($_POST['add-proc'])) {
     $remarks = $_POST["remarks"];
     $unit_price = $_POST["unit_price"];
 
-    $sql2 = "INSERT INTO proc_request_details (request_id, title, qty, uom, remarks, unit_price) VALUES (?, ?, ?, ?, ?, ?)";
+    $sql2 = "INSERT INTO proc_purchase_requests(id_request, nama_barang, qty, uom, remarks, unit_price) VALUES (?, ?, ?, ?, ?, ?)";
     $stmt2 = $koneksi->prepare($sql2);
     $stmt2->bind_param("ssssss", $id_request, $nama_barang, $qty, $uom, $remarks, $unit_price);
 
