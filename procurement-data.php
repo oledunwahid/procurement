@@ -1,14 +1,5 @@
 <?php
-$host = "localhost";
-$username = "root";
-$password = "";
-$database = "emp";
-
-$koneksi = mysqli_connect($host, $username, $password, $database);
-
-if (!$koneksi) {
-    die("Koneksi database gagal: " . mysqli_connect_error());
-}
+require_once("koneksi.php");
 
 $query = "SELECT
             proc_purchase_requests.id_request,

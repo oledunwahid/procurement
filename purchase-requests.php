@@ -97,14 +97,14 @@
                         <p class="fw-medium text-muted mb-0">Pending Requests</p>
                         <?php if (isset($row7['admin']) && ($row7['admin'] == '1')) {
                             // Menghitung total permintaan yang masih dalam status tertentu
-                            $sqlPending = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Pending'");
+                            $sqlPending = mysqli_query($koneksi, "SELECT COUNT(id_request) AS total_pending FROM proc_request_details WHERE status = 'Pending'");
                             $pendingRequests = mysqli_fetch_assoc($sqlPending);
                         } elseif (isset($row7['proc_pic']) && ($row7['proc_pic'] == '1')) {
-                            $sql1 = mysqli_query($koneksi, "SELECT proc_request_details.id_request, user.lokasi FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik  WHERE status = 'Pending' AND user.lokasi IN ($lokasi) ");
-                            $CreatedTiket = mysqli_num_rows($sql1);
+                            $sqlPending = mysqli_query($koneksi, "SELECT COUNT(proc_request_details.id_request) AS total_pending FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik WHERE proc_request_details.status = 'Pending' AND user.lokasi IN ($lokasi)");
+                            $pendingRequests = mysqli_fetch_assoc($sqlPending);                        
                         } else {
                             // Menghitung total permintaan yang masih dalam status tertentu
-                            $sqlPending = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Pending' AND nik_request ='$niklogin' ");
+                            $sqlPending = mysqli_query($koneksi, "SELECT COUNT(id_request) AS total_pending FROM proc_request_details WHERE status = 'Pending' AND nik_request ='$niklogin' ");
                             $pendingRequests = mysqli_fetch_assoc($sqlPending);
                         }
                         ?>
@@ -130,13 +130,13 @@
                         <p class="fw-medium text-muted mb-0">Closed Requests</p>
                         <?php
                         if (isset($row7['admin']) && $row7['admin'] == '1') {
-                            $sql2 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Closed' ");
+                            $sql2 = mysqli_query($koneksi, "SELECT COUNT(id_request) FROM proc_request_details WHERE status = 'Closed' ");
                             $closedRequests = mysqli_num_rows($sql2);
                         } elseif (isset($row7['proc_pic']) && $row7['proc_pic'] == '1') {
-                            $sql2 = mysqli_query($koneksi, "SELECT proc_request_details.id_request, user.lokasi FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik  WHERE status = 'Closed' AND user.lokasi IN ($lokasi) ");
+                            $sql2 = mysqli_query($koneksi, "SELECT COUNT(proc_request_details.id_request, user.lokasi) FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik  WHERE status = 'Closed' AND user.lokasi IN ($lokasi) ");
                             $closedRequests = mysqli_num_rows($sql2);
                         } else {
-                            $sql2 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Closed' AND nik_request ='$niklogin' ");
+                            $sql2 = mysqli_query($koneksi, "SELECT COUNT(id_request) FROM proc_request_details WHERE status = 'Closed' AND nik_request ='$niklogin' ");
                             $closedRequests = mysqli_num_rows($sql2);
                         }
                         ?>
@@ -162,13 +162,13 @@
                         <p class="fw-medium text-muted mb-0">Process Requests</p>
                         <?php
                         if (isset($row7['admin']) && $row7['admin'] == '1') {
-                            $sql3 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Process' ");
+                            $sql3 = mysqli_query($koneksi, "SELECT COUNT(id_request) FROM proc_request_details WHERE status = 'Process' ");
                             $processRequests = mysqli_num_rows($sql3);
                         } elseif (isset($row7['proc_pic']) && $row7['proc_pic'] == '1') {
-                            $sql3 = mysqli_query($koneksi, "SELECT proc_request_details.id_request, user.lokasi FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik  WHERE status = 'Process' AND user.lokasi IN ($lokasi) ");
+                            $sql3 = mysqli_query($koneksi, "SELECT COUNT(proc_request_details.id_request), user.lokasi FROM proc_request_details INNER JOIN user ON proc_request_details.nik_request = user.idnik  WHERE status = 'Process' AND user.lokasi IN ($lokasi) ");
                             $processRequests = mysqli_num_rows($sql3);
                         } else {
-                            $sql3 = mysqli_query($koneksi, "SELECT id_request FROM proc_request_details WHERE status = 'Process' AND nik_request ='$niklogin' ");
+                            $sql3 = mysqli_query($koneksi, "SELECT COUNT(id_request) FROM proc_request_details WHERE status = 'Process' AND nik_request ='$niklogin' ");
                             $processRequests = mysqli_num_rows($sql3);
                         }
                         ?>
@@ -187,6 +187,8 @@
     </div>
 </div>
 
+
+<!-- table ajax  -->
 <div class="row">
     <div class="col-lg-12">
         <div class="card">
@@ -295,7 +297,7 @@
                                 <label for="qty" class="form-label">Quantity:</label>
                                 <div class="input-group">
                                     <button type="button" class="btn btn-primary minus">–</button>
-                                    <input type="number" class="form-control product-quantity" value="0" min="0" max="100" name="qty">
+                                    <input type="number" class="form-control product-quantity" value="0" min="0" max="100" name="qty" required>
                                     <button type="button" class="btn btn-primary plus">+</button>
                                 </div>
                             </div>

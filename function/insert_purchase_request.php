@@ -26,13 +26,15 @@ if (isset($_POST['add_purchase_request'])) {
     $category = $_POST["category"];
     $urgencies = $_POST["urgencies"];
     $lampiran = $_FILES["lampiran"]["name"];
-
-    // Insert data into proc_purchase_requests
-    $sql1 = "INSERT INTO proc_request_details (id_request, title, created_request, nik_request, category, urgencies, lampiran) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    $stmt1 = $koneksi->prepare($sql1);
-    $stmt1->bind_param("sssssss", $id_request, $title, $created_request, $nik_request, $category, $urgencies, $lampiran);
+    $proc_pic = "Not yet Assigned";
+    $status = "Pending";
 
     // Insert data into proc_request_details
+    $sql1 = "INSERT INTO proc_request_details (id_request, title, created_request, nik_request, proc_pic, status, category, urgencies, lampiran) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $stmt1 = $koneksi->prepare($sql1);
+    $stmt1->bind_param("sssssssss", $id_request, $title, $created_request, $nik_request, $proc_pic, $status, $category, $urgencies, $lampiran);
+
+    // Insert data into proc_purchase_requests
     $nama_barang = $_POST["nama_barang"];
     $qty = $_POST["qty"];
     $uom = $_POST["uom"];
