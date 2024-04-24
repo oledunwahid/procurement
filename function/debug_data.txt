@@ -1,0 +1,13 @@
+Array
+(
+    [id_mr] => MR240424095354
+    [type_mr] => Project
+    [tgl_mr] => 2024-04-24
+    [tgl_need_mr] => 2024-04-10
+    [pt_mr] => PT. Bangun Teknik Group
+    [lokasi_mr] => BCPM
+    [ppn] => 11
+    [total_price_mr] => 154.947.878
+    [deskripsi] => asdada
+    [dekripsi_priority_mr] => 
+)

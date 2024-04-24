@@ -1,65 +1,41 @@
 <?php
-session_start();
-require_once("../koneksi.php");
+include("../koneksi.php");
 
-function redirectToFacilitiesPage($message, $icon)
-{
-    $_SESSION["Messages"] = $message;
-    $_SESSION["Icon"] = $icon;
-    header('Location: ../index.php?page=PurchaseRequests');
-    exit();
-}
+if (isset($_POST["add-purchase-request"])) {
+    $nik_request = $_POST['nik_request'];
 
-function generateRequestId()
-{
-    $currentDateTime = new DateTime('now', new DateTimeZone('Asia/Jakarta'));
-    $timestamp = $currentDateTime->format('ymdHis');
-    return "PR" . $timestamp . str_pad(1, '0', STR_PAD_LEFT);
-}
+    // Cek apakah sudah ada id_proc_ch dengan status 'Pending'
+    $cek_query = "SELECT * FROM proc_purchase_requests WHERE nik_request = '$nik_request' AND status = 'Created' ";
+    $cek_result = mysqli_query($koneksi, $cek_query);
 
-if (isset($_POST['add_purchase_request'])) {
-    // Get form data
-    $id_request = generateRequestId();
-    $title = $_POST["title"];
-    $created_request = $_POST["created_request"];
-    $nik_request = $_POST["nik_request"];
-    $category = $_POST["category"];
-    $urgencies = $_POST["urgencies"];
-    $lampiran = $_FILES["lampiran"]["name"];
-    $proc_pic = "Not yet Assigned";
-    $status = "Pending";
+    if (mysqli_num_rows($cek_result) > 0) {
+        // Jika ditemukan, ambil id_proc_ch dari data yang ada
+        $data_exist = mysqli_fetch_assoc($cek_result);
+        $existing_id_proc_ch = $data_exist['id_proc_ch'];
 
-    // Insert data into proc_request_details
-    $sql1 = "INSERT INTO proc_request_details (id_request, title, created_request, nik_request, proc_pic, status, category, urgencies, lampiran) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt1 = $koneksi->prepare($sql1);
-    $stmt1->bind_param("sssssssss", $id_request, $title, $created_request, $nik_request, $proc_pic, $status, $category, $urgencies, $lampiran);
-
-    // Insert data into proc_purchase_requests
-    $nama_barang = $_POST["nama_barang"];
-    $qty = $_POST["qty"];
-    $uom = $_POST["uom"];
-    $remarks = $_POST["remarks"];
-    $unit_price = $_POST["unit_price"];
-
-    $sql2 = "INSERT INTO proc_purchase_requests(id_request, nama_barang, qty, uom, remarks, unit_price) VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt2 = $koneksi->prepare($sql2);
-    $stmt2->bind_param("ssssss", $id_request, $nama_barang, $qty, $uom, $remarks, $unit_price);
-
-    // Perform double insertion
-    $success = $stmt1->execute() && $stmt2->execute();
-
-    if ($success) {
-        // If the insertion is successful, redirect with success message
-        redirectToFacilitiesPage("Purchase request added successfully!", "success");
+        // Redirect ke halaman detail Purchase Request dengan id_proc_ch yang sudah ada
+        header("location:../index.php?page=DetailPurchase&id=$existing_id_proc_ch");
+        exit;
     } else {
-        // If there's an error, redirect with an error message
-        redirectToFacilitiesPage("Error adding purchase request. Please try again.", "error");
+        // Jika tidak ditemukan, lanjutkan dengan proses insert
+        $tanggal_req = date('Y-m-d H:i:s');
+        $currentDateTime = new DateTime('now', new DateTimeZone('Asia/Jakarta'));
+        $timestamp = $currentDateTime->format('ymdHis');
+        $RequestNumber = "CH" . $timestamp;
+
+        $id_proc_ch = $RequestNumber;
+        $created_request = $tanggal_req;
+        $status = 'Created';
+        $query = "INSERT INTO proc_purchase_requests (id_proc_ch, created_request, nik_request, status) VALUES ('$id_proc_ch','$created_request','$nik_request','$status')";
+        $result = mysqli_query($koneksi, $query);
+
+        if ($result) {
+            header("location:../index.php?page=DetailPurchase&id=$id_proc_ch");
+        } else {
+            // Handle jika insert proc_request_details gagal
+            header("location:../index.php?page=DetailPurchase&id=$id_proc_ch");
+        }
     }
-
-    // Close the statements
-    $stmt1->close();
-    $stmt2->close();
+} else {
+    die("Akses dilarang...");
 }
-
-// Close the database connection
-$koneksi->close();

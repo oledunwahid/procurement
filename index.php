@@ -2,26 +2,33 @@
 
 include "roleseason.php";
 include "koneksi.php";
+?>
+<?php $tgl = date('Y-m-d'); ?>
 
-$tgl = date('Y-m-d'); 
-$currentDateTime = new DateTime('now', new DateTimeZone('Asia/Jakarta'));
-
+<?php
 $username = $_SESSION['username'];
-
 $sqllogin = mysqli_query($koneksi, "SELECT * FROM login inner join user ON user.idnik = login.idnik WHERE username='$username'");
 $rowlogin = mysqli_fetch_assoc($sqllogin);
 
 $niklogin                  = $rowlogin['idnik'];
 $namalogin                 = $rowlogin['nama'];
 $foto_profile              = $rowlogin['file_foto'];
-$divisilogin                = $rowlogin['divisi'];
-$menulogin                  = $rowlogin['menu'];
-$lokasilogin              = $rowlogin['lokasi'];
+$divisilogin            = $rowlogin['divisi'];
+$menulogin               = $rowlogin['menu'];
 
 
 
 date_default_timezone_set('Asia/Jakarta');
 
+?>
+
+<?php
+function rupiah($angka)
+{
+
+    $hasil_rupiah = "Rp. " . number_format($angka, 0, ',', '.');
+    return $hasil_rupiah;
+}
 
 function fsize($file)
 {
@@ -41,6 +48,7 @@ function fsize($file)
 <html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
 
 <head>
+
     <meta charset="utf-8" />
     <title>EIP | Mineral Alam Abadi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,11 +56,15 @@ function fsize($file)
     <meta content="Themesbrand" name="author" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="assets/images/logo.svg">
+
     <!-- jsvectormap css -->
     <link href="assets/libs/jsvectormap/css/jsvectormap.min.css" rel="stylesheet" type="text/css" />
+
     <!--Swiper slider css-->
     <link href="assets/libs/swiper/swiper-bundle.min.css" rel="stylesheet" type="text/css" />
+
     <!-- Layout config Js -->
+    <script src="assets/js/layout.js"></script>
     <!-- Bootstrap Css -->
     <link href="assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <!-- Icons Css -->
@@ -62,6 +74,7 @@ function fsize($file)
     <!-- custom Css-->
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
     <link href="assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+
 </head>
 
 <body>
@@ -90,18 +103,22 @@ function fsize($file)
                             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                                 <h4 class="mb-sm-0"> <?php echo $page =  $_GET['page'];
                                                         ?></h4>
+
                                 <div class="page-title-right">
                                     <ol class="breadcrumb m-0">
-                                        <li class="breadcrumb-item"><a href="index.php?page=Dashboard">Dashboard</a></li>
-                                        <li class="breadcrumb-item active"><?php echo $page =  $_GET['page'];                                                                         ?></li>
+                                        <li class="breadcrumb-item"><a href="index.php?page=Dashboard">Dashboards</a></li>
+                                        <li class="breadcrumb-item active"><?php echo $page =  $_GET['page'];
+                                                                            ?></li>
                                     </ol>
                                 </div>
-                                
+
                             </div>
                         </div>
                     </div>
                     <!-- end page title -->
+
                     <?php include "akses_menu_procurement.php" ?>
+
                 </div>
                 <!-- container-fluid -->
             </div>
@@ -131,7 +148,7 @@ function fsize($file)
 
 
     <!-- JAVASCRIPT -->
-    <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+
     <script src="assets/libs/simplebar/simplebar.min.js"></script>
     <script src="assets/libs/node-waves/waves.min.js"></script>
     <script src="assets/libs/feather-icons/feather.min.js"></script>
@@ -139,7 +156,7 @@ function fsize($file)
     <script src="assets/js/plugins.js"></script>
 
     <!-- apexcharts -->
-    <script src="assets/libs/apexcharts/apexcharts.min.js"></script>
+
 
     <!-- Vector map-->
     <script src="assets/libs/jsvectormap/js/jsvectormap.min.js"></script>
@@ -148,17 +165,16 @@ function fsize($file)
     <!--Swiper slider js-->
     <script src="assets/libs/swiper/swiper-bundle.min.js"></script>
 
-    <!-- Dashboard init -->
-    <script src="assets/js/pages/dashboard-ecommerce.init.js"></script>
 
     <script src="assets/libs/sweetalert2/sweetalert2.min.js"></script>
 
     <script src="assets/libs/prismjs/prism.js"></script>
 
-    <script src="assets/js/layout.js"></script>
+
 
 
     <!-- Sweet alert init js-->
+    <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
 
 
 
