@@ -1,32 +1,25 @@
 <?php
-include '../koneksi.php'; // Sesuaikan path ini sesuai dengan lokasi skrip koneksi database Anda
+include '../koneksi.php';
 
-if (isset($_POST['id_proc_ch'], $_POST['nama_barang'], $_POST['uom'], $_POST['qty_barang'], $_POST['unit_price'])) {
+if (isset($_POST['id'])) {
+    $id = $_POST['id'];
     $id_proc_ch = $_POST['id_proc_ch'];
-    $id_mr = $_POST['id_mr'];
     $nama_barang = $_POST['nama_barang'];
-    $uom = $_POST['uom']; // Menambahkan variabel untuk uom
-    $qty_barang = $_POST['qty_barang'];
+    $uom = $_POST['uom'];
+    $qty = $_POST['qty'];
     $unit_price = $_POST['unit_price'];
 
-    // Menambahkan uom ke query update
-    $query = "UPDATE proc_request_details SET nama_barang = ?, uom = ?, qty = ?, unit_price = ? WHERE id = ?";
-
-    // Menyiapkan prepared statement untuk meningkatkan keamanan
+    $query = "UPDATE proc_request_details SET id_proc_ch = ?, nama_barang = ?, qty = ?, uom = ?, unit_price = ? WHERE id = ?";
     $stmt = mysqli_prepare($koneksi, $query);
+    mysqli_stmt_bind_param($stmt, "ssidsi", $id_proc_ch, $nama_barang, $qty, $uom, $unit_price, $id);
 
-    // Mengikat parameter ke statement yang disiapkan
-    mysqli_stmt_bind_param($stmt, "ssidi", $nama_barang, $uom, $qty_barang, $unit_price, $id_proc_ch);
-
-    // Menjalankan prepared statement
     if (mysqli_stmt_execute($stmt)) {
         echo "Data berhasil diupdate";
     } else {
         echo "Error: " . mysqli_error($koneksi);
     }
 
-    // Menutup statement
     mysqli_stmt_close($stmt);
 } else {
-    echo "ID Detail MR atau data lainnya tidak ditemukan";
+    echo "ID tidak ditemukan";
 }

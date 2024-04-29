@@ -29,9 +29,9 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <td><input type='text' name='unit_price[]' class='form-control' value='" . nominal($row['unit_price']) . "' readonly maxlength='11' /></td>
                     <td><span class='totalHarga'><b>" . nominal($totalHarga) . "</b></span></td>
                     <td>
-                        <button type='button' class='btn btn-info btn-sm edit' data-id='" . $row['id'] . "'>E</button>
-                        <button type='button' class='btn btn-success btn-sm saveRow' data-id='" . $row['id'] . "' style='display:none;'>S</button>
-                        <button type='button' class='btn btn-danger btn-sm remove' data-id='" . $row['id'] . "'>R</button>
+                        <button type='button' class='btn btn-info btn-sm edit' data-id='" . $row['id_proc_ch'] . "'>E</button>
+                        <button type='button' class='btn btn-success btn-sm saveRow' data-id='" . $row['id_proc_ch'] . "' style='display:none;'>S</button>
+                        <button type='button' class='btn btn-danger btn-sm remove' data-id='" . $row['id_proc_ch'] . "'>R</button>
                     </td>
                 </tr>";
 }

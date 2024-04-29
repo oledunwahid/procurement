@@ -1,31 +1,54 @@
 <?php
-include '../koneksi.php'; // Sesuaikan dengan path koneksi database Anda
+include '../koneksi.php'; // Sesuaikan dengan path file koneksi Anda
 
-$dataReceived = print_r($_POST, true); // Mengubah data array ke string
-file_put_contents('debug_data.txt', $dataReceived);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Mendapatkan data dari form
+    $id_proc_ch = $_POST['id_proc_ch'];
+    $title = $_POST['title'];
+    $nik_request = $_POST['nik_request'];
+    $proc_pic = $_POST['proc_pic'];
+    $status = $_POST['status'];
+    $category = $_POST['category'];
+    $urgencies = $_POST['urgencies'];
+    $total_price = $_POST['total_price'];
 
-
-if(isset($_POST['id_mr'])) {
-    $id_mr = $_POST['id_mr'];
-    $deskripsi = $_POST['deskripsi'];
-    $ppn = $_POST['ppn'];
-	$tgl_need_mr = $_POST['tgl_need_mr'];
-	$tgl_mr = $_POST['tgl_mr'];
-	$pt_mr = $_POST['pt_mr'];
-	$lokasi_mr = $_POST['lokasi_mr'];
-    $total_price_mr = $_POST['total_price_mr'];
-	$total_price_mr = str_replace('.', '', $total_price_mr);
-	$type_mr = $_POST['type_mr'];
-	$priority_mr = $_POST['priority_mr'];
-	$dekripsi_priority_mr = $_POST['dekripsi_priority_mr'];
-
-    $query = "UPDATE proc_purchase_requests SET  status_mr = 'Procesed',  tgl_need_mr ='$tgl_need_mr' ,tgl_mr ='$tgl_mr' ,pt_mr = '$pt_mr', lokasi_mr = '$lokasi_mr', deskripsi = '$deskripsi', ppn = '$ppn', total_price_mr = '$total_price_mr', type_mr ='$type_mr', priority_mr = '$priority_mr',  dekripsi_priority_mr = '$dekripsi_priority_mr' WHERE id_mr = '$id_mr'";
-    if(mysqli_query($koneksi, $query)) {
-        echo "Data berhasil diupdate";
+    // Memeriksa apakah ada file lampiran yang diunggah
+    if (!empty($_FILES['lampiran']['name'])) {
+        $lampiran = $_FILES['lampiran']['name'];
+        $file_tmp = $_FILES['lampiran']['tmp_name'];
+        move_uploaded_file($file_tmp, "uploads/" . $lampiran);
     } else {
-        echo "Error: " . $query . "<br>" . mysqli_error($koneksi);
+        // Jika tidak ada file yang diunggah, gunakan nilai lampiran yang ada di database
+        $sql_lampiran = "SELECT lampiran FROM proc_request_details WHERE id_proc_ch = '$id_proc_ch'";
+        $result_lampiran = mysqli_query($koneksi, $sql_lampiran);
+        $row_lampiran = mysqli_fetch_assoc($result_lampiran);
+        $lampiran = $row_lampiran['lampiran'];
     }
-} else {
-    echo "ID Material Request tidak ditemukan";
+
+    // Menyiapkan pernyataan SQL untuk memperbarui data purchase request
+    $sql = "UPDATE proc_request_details SET 
+            title = '$title',
+            nik_request = '$nik_request',
+            proc_pic = '$proc_pic',
+            status = '$status',
+            category = '$category',
+            urgencies = '$urgencies',
+            lampiran = '$lampiran'
+            WHERE id_proc_ch = '$id_proc_ch'";
+
+    // Menjalankan pernyataan SQL
+    if (mysqli_query($koneksi, $sql)) {
+        // Memperbarui total harga pada tabel proc_purchase_requests
+        $sql_total_price = "UPDATE proc_purchase_requests SET total_price = '$total_price' WHERE id_proc_ch = '$id_proc_ch'";
+        mysqli_query($koneksi, $sql_total_price);
+
+        // Redirect kembali ke halaman purchase request setelah berhasil memperbarui
+        header("Location: ../index.php?page=PurchaseRequests");
+        exit();
+    } else {
+        echo "Error: " . $sql . "<br>" . mysqli_error($koneksi);
+    }
+
+    // Menutup koneksi
+    mysqli_close($koneksi);
 }
-?>

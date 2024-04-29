@@ -1,18 +1,18 @@
 <?php
 include '../koneksi.php'; // Sesuaikan dengan path file koneksi Anda
 
-if (isset($_POST['id_proc_ch'], $_POST['nama_barang'], $_POST['qty_barang'], $_POST['price'], $_POST['uom'])) {
+if (isset($_POST['id_proc_ch'])) {
     $id_proc_ch = $_POST['id_proc_ch'];
     $nama_barang = $_POST['nama_barang'];
-    $qty_barang = $_POST['qty_barang'];
-    $price = $_POST['price'];
-    $uom = $_POST['uom']; // Mengambil nilai uom dari POST request
+    $qty = $_POST['qty'];
+    $unit_price = $_POST['unit_price'];
+    $uom = $_POST['uom'];
 
-    // Menyiapkan prepared statement dengan parameter tambahan untuk uom
+    // Menyiapkan prepared statement dengan parameter yang sesuai
     $stmt = $koneksi->prepare("INSERT INTO proc_request_details (id_proc_ch, nama_barang, qty, uom, unit_price) VALUES (?, ?, ?, ?, ?)");
 
-    // Mengikat parameter ke statement, termasuk uom
-    $stmt->bind_param("ssids", $id_proc_ch, $nama_barang, $qty_barang, $uom, $price);
+    // Mengikat parameter ke statement
+    $stmt->bind_param("ssids", $id_proc_ch, $nama_barang, $qty, $uom, $unit_price);
 
     // Menjalankan statement
     if (!$stmt->execute()) {

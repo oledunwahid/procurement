@@ -1,20 +1,20 @@
 <?php
-include '../koneksi.php'; // Sesuaikan dengan path file koneksi Anda
+include '../koneksi.php';
 
-// Mengecek apakah ID tersedia
-if(isset($_POST['id_detail_mr'])) {
-    $id_detail_mr = $_POST['id_detail_mr'];
+if (isset($_POST['id'])) {
+    $id = $_POST['id'];
 
-    // Query untuk menghapus data
-    $query = "DELETE FROM budget_detail_mr WHERE id_detail_mr = '$id_detail_mr'";
-    $result = mysqli_query($koneksi, $query);
+    $query = "DELETE FROM proc_request_details WHERE id = ?";
+    $stmt = mysqli_prepare($koneksi, $query);
+    mysqli_stmt_bind_param($stmt, "i", $id);
 
-    if($result) {
+    if (mysqli_stmt_execute($stmt)) {
         echo "Data berhasil dihapus";
     } else {
         echo "Error: " . mysqli_error($koneksi);
     }
+
+    mysqli_stmt_close($stmt);
 } else {
-    echo "ID Detail MR tidak ditemukan";
+    echo "ID tidak ditemukan";
 }
-?>

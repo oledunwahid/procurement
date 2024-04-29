@@ -68,6 +68,14 @@
 $id_proc_ch = $_GET['id'];
 $sql = mysqli_query($koneksi, "SELECT * FROM proc_purchase_requests WHERE  id_proc_ch ='$id_proc_ch' "); // query jika filter dipilih
 $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
+
+
+?>
+
+<?php
+
+$sql7 = mysqli_query($koneksi, "SELECT * FROM access_level WHERE idnik = $niklogin");
+$row7 = mysqli_fetch_assoc($sql7);
 ?>
 
 <div class="container mt-0">
@@ -114,10 +122,14 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                     <label for="invoicenoInput">No Purchase Request</label>
                                     <input type="text" name="id_proc_ch" class="form-control bg-light border-0" value="<?= $row['id_proc_ch'] ?>" readonly>
                                 </div>
+                                <?php
+                                $currentDateTime = date("Y-m-d H:i:s");
+                                ?>
+
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
-                                        <label for="date-field">Date Request</label>
-                                        <input type="date" name="created_request" data-date-format="Y-m-d" class="form-control bg-light border-0" value="<?= $row['created_request'] ?>" readonly>
+                                        <label for="date-field">Current Datetime</label>
+                                        <input type="text" name="created_request" class="form-control bg-light border-0" value="<?= $currentDateTime ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
@@ -127,11 +139,21 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">PIC</label>
+                                    <label for="choices-payment-status">Title</label>
                                     <div class="input-light">
-                                        <input type="text" name="proc_pic" class="form-control" value="<?= $row['proc_pic'] ?>" readonly>
+                                        <input type="text" name="title" class="form-control" value="<?= $row['title'] ?>">
                                     </div>
                                 </div>
+
+
+                                <!-- admin aja  -->
+                                <div class="col-lg-3 col-sm-6">
+                                    <label for="choices-payment-status">PIC</label>
+                                    <div class="input-light">
+                                        <input type="text" name="proc_pic" class="bg-light form-control border-0" value="<?= $row['proc_pic'] ?>" readonly>
+                                    </div>
+                                </div>
+
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">Category</label>
                                     <div class="input-light">
@@ -158,12 +180,11 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                         <input type="file" name="lampiran" class="form-control">
                                     </div>
                                 </div>
-
                                 <!--end row-->
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Update</button>
+                        <button type="submit" class="btn btn-primary">Submit</button>
                     </form>
                 </div>
             </div>
@@ -274,6 +295,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             $row.find('.saveRow').show();
         });
 
+        // Perbaikan pada fungsi saveRow
         $(document).on('click', '.saveRow', function() {
             var row = $(this).closest('tr');
             var data = {
@@ -299,6 +321,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             });
         });
 
+        // Perbaikan pada fungsi remove
         $(document).on('click', '.remove', function() {
             var id = $(this).data('id');
             if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
@@ -331,6 +354,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             });
             $("input[name='total_price']").val(formatRibuan(total));
         }
+
 
         $('#updatePurchaseRequestForm').on('submit', function(e) {
             e.preventDefault();
