@@ -28,12 +28,12 @@
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1 overflow-hidden">
-                        <h5 class="text-primary mb-2">Purchase Requests</h5>
-                        <p class="text-muted mb-0">Explore our Purchase Requests section to view and manage procurement requests made by various departments.</p>
+                        <h5 class="text-primary mb-2">Price Requests</h5>
+                        <p class="text-muted mb-0">Explore our Price Requests section to view and manage procurement requests made by various departments.</p>
                     </div>
                 </div>
                 <div class="mt-4">
-                    <a href="index.php?page=PurchaseRequests" class="btn btn-primary">Open Purchase Requests</a>
+                    <a href="index.php?page=PurchaseRequests" class="btn btn-primary">Open Price Requests</a>
                 </div>
             </div>
         </div>

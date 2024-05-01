@@ -11,11 +11,11 @@
         <div class="card">
             <div class="card-header">
                 <div class="d-flex align-items-center">
-                    <h5 class="card-title mb-0 flex-grow-1">Request Form Purchasing </h5>
+                    <h5 class="card-title mb-0 flex-grow-1">Request Price Forms</h5>
                     <div class="flex-shrink-0">
                         <form action="function/insert_purchase_request.php" method="POST">
                             <input type="text" value="<?= $niklogin ?>" name="nik_request" hidden />
-                            <button class="btn btn-danger add-btn" name="add-purchase-request" type="submit"><i class="ri-add-line align-bottom me-1"></i> Create Purchase Request</button>
+                            <button class="btn btn-danger add-btn" name="add-purchase-request" type="submit"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</button>
                         </form>
                     </div>
                 </div>
@@ -31,13 +31,14 @@
                             <th>Created Date</th>
                             <th>Status</th>
                             <th>Category</th>
+                            <th>Job Location</th>
                             <th>PIC</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $sql = mysqli_query($koneksi, "SELECT id_proc_ch, title, created_request, status, category, proc_pic FROM proc_purchase_requests");
+                        $sql = mysqli_query($koneksi, "SELECT ppr.*, pc.description AS category_name FROM proc_purchase_requests ppr LEFT JOIN proc_category_pic pc ON ppr.category = pc.id");
                         $nomor = 1;
                         while ($row = mysqli_fetch_assoc($sql)) {
                         ?>
@@ -48,6 +49,7 @@
                                 <td><?= $row['created_request'] ?></td>
                                 <td><?= $row['status'] ?></td>
                                 <td><?= $row['category'] ?></td>
+                                <td><?= $row['job_location'] ?></td>
                                 <td><?= $row['proc_pic'] ?></td>
                                 <td>
                                     <div class="dropdown d-inline-block">
@@ -90,4 +92,4 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
 
-<script src="../assets/js/pages/datatables.init.js"></script>
+<script src="../assets/js/pages/datatables.init.js"></script>   

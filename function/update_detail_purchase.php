@@ -8,10 +8,12 @@ if (isset($_POST['id'])) {
     $uom = $_POST['uom'];
     $qty = $_POST['qty'];
     $unit_price = $_POST['unit_price'];
+    $detail_specification = $_POST['detail_specification'];
 
-    $query = "UPDATE proc_request_details SET id_proc_ch = ?, nama_barang = ?, qty = ?, uom = ?, unit_price = ? WHERE id = ?";
+
+    $query = "UPDATE proc_request_details SET id_proc_ch = ?, nama_barang = ?, qty = ?, uom = ?, detail_specification = ?, unit_price = ? WHERE id = ?";
     $stmt = mysqli_prepare($koneksi, $query);
-    mysqli_stmt_bind_param($stmt, "ssidsi", $id_proc_ch, $nama_barang, $qty, $uom, $unit_price, $id);
+    mysqli_stmt_bind_param($stmt, "ssssssi", $id_proc_ch, $nama_barang, $qty, $uom, $detail_specification, $unit_price, $id);
 
     if (mysqli_stmt_execute($stmt)) {
         echo "Data berhasil diupdate";

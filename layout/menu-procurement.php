@@ -42,12 +42,12 @@
                 <li class="nav-item">
                     <?php $pages = ['PurchaseRequests', 'ApprovalPurchase', 'LinkApprovalPurchase', 'ViewPurchase', 'DetailPurchase']; ?>
                     <a class="nav-link menu-link<?php if (in_array($page, $pages)) echo ' active'; ?>" href="#Sop" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarSop">
-                        <i class="ri-shopping-bag-2-line"></i> <span>Purchase Requests</span>
+                        <i class="ri-shopping-bag-2-line"></i> <span>Procurement Requests</span>
                     </a>
                     <div class="collapse <?php if (in_array($page, $pages)) echo 'show'; ?> menu-dropdown" id="Sop">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="index.php?page=PurchaseRequests" class="nav-link <?php if ($page == 'PurchaseRequests') echo 'active'; ?>">Purchase Requests</a>
+                                <a href="index.php?page=PurchaseRequests" class="nav-link <?php if ($page == 'PurchaseRequests') echo 'active'; ?>">Price Requests</a>
                             </li>
                             <!-- <li class="nav-item">
                                 <a href="index.php?page=ApprovalPurchase" class="nav-link <?php if ($page == 'ApprovalPurchase') echo 'active'; ?>">Request Purchase Listsl</a>

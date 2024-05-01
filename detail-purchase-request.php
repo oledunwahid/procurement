@@ -78,12 +78,12 @@ $sql7 = mysqli_query($koneksi, "SELECT * FROM access_level WHERE idnik = $niklog
 $row7 = mysqli_fetch_assoc($sql7);
 ?>
 
-<div class="container mt-0">
+<div class="col">
     <div class="row justify-content-center">
         <div class="col-lg-12">
             <div class="card card-custom">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Input Detail Purchase Request</h5>
+                    <h5 class="card-title mb-0">Input Detail Price Request</h5>
                 </div>
                 <div class="card-body">
                     <button type="button" class="btn btn-primary btn-enhanced" id="addRow">
@@ -97,6 +97,7 @@ $row7 = mysqli_fetch_assoc($sql7);
                                     <th>Nama Barang</th>
                                     <th width="10%">Qty</th>
                                     <th width="10%">Uom</th>
+                                    <th width="10%">Detail Spec</th>
                                     <th width="15%">Harga</th>
                                     <th width="20%">Total Harga</th>
                                     <th width="10%">Action</th>
@@ -114,12 +115,12 @@ $row7 = mysqli_fetch_assoc($sql7);
         <div class="col-lg-12">
             <div class="card card-enhanced">
                 <div class="card-body card-body-enhanced">
-                    <h5 class="card-title">Purchase Request - <?= $row['status'] ?></h5>
+                    <h5 class="card-title">Price Request - <?= $row['status'] ?></h5>
                     <form id="updatePurchaseRequestForm">
                         <div class="card-body border-bottom border-bottom-dashed ">
                             <div class="row g-3">
                                 <div class="col-lg-3 col-sm-6">
-                                    <label for="invoicenoInput">No Purchase Request</label>
+                                    <label for="invoicenoInput">No Price Request</label>
                                     <input type="text" name="id_proc_ch" class="form-control bg-light border-0" value="<?= $row['id_proc_ch'] ?>" readonly>
                                 </div>
                                 <?php
@@ -135,7 +136,13 @@ $row7 = mysqli_fetch_assoc($sql7);
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">Requester</label>
                                     <div class="input-light">
-                                        <input type="text" name="nik_request" class="form-control" value="<?= $row['nik_request'] ?>" readonly>
+                                        <?php
+                                        $nik_request = $row['nik_request'];
+                                        $sqlUser = mysqli_query($koneksi, "SELECT nama FROM user WHERE idnik = '$nik_request'");
+                                        $rowUser = mysqli_fetch_assoc($sqlUser);
+                                        $requesterName = $rowUser['nama'];
+                                        ?>
+                                        <input type="text" name="requester_name" class="form-control bg-light border-0" value="<?= $requesterName ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
@@ -144,30 +151,34 @@ $row7 = mysqli_fetch_assoc($sql7);
                                         <input type="text" name="title" class="form-control" value="<?= $row['title'] ?>">
                                     </div>
                                 </div>
-
-
-                                <!-- admin aja  -->
                                 <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">PIC</label>
-                                    <div class="input-light">
-                                        <input type="text" name="proc_pic" class="bg-light form-control border-0" value="<?= $row['proc_pic'] ?>" readonly>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">Category</label>
-                                    <div class="input-light">
-                                        <select class="form-control" name="category" data-choices data-choices-search-false id="choices-payment-status" required>
-                                            <option value="<?= $row['category'] ?>"><?= $row['category'] ?></option>
-                                            <option value="">Select Category</option>
-                                            <option value="Electronics">Electronics</option>
-                                            <option value="Furniture">Furniture</option>
-                                            <option value="Office Supplies">Office Supplies</option>
-                                            <option value="Stationery">Stationery</option>
-                                            <option value="Machinery">Machinery</option>
+                                    <label for="choices-payment-status">Job Location</label>
+                                    <div>
+                                        <select class="form-control" name="jobLocation" data-choices data-choices-search-false id="choices-payment-status" required>
+                                            <option value="">Select Job Location</option>
+                                            <option value="HO">HO</option>
+                                            <option value="BCPM">BCPM</option>
+                                            <option value="OBI">OBI</option>
                                         </select>
                                     </div>
                                 </div>
+
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="mb-3">
+                                        <label for="choices-single-default" class="form-label">Category</label>
+                                        <select class="form-control" data-choices name="choices-single-default" id="choices-single-default">
+                                            <option value="">Select Category</option>
+                                            <?php
+                                            $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category_pic");
+                                            while ($rowCategory = mysqli_fetch_assoc($sqlCategory)) {
+                                                $selected = ($rowCategory['id'] == $row['category']) ? 'selected' : '';
+                                                echo "<option value='" . $rowCategory['id'] . "' " . $selected . ">" . $rowCategory['description'] . "</option>";
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Total Amount</label>
@@ -244,12 +255,13 @@ $row7 = mysqli_fetch_assoc($sql7);
                 <td><input type="text" name="nama_barang[]" class="form-control" style="width: 100%;" /></td>
                 <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
                 <td><input type="text" name="uom[]" class="form-control" style="width: 80px;" /></td>
+                <td><input type="text" name="detail_specification[]" class="form-control" style="width: 80px;" /></td>
                 <td><input type="text" name="unit_price[]" class="form-control price-input" maxlength="11" style="width: 120px;" /></td>
                 <td><span class="totalHarga">0</span></td>
                 <td>
-                    <button type="button" class="btn btn-success btn-sm saveNewRow">SN</button>
-                    <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">S</button>
-                    <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">R</button>
+                    <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
+                    <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
+                    <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
                 </td>
             </tr>`;
             $('#detail-purchase-request tbody').append(newRow);
@@ -271,6 +283,7 @@ $row7 = mysqli_fetch_assoc($sql7);
                 nama_barang: row.find("input[name='nama_barang[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
                 uom: row.find("input[name='uom[]']").val(),
+                detail_specification: row.find("input[name='detail_specification[]']").val(),
                 unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, '')
             };
 
@@ -299,11 +312,12 @@ $row7 = mysqli_fetch_assoc($sql7);
         $(document).on('click', '.saveRow', function() {
             var row = $(this).closest('tr');
             var data = {
-                id: row.find('.remove').data('id'),
+                id: $(this).data('id'),
                 id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
                 nama_barang: row.find("input[name='nama_barang[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
                 uom: row.find("input[name='uom[]']").val(),
+                detail_specification: row.find("input[name='detail_specification[]']").val(),
                 unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, '')
             };
 
@@ -358,12 +372,14 @@ $row7 = mysqli_fetch_assoc($sql7);
 
         $('#updatePurchaseRequestForm').on('submit', function(e) {
             e.preventDefault();
-            var formData = $(this).serialize();
+            var formData = new FormData(this);
 
             $.ajax({
                 type: "POST",
                 url: "function/update_purchase.php",
                 data: formData,
+                processData: false,
+                contentType: false,
                 success: function(response) {
                     window.location.href = "index.php?page=PurchaseRequests";
                 },

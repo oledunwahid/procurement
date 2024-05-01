@@ -34,7 +34,7 @@
                 <!-- App Search-->
                 <div class="d-flex align-items-center">
 
-                    <h5>EIP - ASK MILA </h5>
+                    <h5>EIP - Procurement</h5>
 
                 </div>
             </div>
