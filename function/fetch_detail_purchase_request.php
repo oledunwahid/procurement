@@ -19,13 +19,12 @@ $output = '';
 while ($row = mysqli_fetch_assoc($result)) {
     // Menghitung total harga (harga * jumlah)
     $totalHarga = $row['unit_price'] * $row['qty'];
-
     $output .= "<tr>
                     <td style='display:none;'><input type='text' name='id_proc_ch[]' class='form-control' value='" . $row['id_proc_ch'] . "' readonly /></td>
                     <td><input type='text' name='nama_barang[]' class='form-control' value='" . $row['nama_barang'] . "' readonly /></td>
+                    <td><textarea name='detail_specification[]' class='form-control' readonly style='width: 100%;'>" . $row['detail_specification'] . "</textarea></td>
                     <td><input type='number' name='qty[]' class='form-control' value='" . $row['qty'] . "' readonly maxlength='5' /></td>
                     <td><input type='text' name='uom[]' class='form-control' value='" . $row['uom'] . "' readonly /></td>
-                    <td><input type='text' name='detail_specification[]' class='form-control' value='" . $row['detail_specification'] . "' readonly/></td>    
                     <td><input type='text' name='unit_price[]' class='form-control' value='" . nominal($row['unit_price']) . "' readonly maxlength='11' /></td>
                     <td><span class='totalHarga'><b>" . nominal($totalHarga) . "</b></span></td>
                     <td>

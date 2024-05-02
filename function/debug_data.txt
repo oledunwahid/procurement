@@ -1,10 +1,10 @@
 Array
 (
-    [id_proc_ch] => CH240502143220
-    [created_request] => 2024-05-02 14:32:46
+    [id_proc_ch] => CH240502153916
+    [created_request] => 2024-05-02 16:50:42
     [requester_name] => 90909090
-    [title] => Afa
+    [title] => dasdas
     [jobLocation] => HO
-    [category] => CP00093
-    [total_price] => Rp. 120 
+    [category] => CP00080
+    [total_price] => 5.670.908.643
 )

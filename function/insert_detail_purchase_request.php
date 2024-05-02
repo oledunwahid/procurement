@@ -13,7 +13,7 @@ if (isset($_POST['id_proc_ch'])) {
     $stmt = $koneksi->prepare("INSERT INTO proc_request_details (id_proc_ch, nama_barang, qty, uom, detail_specification, unit_price) VALUES (?, ?, ?, ?,?, ?)");
 
     // Mengikat parameter ke statement
-    $stmt->bind_param("ssidss", $id_proc_ch, $nama_barang, $qty, $uom, $detail_specification, $unit_price);
+    $stmt->bind_param("sssssi", $id_proc_ch, $nama_barang, $qty, $uom, $detail_specification, $unit_price);
 
     // Menjalankan statement
     if (!$stmt->execute()) {

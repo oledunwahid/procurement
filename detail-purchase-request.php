@@ -89,12 +89,12 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 <tr>
                                     <th style="display:none;">ID Request</th>
                                     <th>Nama Barang</th>
-                                    <th width="10%">Qty</th>
-                                    <th width="10%">Uom</th>
-                                    <th width="10%">Detail Spec</th>
-                                    <th width="15%">Harga</th>
-                                    <th width="20%">Total Harga</th>
-                                    <th width="10%">Action</th>
+                                    <th width="20%">Detail Spec</th>
+                                    <th width="6%">Qty</th>
+                                    <th width="7%">Uom</th>
+                                    <th width="10%">Harga</th>
+                                    <th width="13%">Total Harga</th>
+                                    <th width="15%">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -168,7 +168,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Total Amount</label>
-                                        <input type="text" name="total_price" id="total_price" class="form-control bg-light border-0" value="<?= rupiah($row['total_price']) ?> " readonly />
+                                        <input type="text" name="total_price" id="total_price" class="form-control bg-light border-0" value="<?= $row['total_price'] ?> " readonly />
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-sm-6">
@@ -180,7 +180,9 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 <!--end row-->
                             </div>
                         </div>
-                        <button type="submit" name="updatePurchaseRequestForm" class="btn btn-primary">Submit</button>
+                        <div class="pt-3">
+                            <button type="submit" name="updatePurchaseRequestForm" class="btn btn-primary">Submit</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -238,9 +240,9 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             var newRow = `<tr>
                 <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
                 <td><input type="text" name="nama_barang[]" class="form-control" style="width: 100%;" /></td>
+                <td><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
                 <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
                 <td><input type="text" name="uom[]" class="form-control" style="width: 80px;" /></td>
-                <td><input type="text" name="detail_specification[]" class="form-control" style="width: 80px;" /></td>
                 <td><input type="text" name="unit_price[]" class="form-control price-input" maxlength="11" style="width: 120px;" /></td>
                 <td><span class="totalHarga">0</span></td>
                 <td>
@@ -266,9 +268,9 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             var data = {
                 id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
                 nama_barang: row.find("input[name='nama_barang[]']").val(),
+                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
                 uom: row.find("input[name='uom[]']").val(),
-                detail_specification: row.find("input[name='detail_specification[]']").val(),
                 unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, '')
             };
 
@@ -300,9 +302,9 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 id: $(this).data('id'),
                 id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
                 nama_barang: row.find("input[name='nama_barang[]']").val(),
+                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
                 uom: row.find("input[name='uom[]']").val(),
-                detail_specification: row.find("input[name='detail_specification[]']").val(),
                 unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, '')
             };
 
