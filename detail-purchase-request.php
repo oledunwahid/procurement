@@ -72,12 +72,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
 ?>
 
-<?php
-
-$sql7 = mysqli_query($koneksi, "SELECT * FROM access_level WHERE idnik = $niklogin");
-$row7 = mysqli_fetch_assoc($sql7);
-?>
-
 <div class="col">
     <div class="row justify-content-center">
         <div class="col-lg-12">
@@ -134,15 +128,9 @@ $row7 = mysqli_fetch_assoc($sql7);
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">Requester</label>
+                                    <label for="choices-payment-status">ID NIK Requester</label>
                                     <div class="input-light">
-                                        <?php
-                                        $nik_request = $row['nik_request'];
-                                        $sqlUser = mysqli_query($koneksi, "SELECT nama FROM user WHERE idnik = '$nik_request'");
-                                        $rowUser = mysqli_fetch_assoc($sqlUser);
-                                        $requesterName = $rowUser['nama'];
-                                        ?>
-                                        <input type="text" name="requester_name" class="form-control bg-light border-0" value="<?= $requesterName ?>" readonly>
+                                        <input type="text" name="requester_name" class="form-control bg-light border-0" value="<?= $row['nik_request'] ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
@@ -162,23 +150,21 @@ $row7 = mysqli_fetch_assoc($sql7);
                                         </select>
                                     </div>
                                 </div>
-
                                 <div class="col-lg-3 col-md-6">
                                     <div class="mb-3">
                                         <label for="choices-single-default" class="form-label">Category</label>
-                                        <select class="form-control" data-choices name="choices-single-default" id="choices-single-default">
+                                        <select class="form-control" data-choices name="category" id="choices-single-default" required>
                                             <option value="">Select Category</option>
                                             <?php
-                                            $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category_pic");
+                                            $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category");
                                             while ($rowCategory = mysqli_fetch_assoc($sqlCategory)) {
-                                                $selected = ($rowCategory['id'] == $row['category']) ? 'selected' : '';
-                                                echo "<option value='" . $rowCategory['id'] . "' " . $selected . ">" . $rowCategory['description'] . "</option>";
+                                                $selected = ($rowCategory['id_category'] == $row['nama_category']) ? 'selected' : '';
+                                                echo "<option value='" . $rowCategory['id_category'] . "' " . $selected . ">" . $rowCategory['nama_category'] . "</option>";
                                             }
                                             ?>
                                         </select>
                                     </div>
                                 </div>
-
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Total Amount</label>
@@ -194,8 +180,7 @@ $row7 = mysqli_fetch_assoc($sql7);
                                 <!--end row-->
                             </div>
                         </div>
-
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="submit" name="updatePurchaseRequestForm" class="btn btn-primary">Submit</button>
                     </form>
                 </div>
             </div>

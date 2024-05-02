@@ -1,13 +1,10 @@
 Array
 (
-    [id_mr] => MR240424095354
-    [type_mr] => Project
-    [tgl_mr] => 2024-04-24
-    [tgl_need_mr] => 2024-04-10
-    [pt_mr] => PT. Bangun Teknik Group
-    [lokasi_mr] => BCPM
-    [ppn] => 11
-    [total_price_mr] => 154.947.878
-    [deskripsi] => asdada
-    [dekripsi_priority_mr] => 
+    [id_proc_ch] => CH240502143220
+    [created_request] => 2024-05-02 14:32:46
+    [requester_name] => 90909090
+    [title] => Afa
+    [jobLocation] => HO
+    [category] => CP00093
+    [total_price] => Rp. 120 
 )

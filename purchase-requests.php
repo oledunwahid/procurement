@@ -32,13 +32,14 @@
                             <th>Status</th>
                             <th>Category</th>
                             <th>Job Location</th>
-                            <th>PIC</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                        $sql = mysqli_query($koneksi, "SELECT ppr.*, pc.description AS category_name FROM proc_purchase_requests ppr LEFT JOIN proc_category_pic pc ON ppr.category = pc.id");
+                        $sql = mysqli_query($koneksi, "SELECT pp.id_proc_ch, pp.title, pp.created_request, pp.status, pc.nama_category, pp.job_location 
+                        FROM proc_purchase_requests AS pp 
+                        INNER JOIN proc_category AS pc ON pp.category = pc.id_category");
                         $nomor = 1;
                         while ($row = mysqli_fetch_assoc($sql)) {
                         ?>
@@ -48,9 +49,8 @@
                                 <td><?= $row['title'] ?></td>
                                 <td><?= $row['created_request'] ?></td>
                                 <td><?= $row['status'] ?></td>
-                                <td><?= $row['category'] ?></td>
+                                <td><?= $row['nama_category'] ?></td>
                                 <td><?= $row['job_location'] ?></td>
-                                <td><?= $row['proc_pic'] ?></td>
                                 <td>
                                     <div class="dropdown d-inline-block">
                                         <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -92,4 +92,4 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
 
-<script src="../assets/js/pages/datatables.init.js"></script>   
+<script src="../assets/js/pages/datatables.init.js"></script>
