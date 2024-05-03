@@ -110,7 +110,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             <div class="card card-enhanced">
                 <div class="card-body card-body-enhanced">
                     <h5 class="card-title">Price Request - <?= $row['status'] ?></h5>
-                    <form id="updatePurchaseRequestForm">
+                    <form id="updatePurchaseRequestForm" enctype="multipart/form-data">
                         <div class="card-body border-bottom border-bottom-dashed ">
                             <div class="row g-3">
                                 <div class="col-lg-3 col-sm-6">
