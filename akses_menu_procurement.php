@@ -15,7 +15,7 @@ if (isset($row7['admin']) && ($row7['admin'] == '1')) {
 		case 'DetailPurchase':
 			include "detail-purchase-request.php";
 			break;
-		case 'ViewPurchase':
+		case 'UserDetailPurchase':
 			include "view-detail-purchase.php";
 			break;
 		case 'ApprovalPurchase':
@@ -39,7 +39,7 @@ if (isset($row7['admin']) && ($row7['admin'] == '1')) {
 		case 'PurchaseRequests':
 			include "purchase-requests.php";
 			break;
-		case 'ViewPurchase':
+		case 'UserDetailPurchase':
 			include "view-detail-purchase.php";
 			break;
 		default:

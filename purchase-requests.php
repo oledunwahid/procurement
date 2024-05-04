@@ -13,10 +13,14 @@
                 <div class="d-flex align-items-center">
                     <h5 class="card-title mb-0 flex-grow-1">Request Price Forms</h5>
                     <div class="flex-shrink-0">
-                        <form action="function/insert_purchase_request.php" method="POST">
-                            <input type="text" value="<?= $niklogin ?>" name="nik_request" hidden />
-                            <button class="btn btn-danger add-btn" name="add-purchase-request" type="submit"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</button>
-                        </form>
+                        <?php if ($_SESSION['role'] == 'admin') { ?>
+                            <form action="function/insert_purchase_request.php" method="POST">
+                                <input type="text" value="<?= $niklogin ?>" name="nik_request" hidden />
+                                <button class="btn btn-danger add-btn" name="add-purchase-request" type="submit"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</button>
+                            </form>
+                        <?php } else { ?>
+                            <a href="index.php?page=DetailPurchase" class="btn btn-danger add-btn"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</a>
+                        <?php } ?>
                     </div>
                 </div>
             </div>

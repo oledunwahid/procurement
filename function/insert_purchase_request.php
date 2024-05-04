@@ -14,8 +14,13 @@ if (isset($_POST["add-purchase-request"])) {
         $existing_id_proc_ch = $data_exist['id_proc_ch'];
 
         // Redirect ke halaman detail Purchase Request dengan id_proc_ch yang sudah ada
-        header("location:../index.php?page=DetailPurchase&id=$existing_id_proc_ch");
-        exit;
+        if ($_SESSION['role'] == 'admin') {
+            header("location:../index.php?page=DetailPurchase&id=$existing_id_proc_ch");
+            exit;
+        } else {
+            header("location:../index.php?page=UserDetailPurchase&id=$existing_id_proc_ch");
+            exit;
+        }
     } else {
         // Jika tidak ditemukan, lanjutkan dengan proses insert
         $tanggal_req = date('Y-m-d H:i:s');
@@ -30,7 +35,11 @@ if (isset($_POST["add-purchase-request"])) {
         $result = mysqli_query($koneksi, $query);
 
         if ($result) {
-            header("location:../index.php?page=DetailPurchase&id=$id_proc_ch");
+            if ($_SESSION['role'] == 'admin') {
+                header("location:../index.php?page=DetailPurchase&id=$id_proc_ch");
+            } else {
+                header("location:../index.php?page=UserDetailPurchase&id=$id_proc_ch");
+            }
         } else {
             // Handle jika insert proc_request_details gagal
             header("location:../index.php?page=DetailPurchase&id=$id_proc_ch");
