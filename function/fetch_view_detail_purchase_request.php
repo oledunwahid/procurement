@@ -25,7 +25,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                     <td><textarea name='detail_specification[]' class='form-control' readonly style='width: 100%;'>" . $row['detail_specification'] . "</textarea></td>
                     <td><input type='number' name='qty[]' class='form-control' value='" . $row['qty'] . "' readonly maxlength='5' /></td>
                     <td><input type='text' name='uom[]' class='form-control' value='" . $row['uom'] . "' readonly /></td>
-                    <td><span  name='unit_price[]' class='form-control' value='" . nominal($row['unit_price']) . "' readonly maxlength='11' /></td>
+                    <td><span  name='unit_price[]'  value='" . nominal($row['unit_price']) . "' readonly maxlength='11' </span>0</td>
                     <td><span class='totalHarga'><b>" . nominal($totalHarga) . "</b></span></td>
                     <td>
                         <button type='button' class='btn btn-info btn-sm edit' data-id='" . $row['id'] . "'>Edit</button>

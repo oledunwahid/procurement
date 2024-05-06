@@ -8,7 +8,7 @@ function nominal($angka)
     $hasil_nominal = number_format($angka, 0, ',', '.');
     return $hasil_nominal;
 }
-$query = "SELECT ppr.*, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, prd.detail_specification
+$query = "SELECT ppr.*, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, prd.detail_specification, prd.detail_notes
             FROM proc_request_details prd
             INNER JOIN proc_purchase_requests ppr ON prd.id_proc_ch = ppr.id_proc_ch
             WHERE ppr.id_proc_ch = '$id_proc_ch'";
@@ -32,6 +32,7 @@ while ($row = mysqli_fetch_assoc($result)) {
                         <button type='button' class='btn btn-success btn-sm saveRow' data-id='" . $row['id'] . "' style='display:none;'>Save</button>
                         <button type='button' class='btn btn-danger btn-sm remove' data-id='" . $row['id'] . "'>Remove</button>
                     </td>
+                    <td><textarea name='detail_notes[]' class='form-control' readonly style='width: 100%;'>" . $row['detail_notes'] . "</textarea></td>
                 </tr>";
 }
 

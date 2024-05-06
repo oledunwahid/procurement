@@ -4,6 +4,7 @@ include("../koneksi.php");
 if (isset($_POST["add-purchase-request"])) {
     $nik_request = $_POST['nik_request'];
 
+
     // Cek apakah sudah ada id_proc_ch dengan status 'Pending'
     $cek_query = "SELECT * FROM proc_purchase_requests WHERE nik_request = '$nik_request' AND status = 'Created' ";
     $cek_result = mysqli_query($koneksi, $cek_query);
@@ -14,7 +15,8 @@ if (isset($_POST["add-purchase-request"])) {
         $existing_id_proc_ch = $data_exist['id_proc_ch'];
 
         // Redirect ke halaman detail Purchase Request dengan id_proc_ch yang sudah ada
-        header("location:../index.php?page=DetailPurchase&id=$existing_id_proc_ch");
+
+        header("location:../index.php?page=UserDetailPurchase&id=$existing_id_proc_ch");
         exit;
     } else {
         // Jika tidak ditemukan, lanjutkan dengan proses insert
@@ -29,12 +31,7 @@ if (isset($_POST["add-purchase-request"])) {
         $query = "INSERT INTO proc_purchase_requests (id_proc_ch, created_request, nik_request, status) VALUES ('$id_proc_ch','$created_request','$nik_request','$status')";
         $result = mysqli_query($koneksi, $query);
 
-        if ($result) {
-            header("location:../index.php?page=DetailPurchase&id=$id_proc_ch");
-        } else {
-            // Handle jika insert proc_request_details gagal
-            header("location:../index.php?page=DetailPurchase&id=$id_proc_ch");
-        }
+        header("location:../index.php?page=UserDetailPurchase&id=$id_proc_ch");
     }
 } else {
     die("Akses dilarang...");

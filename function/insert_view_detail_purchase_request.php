@@ -5,15 +5,14 @@ if (isset($_POST['id_proc_ch'])) {
     $id_proc_ch = $_POST['id_proc_ch'];
     $nama_barang = $_POST['nama_barang'];
     $qty = $_POST['qty'];
-    $unit_price = $_POST['unit_price'];
     $uom = $_POST['uom'];
     $detail_specification = $_POST['detail_specification'];
-    $detail_notes = $_POST['detail_notes'];
+
     // Menyiapkan prepared statement dengan parameter yang sesuai
-    $stmt = $koneksi->prepare("INSERT INTO proc_request_details (id_proc_ch, nama_barang, qty, uom, detail_specification, unit_price, detail_notes) VALUES (?, ?, ?, ?,?, ?, ?)");
+    $stmt = $koneksi->prepare("INSERT INTO proc_request_details (id_proc_ch, nama_barang, qty, uom, detail_specification) VALUES (?, ?, ?,?, ?)");
 
     // Mengikat parameter ke statement
-    $stmt->bind_param("sssssis", $id_proc_ch, $nama_barang, $qty, $uom, $detail_specification, $unit_price, $detail_notes);
+    $stmt->bind_param("sssss", $id_proc_ch, $nama_barang, $qty, $uom, $detail_specification);
 
     // Menjalankan statement
     if (!$stmt->execute()) {

@@ -95,6 +95,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                     <th width="10%">Harga</th>
                                     <th width="13%">Total Harga</th>
                                     <th width="15%">Action</th>
+                                    <th width="15%">Detail Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -141,28 +142,19 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">Job Location</label>
-                                    <div>
-                                        <select class="form-control" name="jobLocation" data-choices data-choices-search-false id="choices-payment-status" required>
-                                            <option value="">Select Job Location</option>
-                                            <option value="HO">HO</option>
-                                            <option value="BCPM">BCPM</option>
-                                            <option value="OBI">OBI</option>
-                                        </select>
+                                    <div class="input-light">
+                                        <input type="text" name="title" class="form-control" value="<?= $row['job_location'] ?>">
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-6">
                                     <div class="mb-3">
-                                        <label for="choices-single-default" class="form-label">Category</label>
-                                        <select class="form-control" data-choices name="category" id="choices-single-default" required>
-                                            <option value="">Select Category</option>
-                                            <?php
-                                            $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category");
-                                            while ($rowCategory = mysqli_fetch_assoc($sqlCategory)) {
-                                                $selected = ($rowCategory['id_category'] == $row['nama_category']) ? 'selected' : '';
-                                                echo "<option value='" . $rowCategory['id_category'] . "' " . $selected . ">" . $rowCategory['nama_category'] . "</option>";
-                                            }
-                                            ?>
-                                        </select>
+                                        <label for="category" class="form-label">Category</label>
+                                        <?php
+                                        $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category WHERE id_category = '" . $row['category'] . "'");
+                                        $rowCategory = mysqli_fetch_assoc($sqlCategory);
+                                        $categoryName = $rowCategory['nama_category'];
+                                        ?>
+                                        <input type="text" class="form-control" id="category" name="category" value="<?= $categoryName ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
@@ -191,16 +183,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
     </div>
 </div>
 
-<script>
-    function toggleTextArea(value) {
-        const textAreaDiv = document.getElementById('urgentTextArea');
-        if (value === 'Urgent') {
-            textAreaDiv.style.display = 'block';
-        } else {
-            textAreaDiv.style.display = 'none';
-        }
-    }
-</script>
 
 <script>
     $(document).ready(function() {
@@ -250,6 +232,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                     <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
                     <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
                 </td>
+                <td><textarea name="detail_notes[]" class="form-control" style="width: 100%;"></textarea></td>
             </tr>`;
             $('#detail-purchase-request tbody').append(newRow);
         }
@@ -271,7 +254,8 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
                 uom: row.find("input[name='uom[]']").val(),
-                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, '')
+                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
+                detail_notes: row.find("textarea[name='detail_notes[]']").val()
             };
 
             $.ajax({
@@ -290,7 +274,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
         $(document).on('click', '.edit', function() {
             var $row = $(this).closest('tr');
-            $row.find('input').prop('readonly', false);
+            $row.find('input, textarea').prop('readonly', false);
             $(this).hide();
             $row.find('.saveRow').show();
         });
@@ -305,7 +289,8 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
                 uom: row.find("input[name='uom[]']").val(),
-                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, '')
+                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
+                detail_notes: row.find("textarea[name='detail_notes[]']").val()
             };
 
             $.ajax({

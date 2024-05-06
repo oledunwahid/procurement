@@ -191,16 +191,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
     </div>
 </div>
 
-<script>
-    function toggleTextArea(value) {
-        const textAreaDiv = document.getElementById('urgentTextArea');
-        if (value === 'Urgent') {
-            textAreaDiv.style.display = 'block';
-        } else {
-            textAreaDiv.style.display = 'none';
-        }
-    }
-</script>
 
 <script>
     $(document).ready(function() {
@@ -226,15 +216,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
         loadData();
 
-        // Memanggil updateTotalPrice setiap kali terjadi perubahan pada qty[] atau unit_price[]
-        $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
-            var row = $(this).closest('tr');
-            var qty = parseInt(row.find("input[name='qty[]']").val()) || 0;
-            var price = parseInt(row.find("input[name='unit_price[]']").val().replace(/\./g, '')) || 0;
-            var total = qty * price;
-            row.find('.totalHarga').text(formatRibuan(total));
-            updateTotalPrice();
-        });
 
         function addRow() {
             var newRow = `<tr>
@@ -243,7 +224,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 <td><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
                 <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
                 <td><input type="text" name="uom[]" class="form-control" style="width: 80px;" /></td>
-                <td><input type="text" name="unit_price[]" class="form-control price-input" maxlength="11" style="width: 120px;" /></td>
+                <td><span type="text" name="unit_price[]"</span>0</td>
                 <td><span class="totalHarga">0</span></td>
                 <td>
                     <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
@@ -258,11 +239,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             addRow();
         });
 
-        $(document).on('input', '.price-input', function() {
-            var value = $(this).val().replace(/\./g, '');
-            $(this).val(formatRibuan(value));
-        });
-
         $(document).on('click', '.saveNewRow', function() {
             var row = $(this).closest('tr');
             var data = {
@@ -271,12 +247,11 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
                 uom: row.find("input[name='uom[]']").val(),
-                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, '')
             };
 
             $.ajax({
                 type: "POST",
-                url: "function/insert_detail_purchase_request.php",
+                url: "function/insert_view_detail_purchase_request.php",
                 data: data,
                 success: function(response) {
                     alert("Data berhasil disimpan");
@@ -305,12 +280,11 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
                 uom: row.find("input[name='uom[]']").val(),
-                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, '')
             };
 
             $.ajax({
                 type: "POST",
-                url: "function/update_detail_purchase.php",
+                url: "function/update_view_detail_purchase.php",
                 data: data,
                 success: function(response) {
                     alert("Data berhasil diupdate");
@@ -328,7 +302,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
                 $.ajax({
                     type: "POST",
-                    url: "function/delete_detail_purchase.php",
+                    url: "function/delete_view_detail_purchase.php",
                     data: {
                         id: id
                     },
@@ -345,17 +319,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             }
         });
 
-        function updateTotalPrice() {
-            var total = 0;
-            $("#detail-purchase-request tbody tr").each(function() {
-                var qty = $(this).find("input[name='qty[]']").val();
-                var price = $(this).find("input[name='unit_price[]']").val().replace(/\./g, '');
-                var subtotal = (qty * price) || 0;
-                total += subtotal;
-            });
-            $("input[name='total_price']").val(formatRibuan(total));
-        }
-
 
         $('#updatePurchaseRequestForm').on('submit', function(e) {
             e.preventDefault();
@@ -363,7 +326,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
             $.ajax({
                 type: "POST",
-                url: "function/update_purchase.php",
+                url: "function/update_view_purchase.php",
                 data: formData,
                 processData: false,
                 contentType: false,

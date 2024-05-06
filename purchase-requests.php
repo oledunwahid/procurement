@@ -5,6 +5,9 @@
 
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
 
+<?php $sql1 = mysqli_query($koneksi, "SELECT * FROM proc_admin_category WHERE idnik = $niklogin");
+$row1 = mysqli_fetch_assoc($sql1);
+?>
 
 <div class="row">
     <div class="col-lg-12">
@@ -13,14 +16,10 @@
                 <div class="d-flex align-items-center">
                     <h5 class="card-title mb-0 flex-grow-1">Request Price Forms</h5>
                     <div class="flex-shrink-0">
-                        <?php if ($_SESSION['role'] == 'admin') { ?>
-                            <form action="function/insert_purchase_request.php" method="POST">
-                                <input type="text" value="<?= $niklogin ?>" name="nik_request" hidden />
-                                <button class="btn btn-danger add-btn" name="add-purchase-request" type="submit"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</button>
-                            </form>
-                        <?php } else { ?>
-                            <a href="index.php?page=DetailPurchase" class="btn btn-danger add-btn"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</a>
-                        <?php } ?>
+                        <form action="function/insert_view_purchase_request.php" method="POST">
+                            <input type="text" value="<?= $niklogin ?>" name="nik_request" hidden />
+                            <button class="btn btn-danger add-btn" name="add-purchase-request" type="submit"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -41,11 +40,19 @@
                     </thead>
                     <tbody>
                         <?php
-                        $sql = mysqli_query($koneksi, "SELECT pp.id_proc_ch, pp.title, pp.created_request, pp.status, pc.nama_category, pp.job_location 
-                        FROM proc_purchase_requests AS pp 
-                        INNER JOIN proc_category AS pc ON pp.category = pc.id_category");
+                        $sql = mysqli_query($koneksi, "
+    SELECT pp.id_proc_ch, pp.title, pp.created_request, pp.status, pp.category, pc.nama_category, pp.job_location 
+    FROM proc_purchase_requests AS pp 
+    INNER JOIN proc_category AS pc ON pp.category = pc.id_category
+    WHERE pp.category IN (
+        SELECT id_category 
+        FROM proc_admin_category 
+        WHERE idnik = '$niklogin'
+    )
+    ");
                         $nomor = 1;
                         while ($row = mysqli_fetch_assoc($sql)) {
+                            $isAdmin = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM proc_admin_category WHERE idnik = '$niklogin' AND id_category = '" . $row['category'] . "'")) > 0;
                         ?>
                             <tr>
                                 <td><?= $nomor++ ?></td>
@@ -62,7 +69,7 @@
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li><a href="index.php?page=ViewPurchase&id=<?= $row['id_proc_ch']; ?>" class="dropdown-item"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View</a></li>
-                                            <?php if ($_SESSION['role'] == 'admin') { ?>
+                                            <?php if ($isAdmin) { ?>
                                                 <li><a class="dropdown-item" href="index.php?page=DetailPurchase&id=<?= $row['id_proc_ch']; ?>"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</a></li>
                                                 <li><a class="dropdown-item" href="index.php?page=DeletePurchase&id=<?= $row['id_proc_ch']; ?>" onclick="return confirm('Are you sure you want to delete this item?');"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>
                                             <?php } ?>
