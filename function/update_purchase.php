@@ -6,11 +6,11 @@ if (isset($_POST['id_proc_ch'])) {
     $id_proc_ch = $_POST['id_proc_ch'];
     $title = $_POST['title'];
     $nik_request = $_POST['requester_name'];
-    $category = $_POST['category'];
     $jobLocation = $_POST['jobLocation'];
     $total_price = $_POST['total_price'];
+    $proc_pic = $_POST['proc_pic'];
     $total_price = str_replace('.', '', $total_price);
-    $status = 'Open';
+    $status = $_POST['status'];
 
     // Memeriksa apakah ada file lampiran yang diunggah
     if (!empty($_FILES['lampiran']['name'])) {
@@ -26,7 +26,7 @@ if (isset($_POST['id_proc_ch'])) {
     }
 
     // Menyiapkan pernyataan SQL untuk memperbarui data purchase request
-    $sql = "UPDATE proc_purchase_requests SET title = '$title', nik_request = '$nik_request', category = '$category',  total_price = '$total_price', job_location = '$jobLocation', lampiran = '$lampiran', status = '$status' WHERE id_proc_ch = '$id_proc_ch'";
+    $sql = "UPDATE proc_purchase_requests SET title = '$title', nik_request = '$nik_request', proc_pic = '$proc_pic' , total_price = '$total_price', job_location = '$jobLocation', lampiran = '$lampiran', status = '$status' WHERE id_proc_ch = '$id_proc_ch'";
 
     // Menjalankan query update
     if (mysqli_query($koneksi, $sql)) {

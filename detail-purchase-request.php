@@ -72,7 +72,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
 ?>
 
-<div class="col">
+<div class="row">
     <div class="row justify-content-center">
         <div class="col-lg-12">
             <div class="card card-custom">
@@ -112,6 +112,8 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 <div class="card-body card-body-enhanced">
                     <h5 class="card-title">Price Request - <?= $row['status'] ?></h5>
                     <form id="updatePurchaseRequestForm" enctype="multipart/form-data">
+                        <input type="text" class="form-control" value="<?= $niklogin ?>" name="proc_pic" />
+                        <input type="hidden" name="status" value="Closed">
                         <div class="card-body border-bottom border-bottom-dashed ">
                             <div class="row g-3">
                                 <div class="col-lg-3 col-sm-6">
@@ -143,7 +145,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">Job Location</label>
                                     <div class="input-light">
-                                        <input type="text" name="title" class="form-control" value="<?= $row['job_location'] ?>">
+                                        <input type="text" name="jobLocation" class="form-control" value="<?= $row['job_location'] ?>">
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-6">
@@ -154,7 +156,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                         $rowCategory = mysqli_fetch_assoc($sqlCategory);
                                         $categoryName = $rowCategory['nama_category'];
                                         ?>
-                                        <input type="text" class="form-control" id="category" name="category" value="<?= $categoryName ?>" readonly>
+                                        <input type="text" class="form-control"  value="<?= $categoryName ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
@@ -164,16 +166,63 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-sm-6">
-                                    <div>
-                                        <label for="totalamountInput">Attachment</label>
-                                        <input type="file" name="lampiran" class="form-control">
+                                    <label for="totalamountInput">Attachment</label>
+                                    <div class="d-flex align-items-center border border-dashed p-2 rounded">
+                                        <?php
+                                        if ($row['lampiran']) {
+                                            $file = "file/procurement/" . $row['lampiran'];
+                                            if (file_exists($file)) {
+                                                $filesize = filesize($file);
+                                                if ($filesize >= 1024 * 1024) {
+                                                    $filesize = number_format($filesize / (1024 * 1024), 2) . ' MB';
+                                                } elseif ($filesize >= 1024) {
+                                                    $filesize = number_format($filesize / 1024, 2) . ' KB';
+                                                } else {
+                                                    $filesize = $filesize . ' bytes';
+                                                }
+                                        ?>
+                                                <div class="flex-shrink-0 avatar-sm">
+                                                    <div class="avatar-title bg-light rounded">
+                                                        <?php
+                                                        $file_extension = pathinfo($row['lampiran'], PATHINFO_EXTENSION);
+                                                        if ($file_extension === 'jpg' || $file_extension === 'jpeg' || $file_extension === 'png') {
+                                                            echo '<i class="ri-image-line fs-20 text-primary"></i>';
+                                                        } elseif ($file_extension === 'pdf') {
+                                                            echo '<i class="ri-file-pdf-line fs-20 text-danger"></i>';
+                                                        } else {
+                                                            echo '<i class="ri-file-zip-line fs-20 text-primary"></i>';
+                                                        }
+                                                        ?>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <a href="file/procurement/<?= $row['lampiran'] ?>" class="download-link" download>
+                                                        <i class="mb-1 ri-download-2-line"></i> <?= $row['lampiran'] ?>
+                                                        <small class="text-muted">(<?= $filesize ?>)</small>
+                                                    </a>
+                                                </div>
+                                            <?php
+                                            } else {
+                                            ?>
+                                                <div class="flex-grow-1 ms-3 mt-3 alert alert-warning" role="alert">
+                                                    <i class="fa fa-exclamation-triangle me-2"></i> File not found.
+                                                </div>
+                                            <?php
+                                            }
+                                        } else {
+                                            ?>
+                                            <div class="flex-grow-1 ms-3 mt-3 alert alert-info" role="alert">
+                                                <i class="fa fa-info-circle me-2"></i> No files uploaded.
+                                            </div>
+                                        <?php
+                                        }
+                                        ?>
                                     </div>
                                 </div>
-                                <!--end row-->
                             </div>
                         </div>
                         <div class="pt-3">
-                            <button type="submit" name="updatePurchaseRequestForm" class="btn btn-primary">Submit</button>
+                            <button type="submit" name="updatePurchaseRequestForm" class="btn btn-primary">Approve</button>
                         </div>
                     </form>
                 </div>

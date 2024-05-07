@@ -41,15 +41,15 @@ $row1 = mysqli_fetch_assoc($sql1);
                     <tbody>
                         <?php
                         $sql = mysqli_query($koneksi, "
-    SELECT pp.id_proc_ch, pp.title, pp.created_request, pp.status, pp.category, pc.nama_category, pp.job_location 
-    FROM proc_purchase_requests AS pp 
-    INNER JOIN proc_category AS pc ON pp.category = pc.id_category
-    WHERE pp.category IN (
-        SELECT id_category 
-        FROM proc_admin_category 
-        WHERE idnik = '$niklogin'
-    )
-    ");
+                        SELECT pp.id_proc_ch, pp.title, pp.created_request, pp.status, pp.category, pc.nama_category, pp.job_location, pp.nik_request
+                        FROM proc_purchase_requests AS pp
+                        INNER JOIN proc_category AS pc ON pp.category = pc.id_category
+                        WHERE (pp.category IN (
+                            SELECT id_category
+                            FROM proc_admin_category
+                            WHERE idnik = '$niklogin'
+                        ) OR pp.nik_request = '$niklogin')
+                    ");
                         $nomor = 1;
                         while ($row = mysqli_fetch_assoc($sql)) {
                             $isAdmin = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM proc_admin_category WHERE idnik = '$niklogin' AND id_category = '" . $row['category'] . "'")) > 0;
