@@ -32,6 +32,8 @@ $row1 = mysqli_fetch_assoc($sql1);
                             <th>ID Request</th>
                             <th>Title</th>
                             <th>Created Date</th>
+                            <th>Requestor</th>
+                            <th>PIC</th>
                             <th>Status</th>
                             <th>Category</th>
                             <th>Job Location</th>
@@ -41,9 +43,11 @@ $row1 = mysqli_fetch_assoc($sql1);
                     <tbody>
                         <?php
                         $sql = mysqli_query($koneksi, "
-                        SELECT pp.id_proc_ch, pp.title, pp.created_request, pp.status, pp.category, pc.nama_category, pp.job_location, pp.nik_request
+                        SELECT pp.id_proc_ch, pp.title, pp.created_request, pp.status, pp.category, pc.nama_category, pp.job_location, pp.nik_request, pp.proc_pic, user1.nama AS nama_request, user2.nama AS nama_pic
                         FROM proc_purchase_requests AS pp
                         INNER JOIN proc_category AS pc ON pp.category = pc.id_category
+                        LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
+                        LEFT JOIN user AS user2 ON pp.proc_pic = user2.idnik
                         WHERE (pp.category IN (
                             SELECT id_category
                             FROM proc_admin_category
@@ -56,9 +60,11 @@ $row1 = mysqli_fetch_assoc($sql1);
                         ?>
                             <tr>
                                 <td><?= $nomor++ ?></td>
-                                <td><a href="index.php?page=ViewPurchase&id=<?= $row['id_proc_ch']; ?>"><?= $row['id_proc_ch'] ?></a></td>
+                                <td><a href="index.php?page=ViewPriceReq&id=<?= $row['id_proc_ch']; ?>"><?= $row['id_proc_ch'] ?></a></td>
                                 <td><?= $row['title'] ?></td>
                                 <td><?= $row['created_request'] ?></td>
+                                <td><?= $row['nama_request'] ?></td>
+                                <td><?= $row['nama_pic'] ?></td>
                                 <td><?= $row['status'] ?></td>
                                 <td><?= $row['nama_category'] ?></td>
                                 <td><?= $row['job_location'] ?></td>
@@ -68,7 +74,7 @@ $row1 = mysqli_fetch_assoc($sql1);
                                             <i class="ri-more-fill align-middle"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a href="index.php?page=ViewPurchase&id=<?= $row['id_proc_ch']; ?>" class="dropdown-item"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View</a></li>
+                                            <li><a href="index.php?page=ViewPriceReq&id=<?= $row['id_proc_ch']; ?>" class="dropdown-item"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View</a></li>
                                             <?php if ($isAdmin) { ?>
                                                 <li><a class="dropdown-item" href="index.php?page=DetailPurchase&id=<?= $row['id_proc_ch']; ?>"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</a></li>
                                                 <li><a class="dropdown-item" href="index.php?page=DeletePurchase&id=<?= $row['id_proc_ch']; ?>" onclick="return confirm('Are you sure you want to delete this item?');"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>

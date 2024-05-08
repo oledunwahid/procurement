@@ -24,6 +24,9 @@ if (isset($row7['admin']) && ($row7['admin'] == '1')) {
 		case 'LinkApprovalPurchase':
 			include "link-approval.php";
 			break;
+		case 'ViewPriceReq':
+			include "print-price-request.php";
+			break;
 		default:
 			include "pages-404.php";
 			break;
@@ -35,6 +38,9 @@ if (isset($row7['admin']) && ($row7['admin'] == '1')) {
 			break;
 		case 'DetailPurchase':
 			include "detail-purchase-request.php";
+			break;
+		case 'ViewPriceReq':
+			include "print-price-request.php";
 			break;
 		case 'PurchaseRequests':
 			include "purchase-requests.php";
