@@ -111,7 +111,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 <div class="card-body card-body-enhanced">
                     <h5 class="card-title">Price Request - <?= $row['status'] ?></h5>
                     <form id="updatePurchaseRequestForm">
-                        <div class="card-body border-bottom border-bottom-dashed ">
+                        <div class="card-body border-bottom border-bottom-dashed">
                             <div class="row g-3">
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="invoicenoInput">No Price Request</label>
@@ -120,7 +120,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 <?php
                                 $currentDateTime = date("Y-m-d H:i:s");
                                 ?>
-
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="date-field">Current Datetime</label>
@@ -142,23 +141,23 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">Job Location</label>
                                     <div>
-                                        <select class="form-control" name="jobLocation" data-choices data-choices-search-false id="choices-payment-status" required>
+                                        <select class="form-control" name="jobLocation" id="jobLocation" data-choices data-choices-search-false required>
                                             <option value="">Select Job Location</option>
-                                            <option value="HO">HO</option>
-                                            <option value="BCPM">BCPM</option>
-                                            <option value="OBI">OBI</option>
+                                            <option value="HO" <?= ($row['job_location'] == 'HO') ? 'selected' : ''; ?>>HO</option>
+                                            <option value="LAR" <?= ($row['job_location'] == 'LAR') ? 'selected' : ''; ?>>LAR</option>
+                                            <option value="OBI" <?= ($row['job_location'] == 'OBI') ? 'selected' : ''; ?>>OBI</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-6">
                                     <div class="mb-3">
-                                        <label for="choices-single-default" class="form-label">Category</label>
-                                        <select class="form-control" data-choices name="category" id="choices-single-default" required>
+                                        <label for="category" class="form-label">Category</label>
+                                        <select class="form-control" data-choices name="category" id="category" required>
                                             <option value="">Select Category</option>
                                             <?php
                                             $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category");
                                             while ($rowCategory = mysqli_fetch_assoc($sqlCategory)) {
-                                                $selected = ($rowCategory['id_category'] == $row['nama_category']) ? 'selected' : '';
+                                                $selected = ($rowCategory['id_category'] == $row['category']) ? 'selected' : '';
                                                 echo "<option value='" . $rowCategory['id_category'] . "' " . $selected . ">" . $rowCategory['nama_category'] . "</option>";
                                             }
                                             ?>
@@ -166,9 +165,18 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
+                                    <label for="choices-payment-status">PIC Category Select</label>
+                                    <div>
+                                        <select class="form-control" name="proc_pic" id="picCategory" data-choices data-choices-search-false required>
+                                            <option value="">Select PIC</option>
+                                            <!-- asdkahdk -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Total Amount</label>
-                                        <input type="text" name="total_price" id="total_price" class="form-control bg-light border-0" value="<?= $row['total_price'] ?> " readonly />
+                                        <input type="text" name="total_price" id="total_price" class="form-control bg-light border-0" value="<?= $row['total_price'] ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-sm-6">
@@ -177,7 +185,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                         <input type="file" name="lampiran" class="form-control">
                                     </div>
                                 </div>
-                                <!--end row-->
                             </div>
                         </div>
                         <div class="pt-3">
@@ -188,13 +195,41 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             </div>
         </div>
 
+
     </div>
 </div>
-
 
 <script>
     $(document).ready(function() {
         var idProcCh = <?= json_encode($_GET['id']); ?>;
+        var selectedCategory = '<?= $row['category'] ?>';
+        var selectedPIC = '<?= $row['proc_pic'] ?>';
+
+        populatePICs(selectedCategory, selectedPIC);
+        $('#category').change(function() {
+            var category = $(this).val();
+            populatePICs(category, '');
+        });
+
+        function populatePICs(category, selectedPIC) {
+            console.log('Memanggil populatePICs dengan kategori:', category, 'dan PIC terpilih:', selectedPIC);
+
+            $.ajax({
+                url: 'function/get_pic.php',
+                type: 'GET',
+                data: {
+                    category: category
+                },
+                success: function(response) {
+                    console.log('Respons dari get_pic.php:', response);
+                    $('#picCategory').html(response);
+                    $('#picCategory').val(selectedPIC);
+                },  
+                error: function(xhr, status, error) {
+                    console.error('Terjadi kesalahan dalam AJAX:', error);
+                }
+            });
+        }
 
         function formatRibuan(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -215,7 +250,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         }
 
         loadData();
-
 
         function addRow() {
             var newRow = `<tr>
@@ -338,5 +372,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 }
             });
         });
+
     });
 </script>

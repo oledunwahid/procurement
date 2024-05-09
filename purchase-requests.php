@@ -43,17 +43,32 @@ $row1 = mysqli_fetch_assoc($sql1);
                     <tbody>
                         <?php
                         $sql = mysqli_query($koneksi, "
-                        SELECT pp.id_proc_ch, pp.title, pp.created_request, pp.status, pp.category, pc.nama_category, pp.job_location, pp.nik_request, pp.proc_pic, user1.nama AS nama_request, user2.nama AS nama_pic
-                        FROM proc_purchase_requests AS pp
-                        INNER JOIN proc_category AS pc ON pp.category = pc.id_category
-                        LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
-                        LEFT JOIN user AS user2 ON pp.proc_pic = user2.idnik
-                        WHERE (pp.category IN (
-                            SELECT id_category
-                            FROM proc_admin_category
-                            WHERE idnik = '$niklogin'
-                        ) OR pp.nik_request = '$niklogin')
-                    ");
+        SELECT 
+            pp.id_proc_ch, 
+            pp.title, 
+            pp.created_request, 
+            pp.status, 
+            pp.category, 
+            pc.nama_category, 
+            pp.job_location, 
+            pp.nik_request, 
+            pp.proc_pic, 
+            user1.nama AS nama_request,
+            user2.nama AS nama_pic
+        FROM 
+            proc_purchase_requests AS pp
+            INNER JOIN proc_category AS pc ON pp.category = pc.id_category
+            LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
+            LEFT JOIN user AS user2 ON pp.proc_pic = user2.idnik
+            LEFT JOIN proc_admin_location AS pal ON pp.job_location = pal.location AND pp.proc_pic = pal.idnik
+        WHERE 
+            (pp.category IN (
+                SELECT id_category 
+                FROM proc_admin_category 
+                WHERE idnik = '$niklogin'
+            ) OR pp.nik_request = '$niklogin')
+    ");
+
                         $nomor = 1;
                         while ($row = mysqli_fetch_assoc($sql)) {
                             $isAdmin = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM proc_admin_category WHERE idnik = '$niklogin' AND id_category = '" . $row['category'] . "'")) > 0;
