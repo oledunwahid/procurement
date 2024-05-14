@@ -26,8 +26,16 @@ if (isset($_POST['id_proc_ch'])) {
         $lampiran = $row_lampiran['lampiran'];
     }
 
-    // Menyiapkan pernyataan SQL untuk memperbarui data purchase request
-    $sql = "UPDATE proc_purchase_requests SET title = '$title', nik_request = '$nik_request', category = '$category', proc_pic = '$proc_pic' total_price = '$total_price', job_location = '$jobLocation', lampiran = '$lampiran', status = '$status' WHERE id_proc_ch = '$id_proc_ch'";
+    $sql = "UPDATE proc_purchase_requests SET 
+    title = '$title', 
+    nik_request = '$nik_request', 
+    category = '$category', 
+    proc_pic = '$proc_pic',
+    total_price = '$total_price', 
+    job_location = '$jobLocation', 
+    lampiran = '$lampiran', 
+    status = '$status'
+WHERE id_proc_ch = '$id_proc_ch'";
 
     // Menjalankan query update
     if (mysqli_query($koneksi, $sql)) {

@@ -2,7 +2,6 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" />
 <!--datatable responsive css-->
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css" />
-
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
 
 
@@ -68,8 +67,6 @@
 $id_proc_ch = $_GET['id'];
 $sql = mysqli_query($koneksi, "SELECT * FROM proc_purchase_requests WHERE  id_proc_ch ='$id_proc_ch' "); // query jika filter dipilih
 $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
-
-
 ?>
 
 <div class="col">
@@ -138,26 +135,16 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                         <input type="text" name="title" class="form-control" value="<?= $row['title'] ?>">
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">Job Location</label>
-                                    <div>
-                                        <select class="form-control" name="jobLocation" id="jobLocation" data-choices data-choices-search-false required>
-                                            <option value="">Select Job Location</option>
-                                            <option value="HO" <?= ($row['job_location'] == 'HO') ? 'selected' : ''; ?>>HO</option>
-                                            <option value="LAR" <?= ($row['job_location'] == 'LAR') ? 'selected' : ''; ?>>LAR</option>
-                                            <option value="OBI" <?= ($row['job_location'] == 'OBI') ? 'selected' : ''; ?>>OBI</option>
-                                        </select>
-                                    </div>
-                                </div>
+
                                 <div class="col-lg-3 col-md-6">
                                     <div class="mb-3">
                                         <label for="category" class="form-label">Category</label>
-                                        <select class="form-control" data-choices name="category" id="category" required>
+                                        <select class="form-control" data-choices name="category" id="kategori" required>
                                             <option value="">Select Category</option>
                                             <?php
                                             $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category");
                                             while ($rowCategory = mysqli_fetch_assoc($sqlCategory)) {
-                                                $selected = ($rowCategory['id_category'] == $row['category']) ? 'selected' : '';
+                                                $selected = ($rowCategory['id_category'] == $category) ? 'selected' : '';
                                                 echo "<option value='" . $rowCategory['id_category'] . "' " . $selected . ">" . $rowCategory['nama_category'] . "</option>";
                                             }
                                             ?>
@@ -165,14 +152,26 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">PIC Category Select</label>
+                                    <label for="choices-payment-status">Job Location</label>
                                     <div>
-                                        <select class="form-control" name="proc_pic" id="picCategory" data-choices data-choices-search-false required>
-                                            <option value="">Select PIC</option>
-                                            <!-- asdkahdk -->
+                                        <select class="form-control" name="jobLocation" id="lokasi" data-choices data-choices-search-false required>
+                                            <option value="">Pilih Lokasi</option>
+                                            <option value="HO">HO</option>
+                                            <option value="OBI">OBI</option>
+                                            <option value="LAR">LAR</option>
                                         </select>
                                     </div>
                                 </div>
+
+                                <div class="col-lg-3 col-sm-6">
+                                    <label for="choices-payment-status">PIC Category Select</label>
+                                    <div>
+                                        <select class="form-control" name="proc_pic" id="pic">
+                                            <option value="">Select PIC</option>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Total Amount</label>
@@ -194,42 +193,30 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 </div>
             </div>
         </div>
-
-
     </div>
 </div>
 
 <script>
     $(document).ready(function() {
         var idProcCh = <?= json_encode($_GET['id']); ?>;
-        var selectedCategory = '<?= $row['category'] ?>';
-        var selectedPIC = '<?= $row['proc_pic'] ?>';
-
-        populatePICs(selectedCategory, selectedPIC);
-        $('#category').change(function() {
-            var category = $(this).val();
-            populatePICs(category, '');
+        // Event handler ketika kategori atau lokasi berubah
+        $('#kategori, #lokasi').change(function() {
+            if ($('#kategori').val() && $('#lokasi').val()) {
+                $.ajax({
+                    url: "function/get_pic.php",
+                    type: "POST",
+                    data: {
+                        id_category: $('#kategori').val(),
+                        location: $('#lokasi').val()
+                    },
+                    success: function(data) {
+                        $('#pic').html('<option value="">Pilih PIC</option>' + data);
+                    }
+                });
+            } else {
+                $('#pic').html('<option value="">Pilih PIC</option>');
+            }
         });
-
-        function populatePICs(category, selectedPIC) {
-            console.log('Memanggil populatePICs dengan kategori:', category, 'dan PIC terpilih:', selectedPIC);
-
-            $.ajax({
-                url: 'function/get_pic.php',
-                type: 'GET',
-                data: {
-                    category: category
-                },
-                success: function(response) {
-                    console.log('Respons dari get_pic.php:', response);
-                    $('#picCategory').html(response);
-                    $('#picCategory').val(selectedPIC);
-                },  
-                error: function(xhr, status, error) {
-                    console.error('Terjadi kesalahan dalam AJAX:', error);
-                }
-            });
-        }
 
         function formatRibuan(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");

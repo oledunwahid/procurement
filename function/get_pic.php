@@ -1,23 +1,17 @@
 <?php
 include '../koneksi.php';
+$id_category = $_POST['id_category'];
+$location = $_POST['location']; // Escaping string untuk keamanan
 
-if (isset($_GET['category'])) {
-    $category = $_GET['category'];
+$query = "SELECT u.idnik, u.nama FROM user u
+          JOIN proc_admin_category pac ON u.idnik = pac.idnik
+          JOIN proc_admin_location pal ON u.idnik = pal.idnik
+          WHERE pac.id_category = '$id_category' AND pal.location = '$location' ";
 
-    $query = "SELECT u.idnik, u.nama
-              FROM proc_admin_category pac
-              INNER JOIN user u ON pac.idnik = u.idnik
-              WHERE pac.id_category = '$category'";
+$result = $koneksi->query($query);
 
-    $result = mysqli_query($koneksi, $query);
-
-    $options = '<option value="">Select PIC</option>';
-    echo "Mulai membangun opsi PIC\n";
-    while ($row = mysqli_fetch_assoc($result)) {
-        $options .= '<option value="' . $row['idnik'] . '">' . $row['nama'] . '</option>';
-        echo "Menambahkan opsi PIC: " . $row['nama'] . "\n";
-    }
-    echo "Selesai membangun opsi PIC\n";
-
-    echo $options;
+$options = "";
+while ($row = $result->fetch_assoc()) {
+    $options .= "<option value='" . $row['idnik'] . "'>" . htmlspecialchars($row['nama']) . "</option>";
 }
+echo $options;
