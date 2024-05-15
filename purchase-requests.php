@@ -89,7 +89,7 @@ $row1 = mysqli_fetch_assoc($sql1);
                                             <i class="ri-more-fill align-middle"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a href="index.php?page=ViewPriceReq&id=<?= $row['id_proc_ch']; ?>" class="dropdown-item"><i class="ri-eye-fill align-bottom me-2 text-muted"></i> View</a></li>
+                                            <li><a href="index.php?page=ViewPriceReq&id=<?= $row['id_proc_ch']; ?>" class="dropdown-item"><i class="ri-printer-fill align-bottom me-2 text-muted"></i> Print</a></li>
                                             <?php if ($isAdmin) { ?>
                                                 <li><a class="dropdown-item" href="index.php?page=DetailPurchase&id=<?= $row['id_proc_ch']; ?>"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</a></li>
                                                 <li><a class="dropdown-item" href="index.php?page=DeletePurchase&id=<?= $row['id_proc_ch']; ?>" onclick="return confirm('Are you sure you want to delete this item?');"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>

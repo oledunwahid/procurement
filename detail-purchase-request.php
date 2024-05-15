@@ -112,7 +112,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 <div class="card-body card-body-enhanced">
                     <h5 class="card-title">Price Request - <?= $row['status'] ?></h5>
                     <form id="updatePurchaseRequestForm" enctype="multipart/form-data">
-                        <input type="text" class="form-control" value="<?= $niklogin ?>" name="proc_pic" />
+                        <input type="hidden" class="form-control" value="<?= $niklogin ?>" name="proc_pic" />
                         <input type="hidden" name="status" value="Closed">
                         <div class="card-body border-bottom border-bottom-dashed ">
                             <div class="row g-3">
@@ -156,7 +156,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                         $rowCategory = mysqli_fetch_assoc($sqlCategory);
                                         $categoryName = $rowCategory['nama_category'];
                                         ?>
-                                        <input type="text" class="form-control"  value="<?= $categoryName ?>" readonly>
+                                        <input type="text" class="form-control" value="<?= $categoryName ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
