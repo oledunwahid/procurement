@@ -68,8 +68,13 @@
 $id_proc_ch = $_GET['id'];
 $sql = mysqli_query($koneksi, "SELECT * FROM proc_purchase_requests WHERE  id_proc_ch ='$id_proc_ch' "); // query jika filter dipilih
 $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
+?>
 
 
+<?php
+$sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category WHERE id_category = '" . $row['category'] . "'");
+$rowCategory = mysqli_fetch_assoc($sqlCategory);
+$categoryName = $rowCategory['nama_category'];
 ?>
 
 <div class="row">
@@ -112,7 +117,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 <div class="card-body card-body-enhanced">
                     <h5 class="card-title">Price Request - <?= $row['status'] ?></h5>
                     <form id="updatePurchaseRequestForm" enctype="multipart/form-data">
-                        <input type="hidden" class="form-control" value="<?= $niklogin ?>" name="proc_pic" />
+
                         <input type="hidden" name="status" value="Closed">
                         <div class="card-body border-bottom border-bottom-dashed ">
                             <div class="row g-3">
@@ -139,26 +144,48 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">Title</label>
                                     <div class="input-light">
-                                        <input type="text" name="title" class="form-control" value="<?= $row['title'] ?>">
+                                        <input type="text" name="title" class="form-control" readonly value="<?= $row['title'] ?>">
                                     </div>
                                 </div>
-                                <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">Job Location</label>
-                                    <div class="input-light">
-                                        <input type="text" name="jobLocation" class="form-control" value="<?= $row['job_location'] ?>">
-                                    </div>
-                                </div>
+
+
                                 <div class="col-lg-3 col-md-6">
                                     <div class="mb-3">
                                         <label for="category" class="form-label">Category</label>
-                                        <?php
-                                        $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category WHERE id_category = '" . $row['category'] . "'");
-                                        $rowCategory = mysqli_fetch_assoc($sqlCategory);
-                                        $categoryName = $rowCategory['nama_category'];
-                                        ?>
-                                        <input type="text" class="form-control" value="<?= $categoryName ?>" readonly>
+                                        <select class="form-control" data-choices name="category" id="kategori" data-selected="<?= $row['category'] ?>" required>
+                                            <option value="">Select Category</option>
+                                            <?php
+                                            $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category");
+                                            while ($rowCategory = mysqli_fetch_assoc($sqlCategory)) {
+                                                $selected = ($rowCategory['id_category'] == $row['category']) ? 'selected' : '';
+                                                echo "<option value='" . $rowCategory['id_category'] . "' " . $selected . ">" . $rowCategory['nama_category'] . "</option>";
+                                            }
+                                            ?>
+                                        </select>
                                     </div>
                                 </div>
+
+                                <div class="col-lg-3 col-sm-6">
+                                    <label for="choices-payment-status">Job Location</label>
+                                    <div>
+                                        <select class="form-control" name="jobLocation" id="lokasi" data-choices data-choices-search-false data-selected="<?= $row['job_location'] ?>" required>
+                                            <option value="<?= $row['job_location'] ?>"></option>
+                                            <option value="HO">HO</option>
+                                            <option value="OBI">OBI</option>
+                                            <option value="LAR">LAR</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-sm-6">
+                                    <label for="choices-payment-status">PIC Category Select</label>
+                                    <div>
+                                        <select class="form-control" name="proc_pic" id="pic" data-selected="<?= $row['proc_pic'] ?>">
+                                            <option value="">Select PIC</option>
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Total Amount</label>
@@ -236,6 +263,48 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 <script>
     $(document).ready(function() {
         var idProcCh = <?= json_encode($_GET['id']); ?>;
+        var selectedCategory = $('#kategori').data('selected');
+        var selectedLocation = $('#lokasi').data('selected');
+        var selectedPIC = $('#pic').data('selected');
+
+        // Set selected values on page load
+        $('#kategori').val(selectedCategory).trigger('change');
+        $('#lokasi').val(selectedLocation).trigger('change');
+
+        // Load PIC options based on selected category and location
+        if (selectedCategory && selectedLocation) {
+            $.ajax({
+                url: "function/get_pic.php",
+                type: "POST",
+                data: {
+                    id_category: selectedCategory,
+                    location: selectedLocation
+                },
+                success: function(data) {
+                    $('#pic').html('<option value="">Select PIC</option>' + data);
+                    $('#pic').val(selectedPIC).trigger('change');
+                }
+            });
+        }
+
+        // Update PIC options when category or location changes
+        $('#kategori, #lokasi').change(function() {
+            if ($('#kategori').val() && $('#lokasi').val()) {
+                $.ajax({
+                    url: "function/get_pic.php",
+                    type: "POST",
+                    data: {
+                        id_category: $('#kategori').val(),
+                        location: $('#lokasi').val()
+                    },
+                    success: function(data) {
+                        $('#pic').html('<option value="">Select PIC</option>' + data);
+                    }
+                });
+            } else {
+                $('#pic').html('<option value="">Select PIC</option>');
+            }
+        });
 
         function formatRibuan(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
