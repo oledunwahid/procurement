@@ -4,7 +4,8 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css" />
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
 
-
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <style>
     .card-enhanced {
@@ -241,7 +242,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         function addRow() {
             var newRow = `<tr>
                 <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
-                <td><input type="text" name="nama_barang[]" class="form-control" style="width: 100%;" /></td>
+                <td><input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" /></td>
                 <td><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
                 <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
                 <td><input type="text" name="uom[]" class="form-control" style="width: 80px;" /></td>
@@ -254,8 +255,23 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 </td>
             </tr>`;
             $('#detail-purchase-request tbody').append(newRow);
-        }
 
+            // Inisialisasi auto-suggestion pada input nama barang yang baru ditambahkan
+            $('.nama-barang:last').autocomplete({
+                source: function(request, response) {
+                    $.ajax({
+                        url: 'function/get_suggestion.php',
+                        data: {
+                            query: request.term
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            response(data);
+                        }
+                    });
+                }
+            });
+        }
         $('#addRow').click(function() {
             addRow();
         });

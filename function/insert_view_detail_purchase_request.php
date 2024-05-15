@@ -8,6 +8,23 @@ if (isset($_POST['id_proc_ch'])) {
     $uom = $_POST['uom'];
     $detail_specification = $_POST['detail_specification'];
 
+    // Memeriksa apakah nama barang sudah ada dalam file suggestions.txt
+    $file = fopen('suggestion.txt', 'r');
+    $suggestionExists = false;
+    while (($line = fgets($file)) !== false) {
+        if (trim($line) === $nama_barang) {
+            $suggestionExists = true;
+            break;
+        }
+    }
+    fclose($file);
+
+    // Jika nama barang belum ada dalam file suggestions.txt, tambahkan ke dalam file
+    if (!$suggestionExists) {
+        $file = fopen('suggestion.txt', 'a');
+        fwrite($file, $nama_barang . "\n");
+        fclose($file);
+    }
     // Menyiapkan prepared statement dengan parameter yang sesuai
     $stmt = $koneksi->prepare("INSERT INTO proc_request_details (id_proc_ch, nama_barang, qty, uom, detail_specification) VALUES (?, ?, ?,?, ?)");
 
