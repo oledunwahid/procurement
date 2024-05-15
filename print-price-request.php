@@ -9,8 +9,11 @@ function formatRupiah($value)
 $id_proc_ch = $_GET['id']; // Pastikan nilai ini sesuai dengan konteks
 
 //tambahin nama_admin cokk
-$queryPR = "SELECT proc_purchase_requests.*, user.nama as nama_request  FROM proc_purchase_requests 
-            JOIN user ON proc_purchase_requests.nik_request = user.idnik 
+$queryPR = "SELECT proc_purchase_requests.*, user_request.nama as nama_request, user_pic.nama as nama_pic, proc_category.nama_category as category_name  
+            FROM proc_purchase_requests 
+            JOIN user user_request ON proc_purchase_requests.nik_request = user_request.idnik
+            JOIN user user_pic ON proc_purchase_requests.proc_pic = user_pic.idnik
+            JOIN proc_category ON proc_purchase_requests.category = proc_category.id_category
             WHERE proc_purchase_requests.id_proc_ch = '$id_proc_ch'";
 $resultPR = mysqli_query($koneksi, $queryPR);
 $dataPR = mysqli_fetch_assoc($resultPR);
@@ -184,8 +187,8 @@ $dataPR1 = mysqli_fetch_assoc($resultPR1);
         <p><label>Date Request</label><span>: <?= date('j F Y', strtotime($dataPR['created_request'])); ?></span></p>
         <p><label>Title</label><span>: <?= $dataPR['title']; ?></span></p>
         <p><label>Request By</label><span>: <?= $dataPR['nama_request']; ?></span></p>
-        <p><label>PIC</label><span>: <?= $dataPR['proc_pic']; ?></span></p>
-        <p><label>Category</label><span>: <?= $dataPR['category']; ?></span></p>
+        <p><label>PIC</label><span>: <?= $dataPR['nama_pic']; ?></span></p>
+        <p><label>Category</label><span>: <?= $dataPR['category_name']; ?></span></p>
         <p><label>Job Location</label><span>: <?= $dataPR['job_location']; ?></span></p>
     </div>
 </div>

@@ -302,11 +302,10 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
         $(document).on('click', '.edit', function() {
             var $row = $(this).closest('tr');
-            $row.find('input, textarea').prop('readonly', false);
+            $row.find('input').prop('readonly', false);
             $(this).hide();
             $row.find('.saveRow').show();
         });
-
 
         // Perbaikan pada fungsi saveRow
         $(document).on('click', '.saveRow', function() {

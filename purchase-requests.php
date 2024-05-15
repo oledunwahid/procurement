@@ -75,7 +75,13 @@ $row1 = mysqli_fetch_assoc($sql1);
                         ?>
                             <tr>
                                 <td><?= $nomor++ ?></td>
-                                <td><a href="index.php?page=ViewPriceReq&id=<?= $row['id_proc_ch']; ?>"><?= $row['id_proc_ch'] ?></a></td>
+                                <td>
+                                    <?php if ($isAdmin) { ?>
+                                        <a href="index.php?page=DetailPurchase&id=<?= $row['id_proc_ch']; ?>"><?= $row['id_proc_ch'] ?></a>
+                                    <?php } else { ?>
+                                        <a href="index.php?page=ViewPriceReq&id=<?= $row['id_proc_ch']; ?>"><?= $row['id_proc_ch'] ?></a>
+                                    <?php } ?>
+                                </td>
                                 <td><?= $row['title'] ?></td>
                                 <td><?= $row['created_request'] ?></td>
                                 <td><?= $row['nama_request'] ?></td>
