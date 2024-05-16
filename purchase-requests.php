@@ -17,6 +17,7 @@ $row1 = mysqli_fetch_assoc($sql1);
                     <h5 class="card-title mb-0 flex-grow-1">Request Price Forms</h5>
                     <div class="flex-shrink-0">
                         <form action="function/insert_view_purchase_request.php" method="POST">
+                            <!-- buat if else untuk prevent view admin , button ini hanya untuk user -->
                             <input type="text" value="<?= $niklogin ?>" name="nik_request" hidden />
                             <button class="btn btn-danger add-btn" name="add-purchase-request" type="submit"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</button>
                         </form>

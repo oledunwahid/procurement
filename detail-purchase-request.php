@@ -7,6 +7,7 @@
 
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     .card-enhanced {
         transition: transform .3s, box-shadow .3s;
@@ -249,7 +250,9 @@ $categoryName = $rowCategory['nama_category'];
                             </div>
                         </div>
                         <div class="pt-3">
-                            <button type="submit" name="updatePurchaseRequestForm" class="btn btn-primary">Approve</button>
+                            <button type="submit" name="updatePurchaseRequestForm" class="btn btn-primary">Done</button>
+
+                            <button type="submit" name="" class="btn btn-secondary">Save</button>
                         </div>
                     </form>
                 </div>
@@ -471,10 +474,24 @@ $categoryName = $rowCategory['nama_category'];
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    window.location.href = "index.php?page=PurchaseRequests";
+                    Swal.fire({
+                        title: 'Sukses!',
+                        text: 'Data berhasil di Approve.',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "index.php?page=PurchaseRequests";
+                        }
+                    });
                 },
                 error: function() {
-                    alert("Terjadi kesalahan saat mengupdate data");
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan saat mengupdate data.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
                 }
             });
         });
