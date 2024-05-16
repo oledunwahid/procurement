@@ -89,7 +89,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                     <th>Nama Barang</th>
                                     <th width="20%">Detail Spec</th>
                                     <th width="6%">Qty</th>
-                                    <th width="7%">Uom</th>
+                                    <th width="8%">Uom</th>
                                     <th width="10%">Harga</th>
                                     <th width="13%">Total Harga</th>
                                     <th width="15%">Action</th>
@@ -245,7 +245,24 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 <td><input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" /></td>
                 <td><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
                 <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
-                <td><input type="text" name="uom[]" class="form-control" style="width: 80px;" /></td>
+                <td>
+                <select name='uom[]' class='form-control uom-dropdown'>
+                        <option value='Pcs'>Pcs</option>
+                        <option value='Buah'>Buah</option>
+                        <option value='Unit'>Unit</option>
+                        <option value='Pack'>Pack</option>
+                        <option value='Dus'>Dus</option>
+                        <option value='M'>M</option>
+                        <option value='Btg'>Btg</option>
+                        <option value='CM'>CM</option>
+                        <option value='KM'>KM</option>
+                        <option value='Ich'>Ich</option>
+                        <option value='Kg'>Kg</option>
+                        <option value='Gram'>Gram</option>
+                        <option value='Lot'>Lot</option>
+                        <option value='ml'>ml</option>
+                    </select>
+                </td>
                 <td><span type="text" name="unit_price[]"</span>0</td>
                 <td><span class="totalHarga">0</span></td>
                 <td>
@@ -283,7 +300,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 nama_barang: row.find("input[name='nama_barang[]']").val(),
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
-                uom: row.find("input[name='uom[]']").val(),
+                uom: row.find("select[name='uom[]']").val(), // Menambahkan nilai dropdown uom
             };
 
             $.ajax({
@@ -302,7 +319,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
         $(document).on('click', '.edit', function() {
             var $row = $(this).closest('tr');
-            $row.find('input').prop('readonly', false);
+            $row.find('input, textarea, select').prop('readonly', false);
             $(this).hide();
             $row.find('.saveRow').show();
         });
@@ -316,7 +333,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 nama_barang: row.find("input[name='nama_barang[]']").val(),
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
-                uom: row.find("input[name='uom[]']").val(),
+                uom: row.find("select[name='uom[]']").val(), // Menambahkan nilai dropdown uom
             };
 
             $.ajax({
