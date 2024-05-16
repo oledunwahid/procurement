@@ -13,6 +13,14 @@ if (isset($_POST['id_proc_ch'])) {
     $total_price = str_replace('.', '', $total_price);
     $status = 'Open';
 
+
+
+    $sqlNama = "SELECT  nama, wa FROM user WHERE idnik = '$proc_pic' ";
+    $rowNama = mysqli_fetch_assoc(mysqli_query($koneksi, $sqlNama));
+    $NamaPIC = $rowNama['nama'];
+    $waPIC = $rowNama['wa'];
+
+
     // Memeriksa apakah ada file lampiran yang diunggah
     if (!empty($_FILES['lampiran']['name'])) {
         $lampiran = $_FILES['lampiran']['name'];
@@ -35,10 +43,43 @@ if (isset($_POST['id_proc_ch'])) {
     job_location = '$jobLocation', 
     lampiran = '$lampiran', 
     status = '$status'
-WHERE id_proc_ch = '$id_proc_ch'";
+    WHERE id_proc_ch = '$id_proc_ch'";
 
     // Menjalankan query update
     if (mysqli_query($koneksi, $sql)) {
+        $namaEmployee = 'Bapak/Ibu ' . $NamaPIC;
+        // Ganti dengan nama yang sesuai
+        $link = 'https://proc.maagroup.co.id/index.php?page=UserDetailPurchase&id=' . $id_proc_ch; // Ganti dengan URL yang valid
+
+        $message = "Halo " . $namaEmployee . "!\n\nAda Price Request dengan ID #" . $id_proc_ch .  "\n\nInfo lebih lanjut tentang Price Request ini:"
+            . $link;
+
+        // Pengaturan untuk cURL
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.fonnte.com/send',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => array(
+                'target' => $waPIC,
+                'message' => $message,
+                'countryCode' => '62', // Ganti kode negara jika perlu
+            ),
+            CURLOPT_HTTPHEADER => array(
+                'Authorization: vXmxpJo3+5kVsDAWt!y+' // Ganti TOKEN dengan token Anda
+            ),
+        ));
+        // Melakukan request pengiriman pesan WhatsApp
+        $response = curl_exec($curl);
+        // Menutup koneksi cURL
+        curl_close($curl);
+
         echo "Data berhasil diupdate";
     } else {
         echo "Error: " . $sql . "<br>" . mysqli_error($koneksi);

@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- Tambahkan library SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
     .card-enhanced {
         transition: transform .3s, box-shadow .3s;
@@ -385,10 +387,24 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    window.location.href = "index.php?page=PurchaseRequests";
+                    Swal.fire({
+                        title: 'Sukses!',
+                        text: 'Data berhasil di submit.',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "index.php?page=PurchaseRequests";
+                        }
+                    });
                 },
                 error: function() {
-                    alert("Terjadi kesalahan saat mengupdate data");
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan saat mengupdate data.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
                 }
             });
         });
