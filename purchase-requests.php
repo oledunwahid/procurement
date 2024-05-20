@@ -16,11 +16,25 @@ $row1 = mysqli_fetch_assoc($sql1);
                 <div class="d-flex align-items-center">
                     <h5 class="card-title mb-0 flex-grow-1">Request Price Forms</h5>
                     <div class="flex-shrink-0">
-                        <form action="function/insert_view_purchase_request.php" method="POST">
-                            <!-- buat if else untuk prevent view admin , button ini hanya untuk user -->
-                            <input type="text" value="<?= $niklogin ?>" name="nik_request" hidden />
-                            <button class="btn btn-danger add-btn" name="add-purchase-request" type="submit"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</button>
-                        </form>
+                        <?php
+                        // Cek apakah pengguna adalah admin atau bukan
+                        $isAdmin = false;
+                        $sql = "SELECT * FROM proc_admin_category WHERE idnik = '$niklogin'";
+                        $result = mysqli_query($koneksi, $sql);
+                        if (mysqli_num_rows($result) > 0) {
+                            $isAdmin = true;
+                        }
+
+                        // Jika bukan admin, tampilkan tombol "Create Price Request"
+                        if (!$isAdmin) {
+                        ?>
+                            <form action="function/insert_view_purchase_request.php" method="POST">
+                                <input type="text" value="<?= $niklogin ?>" name="nik_request" hidden />
+                                <button class="btn btn-danger add-btn" name="add-purchase-request" type="submit"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</button>
+                            </form>
+                        <?php
+                        }
+                        ?>
                     </div>
                 </div>
             </div>

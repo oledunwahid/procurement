@@ -83,12 +83,16 @@ $categoryName = $rowCategory['nama_category'];
         <div class="col-lg-12">
             <div class="card card-custom">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Input Detail Price Request</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Input Detail Price Request</h5>
+                        <a href="index.php?page=PurchaseRequests" class="btn btn-close btn-lg">
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <button type="button" class="btn btn-primary btn-enhanced" id="addRow">
+                    <!-- <button type="button" class="btn btn-primary btn-enhanced" id="addRow">
                         <i class="ri-add-line icon-btn-space"></i>Add Row
-                    </button>
+                    </button> -->
                     <div class="table-responsive mt-3">
                         <table class="table table-hover" id="detail-purchase-request">
                             <thead>
@@ -118,8 +122,6 @@ $categoryName = $rowCategory['nama_category'];
                 <div class="card-body card-body-enhanced">
                     <h5 class="card-title">Price Request - <?= $row['status'] ?></h5>
                     <form id="updatePurchaseRequestForm" enctype="multipart/form-data">
-
-                        <input type="hidden" name="status" value="Closed">
                         <div class="card-body border-bottom border-bottom-dashed ">
                             <div class="row g-3">
                                 <div class="col-lg-3 col-sm-6">
@@ -250,9 +252,8 @@ $categoryName = $rowCategory['nama_category'];
                             </div>
                         </div>
                         <div class="pt-3">
-                            <button type="submit" name="updatePurchaseRequestForm" class="btn btn-primary">Done</button>
-
-                            <button type="submit" name="" class="btn btn-secondary">Save</button>
+                            <button type="button" class="btn btn-primary" id="closedTicketBtn">Closed Ticket</button>
+                            <button type="button" class="btn btn-secondary" id="updateTicketBtn">Update Ticket</button>
                         </div>
                     </form>
                 </div>
@@ -462,10 +463,9 @@ $categoryName = $rowCategory['nama_category'];
             $("input[name='total_price']").val(formatRibuan(total));
         }
 
-
-        $('#updatePurchaseRequestForm').on('submit', function(e) {
-            e.preventDefault();
-            var formData = new FormData(this);
+        $('#closedTicketBtn').on('click', function() {
+            var formData = new FormData($('#updatePurchaseRequestForm')[0]);
+            formData.append('status', 'Closed');
 
             $.ajax({
                 type: "POST",
@@ -476,7 +476,40 @@ $categoryName = $rowCategory['nama_category'];
                 success: function(response) {
                     Swal.fire({
                         title: 'Sukses!',
-                        text: 'Data berhasil di Approve.',
+                        text: 'Data berhasil di Closed.',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "index.php?page=PurchaseRequests";
+                        }
+                    });
+                },
+                error: function() {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan saat mengupdate data.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        });
+
+        $('#updateTicketBtn').on('click', function() {
+            var formData = new FormData($('#updatePurchaseRequestForm')[0]);
+            formData.append('status', 'Open');
+
+            $.ajax({
+                type: "POST",
+                url: "function/update_purchase.php",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    Swal.fire({
+                        title: 'Sukses!',
+                        text: 'Data berhasil diupdate.',
                         icon: 'success',
                         confirmButtonText: 'OK'
                     }).then((result) => {
