@@ -77,7 +77,11 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         <div class="col-lg-12">
             <div class="card card-custom">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Input Detail Price Request</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Input Detail Price Request</h5>
+                        <a href="index.php?page=PurchaseRequests" class="btn btn-close btn-lg">
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <button type="button" class="btn btn-primary btn-enhanced" id="addRow">
@@ -183,8 +187,8 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 </div>
                                 <div class="col-lg-6 col-sm-6">
                                     <div>
-                                        <label for="totalamountInput">Attachment</label>
-                                        <input type="file" name="lampiran" class="form-control">
+                                        <label for="totalamountInput">Attachment <strong>* MAX 2MB (PDF only)</strong></label>
+                                        <input type="file" name="lampiran" class="form-control" accept=".pdf" required>
                                     </div>
                                 </div>
                             </div>
