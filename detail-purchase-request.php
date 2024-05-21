@@ -151,41 +151,84 @@ $categoryName = $rowCategory['nama_category'];
                                     </div>
                                 </div>
 
-
                                 <div class="col-lg-3 col-md-6">
                                     <div class="mb-3">
                                         <label for="category" class="form-label">Category</label>
-                                        <select class="form-control" data-choices name="category" id="kategori" data-selected="<?= $row['category'] ?>" required>
-                                            <option value="">Select Category</option>
-                                            <?php
-                                            $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category");
-                                            while ($rowCategory = mysqli_fetch_assoc($sqlCategory)) {
-                                                $selected = ($rowCategory['id_category'] == $row['category']) ? 'selected' : '';
-                                                echo "<option value='" . $rowCategory['id_category'] . "' " . $selected . ">" . $rowCategory['nama_category'] . "</option>";
-                                            }
-                                            ?>
-                                        </select>
+                                        <?php
+                                        $isSupervior = in_array($niklogin, ['19000133', '20000308', '19000136', '19000078']);
+                                        if ($isSupervior) {
+                                        ?>
+                                            <select class="form-control" data-choices name="category" id="kategori" data-selected="<?= $row['category'] ?>" required>
+                                                <option value="">Select Category</option>
+                                                <?php
+                                                $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category");
+                                                while ($rowCategory = mysqli_fetch_assoc($sqlCategory)) {
+                                                    $selected = ($rowCategory['id_category'] == $row['category']) ? 'selected' : '';
+                                                    echo "<option value='" . $rowCategory['id_category'] . "' " . $selected . ">" . $rowCategory['nama_category'] . "</option>";
+                                                }
+                                                ?>
+                                            </select>
+                                        <?php
+                                        } else {
+                                        ?>
+                                            <input type="text" class="form-control" name="category" value="<?= $categoryName ?>" readonly>
+                                        <?php
+                                        }
+                                        ?>
                                     </div>
                                 </div>
 
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">Job Location</label>
                                     <div>
-                                        <select class="form-control" name="jobLocation" id="lokasi" data-choices data-choices-search-false data-selected="<?= $row['job_location'] ?>" required>
-                                            <option value="<?= $row['job_location'] ?>"></option>
-                                            <option value="HO">HO</option>
-                                            <option value="OBI">OBI</option>
-                                            <option value="LAR">LAR</option>
-                                        </select>
+                                        <?php
+                                        if ($isSupervior) {
+                                        ?>
+                                            <select class="form-control" name="jobLocation" id="lokasi" data-choices data-choices-search-false data-selected="<?= $row['job_location'] ?>" required>
+                                                <option value="<?= $row['job_location'] ?>"></option>
+                                                <option value="HO">HO</option>
+                                                <option value="OBI">OBI</option>
+                                                <option value="LAR">LAR</option>
+                                            </select>
+
+                                        <?php
+                                        } else {
+                                        ?>
+                                            <input type="text" class="form-control" name="jobLocation" value="<?= $row['job_location'] ?>" readonly>
+                                        <?php
+                                        }
+                                        ?>
                                     </div>
                                 </div>
 
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">PIC Category Select</label>
                                     <div>
-                                        <select class="form-control" name="proc_pic" id="pic" data-selected="<?= $row['proc_pic'] ?>">
-                                            <option value="">Select PIC</option>
-                                        </select>
+                                        <?php
+                                        function getUserName($idnik)
+                                        {
+                                            global $koneksi;
+                                            $sql = "SELECT nama FROM user WHERE idnik = '$idnik'";
+                                            $result = mysqli_query($koneksi, $sql);
+                                            $row = mysqli_fetch_assoc($result);
+                                            return $row['nama'];
+                                        }
+                                        ?>
+                                        <?php
+                                        $isSupervidor = in_array($niklogin, ['19000133', '20000308', '19000136', '19000078']);
+                                        if ($isSupervidor) {
+                                        ?>
+                                            <select class="form-control" name="proc_pic" id="pic" data-selected="<?= $row['proc_pic'] ?>">
+                                                <option value="">Select PIC</option>
+                                            </select>
+                                        <?php
+                                        } else {
+                                            $picName = getUserName($row['proc_pic']);
+                                        ?>
+                                            <input type="text" class="form-control" name="proc_pic" value="<?= $picName ?>" readonly>
+                                        <?php
+                                        }
+                                        ?>
                                     </div>
                                 </div>
 
@@ -466,6 +509,9 @@ $categoryName = $rowCategory['nama_category'];
         $('#closedTicketBtn').on('click', function() {
             var formData = new FormData($('#updatePurchaseRequestForm')[0]);
             formData.append('status', 'Closed');
+            formData.append('category', $('#kategori').val());
+            formData.append('jobLocation', $('#lokasi').val());
+            formData.append('proc_pic', $('#pic').val());
 
             $.ajax({
                 type: "POST",
@@ -499,6 +545,9 @@ $categoryName = $rowCategory['nama_category'];
         $('#updateTicketBtn').on('click', function() {
             var formData = new FormData($('#updatePurchaseRequestForm')[0]);
             formData.append('status', 'Open');
+            formData.append('category', $('#kategori').val());
+            formData.append('jobLocation', $('#lokasi').val());
+            formData.append('proc_pic', $('#pic').val());
 
             $.ajax({
                 type: "POST",
