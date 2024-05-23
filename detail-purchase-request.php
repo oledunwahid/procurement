@@ -84,7 +84,7 @@ $categoryName = $rowCategory['nama_category'];
             <div class="card card-custom">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="card-title mb-0">Input Detail Price Request</h5>
+                        <h5 class="card-title mb-0">Price Request Details</h5>
                         <a href="index.php?page=PurchaseRequests" class="btn btn-close btn-lg">
                         </a>
                     </div>
@@ -371,7 +371,28 @@ $categoryName = $rowCategory['nama_category'];
             });
         }
 
+        function hasDetailRows() {
+            var tableRows = $('#detail-purchase-request tbody tr');
+            return tableRows.length > 0;
+        }
+
+        function toggleClosedTicketButton() {
+            var hasRows = hasDetailRows();
+            var totalAmount = parseFloat($("input[name='total_price']").val().replace(/\./g, ''));
+
+            if (!hasRows || totalAmount === 0) {
+                $('#closedTicketBtn').prop('disabled', true);
+                $('#closedTicketBtn').html('<i class="ri-lock-line me-1"></i> Closed Ticket');
+            } else {
+                $('#closedTicketBtn').prop('disabled', false);
+                $('#closedTicketBtn').html('Closed Ticket');
+            }
+        }
+
         loadData();
+
+        // Cek keberadaan data saat halaman dimuat
+        toggleClosedTicketButton();
 
         // Memanggil updateTotalPrice setiap kali terjadi perubahan pada qty[] atau unit_price[]
         $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
@@ -385,20 +406,20 @@ $categoryName = $rowCategory['nama_category'];
 
         function addRow() {
             var newRow = `<tr>
-                <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
-                <td><input type="text" name="nama_barang[]" class="form-control" style="width: 100%;" /></td>
-                <td><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
-                <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
-                <td><input type="text" name="uom[]" class="form-control" style="width: 80px;" /></td>
-                <td><input type="text" name="unit_price[]" class="form-control price-input" maxlength="11" style="width: 120px;" /></td>
-                <td><span class="totalHarga">0</span></td>
-                <td>
-                    <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
-                    <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
-                    <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
-                </td>
-                <td><textarea name="detail_notes[]" class="form-control" style="width: 100%;"></textarea></td>
-            </tr>`;
+            <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
+            <td><input type="text" name="nama_barang[]" class="form-control" style="width: 100%;" /></td>
+            <td><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
+            <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
+            <td><input type="text" name="uom[]" class="form-control" style="width: 80px;" /></td>
+            <td><input type="text" name="unit_price[]" class="form-control price-input" maxlength="11" style="width: 120px;" /></td>
+            <td><span class="totalHarga">0</span></td>
+            <td>
+                <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
+                <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
+                <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
+            </td>
+            <td><textarea name="detail_notes[]" class="form-control" style="width: 100%;"></textarea></td>
+        </tr>`;
             $('#detail-purchase-request tbody').append(newRow);
         }
 
@@ -429,7 +450,9 @@ $categoryName = $rowCategory['nama_category'];
                 data: data,
                 success: function(response) {
                     alert("Data berhasil disimpan");
-                    loadData();
+                    loadData(function() {
+                        toggleClosedTicketButton();
+                    });
                 },
                 error: function() {
                     alert("Terjadi kesalahan saat menyimpan data");
@@ -464,7 +487,9 @@ $categoryName = $rowCategory['nama_category'];
                 data: data,
                 success: function(response) {
                     alert("Data berhasil diupdate");
-                    loadData();
+                    loadData(function() {
+                        toggleClosedTicketButton();
+                    });
                 },
                 error: function() {
                     alert("Terjadi kesalahan saat menyimpan data");
@@ -486,6 +511,7 @@ $categoryName = $rowCategory['nama_category'];
                         alert("Data berhasil dihapus");
                         loadData(function() {
                             updateTotalPrice();
+                            toggleClosedTicketButton();
                         });
                     },
                     error: function() {
@@ -504,6 +530,7 @@ $categoryName = $rowCategory['nama_category'];
                 total += subtotal;
             });
             $("input[name='total_price']").val(formatRibuan(total));
+            toggleClosedTicketButton();
         }
 
         $('#closedTicketBtn').on('click', function() {
