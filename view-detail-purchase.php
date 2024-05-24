@@ -182,7 +182,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Total Amount</label>
-                                        <input type="text" name="total_price" id="total_price" class="form-control bg-light border-0" value="<?= $row['total_price'] ?>" readonly>
+                                        <input type="text" name="total_price" id="total_price" class="form-control bg-light border-0" value="<?php echo 'Rp ' . number_format($row['total_price'], 0, ',', '.'); ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="col-lg-6 col-sm-6">
