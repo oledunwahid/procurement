@@ -13,13 +13,10 @@ if (isset($_POST['id_proc_ch'])) {
     $total_price = str_replace('.', '', $total_price);
     $status = 'Open';
 
-
-
     $sqlNama = "SELECT  nama, wa FROM user WHERE idnik = '$proc_pic' ";
     $rowNama = mysqli_fetch_assoc(mysqli_query($koneksi, $sqlNama));
     $NamaPIC = $rowNama['nama'];
     $waPIC = $rowNama['wa'];
-
 
     // Memeriksa apakah ada file lampiran yang diunggah
     if (!empty($_FILES['lampiran']['name'])) {
@@ -79,7 +76,6 @@ if (isset($_POST['id_proc_ch'])) {
         $response = curl_exec($curl);
         // Menutup koneksi cURL
         curl_close($curl);
-
         echo "Data berhasil diupdate";
     } else {
         echo "Error: " . $sql . "<br>" . mysqli_error($koneksi);

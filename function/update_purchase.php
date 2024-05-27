@@ -46,10 +46,50 @@ if (isset($_POST['id_proc_ch'])) {
 
     // Menjalankan query update
     if (mysqli_query($koneksi, $sql)) {
+        if ($status == 'Closed') {
+            // Jika status diubah menjadi 'Closed', kirim pesan WhatsApp ke user
+            $sqlUser = "SELECT nama, wa FROM user WHERE idnik = '$nik_request'";
+            $rowUser = mysqli_fetch_assoc(mysqli_query($koneksi, $sqlUser));
+            $namaUser = $rowUser['nama'];
+            $waUser = $rowUser['wa'];
+
+            $namaEmployee = 'Bapak/Ibu ' . $namaUser;
+            $link = 'https://proc.maagroup.co.id/index.php?page=UserDetailPurchase&id=' . $id_proc_ch;
+
+            $message = "Halo " . $namaEmployee . "!\n\nPrice Request dengan ID #" . $id_proc_ch . " telah ditutup oleh admin.\n\nInfo lebih lanjut tentang Price Request ini: " . $link;
+
+            // Pengaturan untuk cURL
+            $curl = curl_init();
+
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $waUser,
+                    'message' => $message,
+                    'countryCode' => '62',
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization: vXmxpJo3+5kVsDAWt!y+'
+                ),
+            ));
+
+            // Melakukan request pengiriman pesan WhatsApp ke user
+            $response = curl_exec($curl);
+            curl_close($curl);
+        }
+
         echo "Data berhasil diupdate";
     } else {
         echo "Error: " . $sql . "<br>" . mysqli_error($koneksi);
     }
+
 
     // Menutup koneksi
     mysqli_close($koneksi);
