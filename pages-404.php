@@ -16,7 +16,7 @@
                     <div class="col-lg-12">
                         <div class="text-center mt-sm-5 pt-4">
                             <div class="mb-5 text-white-50">
-                                <h1 class="display-5 coming-soon-text">Halaman Yang Anda Cari Tidak Ditemukan</h1>
+                                <h1 class="display-5 coming-soon-text">404 Page not Found</h1>
                                 <p class="fs-14">Please check back in sometime</p>
                                 <div class="mt-4 pt-2">
                                     <a href="index.php?page=Dashboard" class="btn btn-success"><i class="mdi mdi-home me-1"></i> Back to Home</a>
@@ -45,7 +45,9 @@
                     <div class="col-lg-12">
                         <div class="text-center">
                             <p class="mb-0 text-muted">&copy;
-                                <script>document.write(new Date().getFullYear())</script> Velzon. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand
+                                <script>
+                                    document.write(new Date().getFullYear())
+                                </script> Velzon. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand
                             </p>
                         </div>
                     </div>

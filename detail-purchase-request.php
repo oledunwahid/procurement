@@ -138,10 +138,24 @@ $categoryName = $rowCategory['nama_category'];
                                         <input type="text" name="created_request" class="form-control bg-light border-0" value="<?= $currentDateTime ?>" readonly>
                                     </div>
                                 </div>
+                                <?php
+                                $id_proc_ch = $_GET['id'];
+                                $sql = mysqli_query($koneksi, "
+    SELECT
+        pp.*, user1.nama AS nama_request
+    FROM
+        proc_purchase_requests AS pp
+        LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
+    WHERE
+        pp.id_proc_ch = '$id_proc_ch'
+");
+                                $row = mysqli_fetch_assoc($sql);
+                                ?>
+
                                 <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">ID NIK Requester</label>
+                                    <label for="choices-payment-status">Nama Requester</label>
                                     <div class="input-light">
-                                        <input type="text" name="requester_name" class="form-control bg-light border-0" value="<?= $row['nik_request'] ?>" readonly>
+                                        <input type="text" name="requester_name" class="form-control bg-light border-0" value="<?= htmlspecialchars($row['nama_request']) ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
@@ -178,28 +192,6 @@ $categoryName = $rowCategory['nama_category'];
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">Job Location</label>
-                                    <div>
-                                        <?php
-                                        if ($isSupervior) {
-                                        ?>
-                                            <select class="form-control" name="jobLocation" id="lokasi" data-choices data-choices-search-false data-selected="<?= $row['job_location'] ?>" required>
-                                                <option value="<?= $row['job_location'] ?>"></option>
-                                                <option value="HO">HO</option>
-                                                <option value="OBI">OBI</option>
-                                                <option value="LAR">LAR</option>
-                                            </select>
-
-                                        <?php
-                                        } else {
-                                        ?>
-                                            <input type="text" class="form-control" name="jobLocation" value="<?= $row['job_location'] ?>" readonly>
-                                        <?php
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
 
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">PIC Category Select</label>

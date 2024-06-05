@@ -48,11 +48,9 @@ $row1 = mysqli_fetch_assoc($sql1);
                             <th>Title</th>
                             <th>Created Date</th>
                             <th>Requestor</th>
-                            <th>PIC</th>
                             <th>Status</th>
                             <th>Category</th>
                             <th>Division</th>
-                            <th>Job Location</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -66,18 +64,14 @@ $row1 = mysqli_fetch_assoc($sql1);
                         pp.status,
                         pp.category,
                         pc.nama_category,
-                        pp.job_location,
                         pp.nik_request,
                         pp.proc_pic,
                         user1.nama AS nama_request,
-                        user2.nama AS nama_pic,
                         user1.divisi AS divisi_request
                     FROM
                         proc_purchase_requests AS pp
                         INNER JOIN proc_category AS pc ON pp.category = pc.id_category
                         LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
-                        LEFT JOIN user AS user2 ON pp.proc_pic = user2.idnik
-                        LEFT JOIN proc_admin_location AS pal ON pp.job_location = pal.location AND pp.proc_pic = pal.idnik
                     WHERE
                         (pp.category IN (
                             SELECT id_category
@@ -102,11 +96,9 @@ $row1 = mysqli_fetch_assoc($sql1);
                                 <td><?= $row['title'] ?></td>
                                 <td><?= $row['created_request'] ?></td>
                                 <td><?= $row['nama_request'] ?></td>
-                                <td><?= $row['nama_pic'] ?></td>
                                 <td><?= $row['status'] ?></td>
                                 <td><?= $row['nama_category'] ?></td>
                                 <td><?= $row['divisi_request'] ?></td>
-                                <td><?= $row['job_location'] ?></td>
                                 <td>
                                     <div class="dropdown d-inline-block">
                                         <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">

@@ -95,6 +95,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                     <th>Nama Barang</th>
                                     <th width="20%">Detail Spec</th>
                                     <th width="6%">Qty</th>
+                                    <th width="16%">Category</th>
                                     <th width="8%">Uom</th>
                                     <th width="10%">Harga</th>
                                     <th width="13%">Total Harga</th>
@@ -131,7 +132,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">ID NIK Requester</label>
+                                    <label for="choices-payment-status">Nama Requester</label>
                                     <div class="input-light">
                                         <input type="text" name="requester_name" class="form-control bg-light border-0" value="<?= $row['nik_request'] ?>" readonly>
                                     </div>
@@ -143,42 +144,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-md-6">
-                                    <div class="mb-3">
-                                        <label for="category" class="form-label">Category</label>
-                                        <select class="form-control" data-choices name="category" id="kategori" required>
-                                            <option value="">Select Category</option>
-                                            <?php
-                                            $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category");
-                                            while ($rowCategory = mysqli_fetch_assoc($sqlCategory)) {
-                                                $selected = ($rowCategory['id_category'] == $category) ? 'selected' : '';
-                                                echo "<option value='" . $rowCategory['id_category'] . "' " . $selected . ">" . $rowCategory['nama_category'] . "</option>";
-                                            }
-                                            ?>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">Job Location</label>
-                                    <div>
-                                        <select class="form-control" name="jobLocation" id="lokasi" data-choices data-choices-search-false required>
-                                            <option value="">Pilih Lokasi</option>
-                                            <option value="HO">HO</option>
-                                            <option value="OBI">OBI</option>
-                                            <option value="LAR">LAR</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">PIC Category Select</label>
-                                    <div>
-                                        <select class="form-control" name="proc_pic" id="pic">
-                                            <option value="">Select PIC</option>
-                                        </select>
-                                    </div>
-                                </div>
-
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Total Amount</label>
@@ -187,8 +152,8 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 </div>
                                 <div class="col-lg-6 col-sm-6">
                                     <div>
-                                        <label for="totalamountInput">Attachment <strong>* MAX 2MB (PDF only)</strong></label>
-                                        <input type="file" name="lampiran" class="form-control" accept=".pdf" required>
+                                        <label for="totalamountInput">Attachment <strong>* MAX 2MB (PDF, JPG , PDF ,JPEG)</strong></label>
+                                        <input type="file" name="lampiran" class="form-control" accept=".pdf,.jpg,.png,.jpeg" required>
                                     </div>
                                 </div>
                             </div>
@@ -206,24 +171,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 <script>
     $(document).ready(function() {
         var idProcCh = <?= json_encode($_GET['id']); ?>;
-        // Event handler ketika kategori atau lokasi berubah
-        $('#kategori, #lokasi').change(function() {
-            if ($('#kategori').val() && $('#lokasi').val()) {
-                $.ajax({
-                    url: "function/get_pic.php",
-                    type: "POST",
-                    data: {
-                        id_category: $('#kategori').val(),
-                        location: $('#lokasi').val()
-                    },
-                    success: function(data) {
-                        $('#pic').html('<option value="">Pilih PIC</option>' + data);
-                    }
-                });
-            } else {
-                $('#pic').html('<option value="">Pilih PIC</option>');
-            }
-        });
 
         function formatRibuan(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -246,58 +193,74 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         loadData();
 
         function addRow() {
-            var newRow = `<tr>
-                <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
-                <td><input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" /></td>
-                <td><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
-                <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
-                <td>
-                <select name='uom[]' class='form-control uom-dropdown'>
-                        <option value='Pcs'>Pcs</option>
-                        <option value='Buah'>Buah</option>
-                        <option value='Unit'>Unit</option>
-                        <option value='Pack'>Pack</option>
-                        <option value='Dus'>Dus</option>
-                        <option value='M'>M</option>
-                        <option value='Btg'>Btg</option>
-                        <option value='CM'>CM</option>
-                        <option value='KM'>KM</option>
-                        <option value='Ich'>Ich</option>
-                        <option value='Kg'>Kg</option>
-                        <option value='Gram'>Gram</option>
-                        <option value='Lot'>Lot</option>
-                        <option value='ml'>ml</option>
-                    </select>
-                </td>
-                <td><span type="text" name="unit_price[]"</span>0</td>
-                <td><span class="totalHarga">0</span></td>
-                <td>
-                    <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
-                    <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
-                    <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
-                </td>
-            </tr>`;
-            $('#detail-purchase-request tbody').append(newRow);
+            $.ajax({
+                url: 'function/get_uom.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(uomData) {
+                    var uomOptions = uomData.map(function(uom) {
+                        return `<option value="${uom.uom_name}">${uom.uom_name}</option>`;
+                    }).join('');
 
-            // Inisialisasi auto-suggestion pada input nama barang yang baru ditambahkan
-            $('.nama-barang:last').autocomplete({
-                source: function(request, response) {
                     $.ajax({
-                        url: 'function/get_suggestion.php',
-                        data: {
-                            query: request.term
-                        },
+                        url: 'function/get_category.php',
+                        type: 'GET',
                         dataType: 'json',
-                        success: function(data) {
-                            response(data);
+                        success: function(categoryData) {
+                            var categoryOptions = categoryData.map(function(category) {
+                                return `<option value="${category.id_category}">${category.nama_category}</option>`;
+                            }).join('');
+
+                            var newRow = `<tr>
+                        <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
+                        <td><input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" /></td>
+                        <td><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
+                        <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
+                        <td>
+                            <select name='category[]' class='form-control category-dropdown'>
+                                ${categoryOptions}
+                            </select>
+                        </td>
+                        <td>
+                            <select name='uom[]' class='form-control uom-dropdown'>
+                                ${uomOptions}
+                            </select>
+                        </td>
+                        <td><span type="text" name="unit_price[]"</span>0</td>
+                        <td><span class="totalHarga">0</span></td>
+                        <td>
+                            <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
+                            <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
+                            <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
+                        </td>
+                    </tr>`;
+                            $('#detail-purchase-request tbody').append(newRow);
+
+                            // Inisialisasi auto-suggestion pada input nama barang yang baru ditambahkan
+                            $('.nama-barang:last').autocomplete({
+                                source: function(request, response) {
+                                    $.ajax({
+                                        url: 'function/get_suggestion.php',
+                                        data: {
+                                            query: request.term
+                                        },
+                                        dataType: 'json',
+                                        success: function(data) {
+                                            response(data);
+                                        }
+                                    });
+                                }
+                            });
                         }
                     });
                 }
             });
         }
+
         $('#addRow').click(function() {
             addRow();
         });
+
 
         $(document).on('click', '.saveNewRow', function() {
             var row = $(this).closest('tr');
@@ -306,6 +269,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 nama_barang: row.find("input[name='nama_barang[]']").val(),
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
+                category: row.find("select[name='category[]']").val(),
                 uom: row.find("select[name='uom[]']").val(), // Menambahkan nilai dropdown uom
             };
 
@@ -339,6 +303,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 nama_barang: row.find("input[name='nama_barang[]']").val(),
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
+                category: row.find("select[name='category[]']").val(),
                 uom: row.find("select[name='uom[]']").val(), // Menambahkan nilai dropdown uom
             };
 
@@ -378,7 +343,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 });
             }
         });
-
 
         $('#updatePurchaseRequestForm').on('submit', function(e) {
             e.preventDefault();
