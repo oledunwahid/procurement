@@ -5,11 +5,28 @@ $id_proc_ch = $_GET['id_proc_ch'];
 
 function nominal($angka)
 {
-    $hasil_nominal = number_format($angka, 0, ',', '.');
-    return $hasil_nominal;
+    return number_format($angka, 0, ',', '.');
 }
 
-$query = "SELECT ppr.*, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, prd.detail_specification
+// Fetch UOM data
+$uomQuery = "SELECT uom_name FROM uom";
+$uomResult = mysqli_query($koneksi, $uomQuery);
+$uomOptions = "";
+
+while ($uomRow = mysqli_fetch_assoc($uomResult)) {
+    $uomOptions .= "<option value='" . $uomRow['uom_name'] . "'>" . $uomRow['uom_name'] . "</option>";
+}
+
+// Fetch Category data
+$categoryQuery = "SELECT id_category, nama_category FROM proc_category";
+$categoryResult = mysqli_query($koneksi, $categoryQuery);
+$categoryOptions = "";
+
+while ($categoryRow = mysqli_fetch_assoc($categoryResult)) {
+    $categoryOptions .= "<option value='" . $categoryRow['id_category'] . "'>" . $categoryRow['nama_category'] . "</option>";
+}
+
+$query = "SELECT ppr.*, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, prd.detail_specification, ppr.category
           FROM proc_request_details prd
           INNER JOIN proc_purchase_requests ppr ON prd.id_proc_ch = ppr.id_proc_ch
           WHERE ppr.id_proc_ch = '$id_proc_ch'";
@@ -19,30 +36,37 @@ $output = '';
 
 while ($row = mysqli_fetch_assoc($result)) {
     $totalHarga = $row['unit_price'] * $row['qty'];
+
+    // Generate UOM options with selected attribute
+    $uomSelectOptions = "";
+    foreach (explode('</option>', $uomOptions) as $option) {
+        $selected = strpos($option, "value='" . $row['uom'] . "'") !== false ? "selected" : "";
+        $uomSelectOptions .= str_replace("<option", "<option $selected", $option) . "</option>";
+    }
+
+    // Generate Category options with selected attribute
+    $categorySelectOptions = "";
+    foreach (explode('</option>', $categoryOptions) as $option) {
+        $selected = strpos($option, "value='" . $row['category'] . "'") !== false ? "selected" : "";
+        $categorySelectOptions .= str_replace("<option", "<option $selected", $option) . "</option>";
+    }
+
     $output .= "<tr>
                     <td style='display:none;'><input type='text' name='id_proc_ch[]' class='form-control' value='" . $row['id_proc_ch'] . "' readonly /></td>
                     <td><input type='text' name='nama_barang[]' class='form-control' value='" . $row['nama_barang'] . "' readonly /></td>
                     <td><textarea name='detail_specification[]' class='form-control' readonly style='width: 100%;'>" . $row['detail_specification'] . "</textarea></td>
                     <td><input type='number' name='qty[]' class='form-control' value='" . $row['qty'] . "' readonly maxlength='5' /></td>
                     <td>
-                        <select name='uom[]' class='form-control' readonly>
-                            <option value='Pcs' " . ($row['uom'] == 'Pcs' ? 'selected' : '') . ">Pcs</option>
-                            <option value='Buah' " . ($row['uom'] == 'Buah' ? 'selected' : '') . ">Buah</option>
-                            <option value='Unit' " . ($row['uom'] == 'Unit' ? 'selected' : '') . ">Unit</option>
-                            <option value='Pack' " . ($row['uom'] == 'Pack' ? 'selected' : '') . ">Pack</option>
-                            <option value='Dus' " . ($row['uom'] == 'Dus' ? 'selected' : '') . ">Dus</option>
-                            <option value='M' " . ($row['uom'] == 'M' ? 'selected' : '') . ">M</option>
-                            <option value='Btg' " . ($row['uom'] == 'Btg' ? 'selected' : '') . ">Btg</option>
-                            <option value='CM' " . ($row['uom'] == 'CM' ? 'selected' : '') . ">CM</option>
-                            <option value='KM' " . ($row['uom'] == 'KM' ? 'selected' : '') . ">KM</option>
-                            <option value='Ich' " . ($row['uom'] == 'Ich' ? 'selected' : '') . ">Ich</option>
-                            <option value='Kg' " . ($row['uom'] == 'Kg' ? 'selected' : '') . ">Kg</option>
-                            <option value='Gram' " . ($row['uom'] == 'Gram' ? 'selected' : '') . ">Gram</option>
-                            <option value='Lot' " . ($row['uom'] == 'Lot' ? 'selected' : '') . ">Lot</option>
-                            <option value='ml' " . ($row['uom'] == 'ml' ? 'selected' : '') . ">ml</option>
+                        <select name='category[]' class='form-control' readonly>
+                            $categorySelectOptions
                         </select>
                     </td>
-                    <td><span name='unit_price[]' value='" . nominal($row['unit_price']) . "' readonly maxlength='11'></span>0</td>
+                    <td>
+                        <select name='uom[]' class='form-control' readonly>
+                            $uomSelectOptions
+                        </select>
+                    </td>
+                    <td><span name='unit_price[]' value='" . nominal($row['unit_price']) . "' readonly maxlength='11'></span>" . nominal($row['unit_price']) . "</td>
                     <td><span class='totalHarga'><b>" . nominal($totalHarga) . "</b></span></td>
                     <td>
                         <button type='button' class='btn btn-info btn-sm edit' data-id='" . $row['id'] . "'>Edit</button>

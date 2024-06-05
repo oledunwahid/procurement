@@ -1,58 +1,44 @@
-<?php 
-// mengaktifkan session pada php
+<?php
+/// Start atau resume session
 session_start();
-$url = $_SESSION['yuhu'] ;
-// menghubungkan php dengan koneksi database
+$url = $_SESSION['url-dituju'];
+
 include 'koneksi.php';
 
-// menangkap data yang dikirim dari form login
+// Menangkap data yang dikirim dari form login
 $username = $_POST['username'];
 $password = $_POST['password'];
+$rememberMe = isset($_POST['remember']) ? $_POST['remember'] : '';
 
-
-// menyeleksi data user dengan username dan password yang sesuai
-$login = mysqli_query($koneksi,"select * from login where username='$username' and password='$password' and status_login ='Aktif' ");
-// menghitung jumlah data yang ditemukan
+// Menyeleksi data user dengan username yang sesuai
+$login = mysqli_query($koneksi, "SELECT * FROM login WHERE username='$username' AND status_login='Aktif'");
+// Menghitung jumlah data yang ditemukan
 $cek = mysqli_num_rows($login);
 
-// cek apakah username dan password di temukan pada database
-if($cek > 0){
-
+if ($cek > 0) {
 	$data = mysqli_fetch_assoc($login);
 
-	// cek jika user login sebagai admin
-	if($data['role']=="admin"){
-
-		// buat session login dan username
+	// Verifikasi password
+	if (password_verify($password, $data['password'])) {
 		$_SESSION['username'] = $username;
-		$_SESSION['role'] = "admin";
-		
-	
-		if($url ==  false || $url == null ){
-			header("location:index.php?page=Dashboard");
-		}else{
+		$_SESSION['role'] = $data['role'];
 
-			header("location:$url");
-		}
-		
-
-	// cek jika user login sebagai user
-	}else if($data['role']=="user"){
-		// buat session login dan username
-		$_SESSION['username'] = $username;
-		$_SESSION['role'] = "user";
-		
-		
-	
-			if($url ==  false || $url == null ){
-			header("location:index.php?page=Dashboard");
-		}else{
-
-			header("location:$url");
+		// Jika "Remember me" dicentang
+		if ($rememberMe === 'yes') {
+			$cookie_lifetime = 30 * 24 * 60 * 60; // 1 bulan
+			setcookie('username', $username, time() + $cookie_lifetime);
+			// Jangan simpan password di cookie, ini hanya contoh
+			// Simpan token aman sebagai pengganti jika diperlukan
 		}
 
+		// Setelah berhasil login, redirect ke halaman yang ditentukan
+		$url = isset($_SESSION['url-dituju']) ? $_SESSION['url-dituju'] : 'index.php?page=Dashboard';
+		header("location:$url");
+	} else {
+		$_SESSION['login_error'] = 'Username atau password tidak sesuai';
+		header("location:login.php");
 	}
-	
-}else{
-	header("location:login.php?pesan=gagal");
+} else {
+	$_SESSION['login_error'] = 'Username atau password tidak sesuai';
+	header("location:login.php");
 }
