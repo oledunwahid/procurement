@@ -131,10 +131,22 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                         <input type="text" name="created_request" class="form-control bg-light border-0" value="<?= $currentDateTime ?>" readonly>
                                     </div>
                                 </div>
+                                <?php
+                                $idnik = $row['nik_request'];
+                                $query = "SELECT nama FROM user WHERE idnik = ?";
+                                $stmt = $koneksi->prepare($query);
+                                $stmt->bind_param("s", $idnik);
+                                $stmt->execute();
+                                $stmt->bind_result($nama);
+                                $stmt->fetch();
+                                $stmt->close();
+                                ?>
+
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">Nama Requester</label>
                                     <div class="input-light">
-                                        <input type="text" name="requester_name" class="form-control bg-light border-0" value="<?= $row['nik_request'] ?>" readonly>
+                                        <input type="text" name="requester_name_display" class="form-control bg-light border-0" value="<?= htmlspecialchars($nama) ?>" readonly>
+                                        <input type="hidden" name="requester_name" value="<?= htmlspecialchars($idnik) ?>">
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-sm-6">
@@ -143,7 +155,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                         <input type="text" name="title" class="form-control" value="<?= $row['title'] ?>">
                                     </div>
                                 </div>
-
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Total Amount</label>
@@ -261,7 +272,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             addRow();
         });
 
-
         $(document).on('click', '.saveNewRow', function() {
             var row = $(this).closest('tr');
             var data = {
@@ -270,7 +280,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
                 category: row.find("select[name='category[]']").val(),
-                uom: row.find("select[name='uom[]']").val(), // Menambahkan nilai dropdown uom
+                uom: row.find("select[name='uom[]']").val()
             };
 
             $.ajax({
@@ -294,7 +304,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             $row.find('.saveRow').show();
         });
 
-        // Perbaikan pada fungsi saveRow
         $(document).on('click', '.saveRow', function() {
             var row = $(this).closest('tr');
             var data = {
@@ -304,7 +313,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
                 category: row.find("select[name='category[]']").val(),
-                uom: row.find("select[name='uom[]']").val(), // Menambahkan nilai dropdown uom
+                uom: row.find("select[name='uom[]']").val()
             };
 
             $.ajax({
@@ -321,7 +330,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             });
         });
 
-        // Perbaikan pada fungsi remove
         $(document).on('click', '.remove', function() {
             var id = $(this).data('id');
             if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {

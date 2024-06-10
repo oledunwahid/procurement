@@ -29,25 +29,19 @@ if (isset($_POST['id'])) {
     }
 
     // Update proc_request_details
-    $queryDetails = "UPDATE proc_request_details SET id_proc_ch = ?, nama_barang = ?, qty = ?, uom = ?, detail_specification = ? WHERE id = ?";
+    $queryDetails = "UPDATE proc_request_details SET id_proc_ch = ?, nama_barang = ?, qty = ?, uom = ?, detail_specification = ?, category = ? WHERE id = ?";
     $stmtDetails = mysqli_prepare($koneksi, $queryDetails);
-    mysqli_stmt_bind_param($stmtDetails, "ssissi", $id_proc_ch, $nama_barang, $qty, $uom, $detail_specification, $id);
+    mysqli_stmt_bind_param($stmtDetails, "ssssssi", $id_proc_ch, $nama_barang, $qty, $uom, $detail_specification, $category, $id);
 
-    // Update proc_purchase_request
-    $queryPurchase = "UPDATE proc_purchase_requests SET category = ? WHERE id_proc_ch = ?";
-    $stmtPurchase = mysqli_prepare($koneksi, $queryPurchase);
-    mysqli_stmt_bind_param($stmtPurchase, "si", $category, $id_proc_ch);
-
-    // Execute both queries
-    if (mysqli_stmt_execute($stmtDetails) && mysqli_stmt_execute($stmtPurchase)) {
+    // Execute the query
+    if (mysqli_stmt_execute($stmtDetails)) {
         echo "Data berhasil diupdate";
     } else {
         echo "Error: " . mysqli_error($koneksi);
     }
 
-    // Close the statements
+    // Close the statement
     mysqli_stmt_close($stmtDetails);
-    mysqli_stmt_close($stmtPurchase);
 } else {
     echo "ID tidak ditemukan";
 }
