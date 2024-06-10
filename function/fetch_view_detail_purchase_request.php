@@ -26,10 +26,10 @@ while ($categoryRow = mysqli_fetch_assoc($categoryResult)) {
     $categoryOptions .= "<option value='" . $categoryRow['id_category'] . "'>" . $categoryRow['nama_category'] . "</option>";
 }
 
-$query = "SELECT ppr.*, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, prd.detail_specification, ppr.category
+$query = "SELECT prd.*, pc.nama_category, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, prd.detail_specification, prd.category
           FROM proc_request_details prd
-          INNER JOIN proc_purchase_requests ppr ON prd.id_proc_ch = ppr.id_proc_ch
-          WHERE ppr.id_proc_ch = '$id_proc_ch'";
+          LEFT JOIN proc_category pc ON prd.category = pc.id_category
+          WHERE prd.id_proc_ch = '$id_proc_ch'";
 
 $result = mysqli_query($koneksi, $query);
 $output = '';
