@@ -1,14 +1,15 @@
 <?php session_start();
 if (isset($_SESSION['username']) && $_SESSION['username']) {
     // Jika sudah login, arahkan ke halaman akses (atau halaman home)
-    header("Location: location:index.php?Page=Dashboard");
+    header("location:index.php?page=Dashboard");
+
     exit();
 } ?>
 <!doctype html>
 <html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <head>
-
 
     <meta charset="utf-8" />
     <title>Sign In | EIP MAA Group</title>
@@ -16,7 +17,7 @@ if (isset($_SESSION['username']) && $_SESSION['username']) {
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />
     <!-- App favicon -->
-    <link rel="shortcut icon" href="assets/images/logo.svg">
+    <link rel="shortcut icon" href="assets/images/favicon.ico">
 
     <!-- Layout config Js -->
     <script src="assets/js/layout.js"></script>
@@ -33,9 +34,11 @@ if (isset($_SESSION['username']) && $_SESSION['username']) {
 
 <body>
 
+
+
     <div class="auth-page-wrapper pt-5">
         <!-- auth page bg -->
-        <div class="auth-one-bg-position auth-one-bg" >
+        <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
             <div class="bg-overlay"></div>
 
             <div class="shape">
@@ -57,7 +60,7 @@ if (isset($_SESSION['username']) && $_SESSION['username']) {
                                     <img src="assets/images/logo_MAAA.png" alt="" height="35">
                                 </a>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Employee Information Portal</p>
+                            <p class="mt-3 fs-15 fw-medium">Employee Imformation Portal</p>
                         </div>
                     </div>
                 </div>
@@ -78,20 +81,22 @@ if (isset($_SESSION['username']) && $_SESSION['username']) {
                                         <div class="mb-3">
                                             <label for="username" class="form-label">Username</label>
 
-                                            <input type="text" class="form-control" id="username" placeholder="Enter username" name="username">
+                                            <input type="text" class="form-control" id="username" placeholder="Enter username" name="username" required>
                                         </div>
 
                                         <div class="mb-3">
-
+                                            <div class="float-end">
+                                                <a href="forgotpassword.php" class="text-muted">Forgot password?</a>
+                                            </div>
                                             <label class="form-label" for="password-input">Password</label>
                                             <div class="position-relative auth-pass-inputgroup mb-3">
-                                                <input type="password" class="form-control pe-5 password-input" placeholder="Enter password" id="password-input" name="password">
+                                                <input type="password" class="form-control pe-5 password-input" placeholder="Enter password" id="password-input" name="password" required>
                                                 <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
                                             </div>
                                         </div>
 
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" value="" id="auth-remember-check">
+                                            <input class="form-check-input" type="checkbox" value="yes" id="auth-remember-check" name="remember">
                                             <label class="form-check-label" for="auth-remember-check">Remember me</label>
                                         </div>
 
@@ -152,6 +157,40 @@ if (isset($_SESSION['username']) && $_SESSION['username']) {
     <script src="assets/js/pages/particles.app.js"></script>
     <!-- password-addon init -->
     <script src="assets/js/pages/password-addon.init.js"></script>
+
+
+
+
+    <?php if (isset($_SESSION["notif_type"]) && isset($_SESSION["notif_message"])) : ?>
+        <script>
+            Swal.fire({
+                icon: '<?php echo $_SESSION["notif_type"]; ?>',
+                title: '<?php echo $_SESSION["notif_message"]; ?>',
+                <?php echo ($_SESSION["notif_type"] == "error" ? "confirmButtonClass: 'btn btn-primary w-xs mt-2', buttonsStyling: false," : "showConfirmButton: false,") ?>
+                timer: 1600,
+                showCloseButton: true
+            });
+        </script>
+        <?php
+        // Menghapus notifikasi dari session setelah ditampilkan
+        unset($_SESSION["notif_type"]);
+        unset($_SESSION["notif_message"]);
+        ?>
+    <?php endif; ?>
+
+
+
+    <script>
+        <?php if (isset($_SESSION['login_error'])) : ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '<?php echo $_SESSION['login_error']; ?>',
+            });
+        <?php
+            unset($_SESSION['login_error']); // Pastikan untuk membersihkan session setelah digunakan
+        endif; ?>
+    </script>
 </body>
 
 </html>

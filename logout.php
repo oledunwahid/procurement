@@ -1,4 +1,4 @@
-<?php 
+<?php
 // mengaktifkan session php
 session_start();
 
@@ -7,4 +7,3 @@ session_destroy();
 
 // mengalihkan halaman ke halaman login
 header("location:sign-out.php");
-?>
