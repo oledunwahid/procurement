@@ -1,13 +1,14 @@
-<?php 
-	session_start();
+<?php
+session_start();
+$_SESSION['url-dituju'] = $_SERVER['REQUEST_URI'];
 
-$_SESSION['yuhu'] = $_SERVER['REQUEST_URI'];
+if (isset($_COOKIE['login_token'])) {
+	$token = $_COOKIE['login_token'];
 
-
-if (!isset($_SESSION['username'])){
-	header("location:login.php?gagal");
-
+	$_SESSION['idnik'];
 }
 
-		
-?>
+if (!isset($_SESSION['idnik'])) {
+	header("location:login.php");
+	exit;
+}
