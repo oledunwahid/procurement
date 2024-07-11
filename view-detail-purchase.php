@@ -33,9 +33,6 @@
         transform: translateY(-2px);
     }
 
-
-
-
     /* Menyesuaikan lebar kolom pada tabel */
 
 
@@ -65,6 +62,65 @@
     }
 </style>
 
+<style>
+    @media screen and (max-width: 767px) {
+        #detail-purchase-request thead {
+            display: none;
+        }
+
+        #detail-purchase-request,
+        #detail-purchase-request tbody,
+        #detail-purchase-request tr,
+        #detail-purchase-request td {
+            display: block;
+            width: 100%;
+        }
+
+        #detail-purchase-request tr {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        #detail-purchase-request td {
+            text-align: left;
+            padding: 8px 8px 8px 45%;
+            position: relative;
+            min-height: 30px;
+            border: none;
+        }
+
+        #detail-purchase-request td::before {
+            content: attr(data-label);
+            position: absolute;
+            left: 6px;
+            width: 40%;
+            padding-right: 10px;
+            white-space: nowrap;
+            text-align: left;
+            font-weight: bold;
+            color: #555;
+        }
+
+        #detail-purchase-request td input,
+        #detail-purchase-request td select,
+        #detail-purchase-request td textarea {
+            width: 100% !important;
+            margin-top: 5px;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            margin-top: 10px;
+        }
+
+        .action-buttons button {
+            margin: 2px;
+        }
+    }
+</style>
 
 <?php
 $id_proc_ch = $_GET['id'];
@@ -84,11 +140,13 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                     </div>
                 </div>
                 <div class="card-body">
-                    <button type="button" class="btn btn-primary btn-enhanced" id="addRow">
-                        <i class="ri-add-line icon-btn-space"></i>Add Row
-                    </button>
+                    <div class="sticky-top bg-white py-2 mb-3">
+                        <button type="button" class="btn btn-primary btn-block" id="addRow">
+                            <i class="ri-add-line icon-btn-space"></i>Add Row
+                        </button>
+                    </div>
                     <div class="table-responsive mt-3">
-                        <table class="table table-hover" id="detail-purchase-request">
+                        <table class="table table-hover table-sm" id="detail-purchase-request">
                             <thead>
                                 <tr>
                                     <th style="display:none;">ID Request</th>
@@ -187,6 +245,15 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
 
+        function applyDataLabels() {
+            $('#detail-purchase-request tbody tr').each(function() {
+                $(this).find('td').each(function(index) {
+                    var label = $('#detail-purchase-request thead th').eq(index).text();
+                    $(this).attr('data-label', label + ':');
+                });
+            });
+        }
+
         function loadData(callback) {
             $.ajax({
                 url: 'function/fetch_view_detail_purchase_request.php',
@@ -223,29 +290,32 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                             }).join('');
 
                             var newRow = `<tr>
-                        <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
-                        <td><input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" /></td>
-                        <td><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
-                        <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
-                        <td>
-                            <select name='category[]' class='form-control category-dropdown'>
-                                ${categoryOptions}
-                            </select>
-                        </td>
-                        <td>
-                            <select name='uom[]' class='form-control uom-dropdown'>
-                                ${uomOptions}
-                            </select>
-                        </td>
-                        <td><span type="text" name="unit_price[]"</span>0</td>
-                        <td><span class="totalHarga">0</span></td>
-                        <td>
-                            <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
-                            <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
-                            <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
-                        </td>
-                    </tr>`;
+                                    <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
+                                    <td data-label="Nama Barang"><input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" /></td>
+                                    <td data-label="Detail Spec"><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
+                                    <td data-label="Qty"><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
+                                    <td data-label="Category">
+                                        <select name='category[]' class='form-control category-dropdown'>
+                                            ${categoryOptions}
+                                        </select>
+                                    </td>
+                                    <td data-label="Uom">
+                                        <select name='uom[]' class='form-control uom-dropdown'>
+                                            ${uomOptions}
+                                        </select>
+                                    </td>
+                                    <td data-label="Harga"><span type="text" name="unit_price[]">0</span></td>
+                                    <td data-label="Total Harga"><span class="totalHarga">0</span></td>
+                                    <td data-label="Action">
+                                        <div class="action-buttons">
+                                            <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
+                                            <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
+                                            <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
+                                        </div>
+                                    </td>
+                                </tr>`;
                             $('#detail-purchase-request tbody').append(newRow);
+                            applyDataLabels();
 
                             // Inisialisasi auto-suggestion pada input nama barang yang baru ditambahkan
                             $('.nama-barang:last').autocomplete({
@@ -288,11 +358,32 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 url: "function/insert_view_detail_purchase_request.php",
                 data: data,
                 success: function(response) {
-                    alert("Data berhasil disimpan");
-                    loadData();
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadData(function() {
+                            applyDataLabels();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message
+                        });
+                    }
                 },
-                error: function() {
-                    alert("Terjadi kesalahan saat menyimpan data");
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error updating the row.'
+                    });
                 }
             });
         });
@@ -320,36 +411,96 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 type: "POST",
                 url: "function/update_view_detail_purchase.php",
                 data: data,
+                dataType: 'json',
                 success: function(response) {
-                    alert("Data berhasil diupdate");
-                    loadData();
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadData(function() {
+                            applyDataLabels();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message
+                        });
+                    }
                 },
-                error: function() {
-                    alert("Terjadi kesalahan saat menyimpan data");
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error updating the row.'
+                    });
                 }
             });
         });
 
         $(document).on('click', '.remove', function() {
             var id = $(this).data('id');
-            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-                $.ajax({
-                    type: "POST",
-                    url: "function/delete_view_detail_purchase.php",
-                    data: {
-                        id: id
-                    },
-                    success: function(response) {
-                        alert("Data berhasil dihapus");
-                        loadData(function() {
-                            updateTotalPrice();
-                        });
-                    },
-                    error: function() {
-                        alert("Terjadi kesalahan saat menghapus data");
-                    }
+            if (!id) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Cannot identify the item to delete'
                 });
+                return;
             }
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "POST",
+                        url: "function/delete_view_detail_purchase.php",
+                        data: {
+                            id: id
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.message,
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                                loadData(function() {
+                                    applyDataLabels();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("AJAX Error:", status, error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'There was an error deleting the row.'
+                            });
+                        }
+                    });
+                }
+            });
         });
 
         $('#updatePurchaseRequestForm').on('submit', function(e) {
@@ -384,6 +535,6 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 }
             });
         });
-
+        applyDataLabels();
     });
 </script>
