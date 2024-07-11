@@ -1,5 +1,8 @@
 <?php
 include '../koneksi.php'; // Sesuaikan dengan path file koneksi Anda
+header('Content-Type: application/json');
+
+$response = array('status' => 'error', 'message' => 'No data received');
 
 if (isset($_POST['id_proc_ch'])) {
     $id_proc_ch = $_POST['id_proc_ch'];
@@ -8,7 +11,6 @@ if (isset($_POST['id_proc_ch'])) {
     $uom = $_POST['uom'];
     $detail_specification = $_POST['detail_specification'];
     $category = $_POST['category'];
-
 
     $file = fopen('suggestion.txt', 'r');
     $suggestionExists = false;
@@ -33,16 +35,15 @@ if (isset($_POST['id_proc_ch'])) {
     $stmt->bind_param("ssssss", $id_proc_ch, $nama_barang, $qty, $uom, $detail_specification, $category);
 
     // Menjalankan statement
-    if (!$stmt->execute()) {
-        echo "Error: " . $stmt->error;
-        $stmt->close();
-        $koneksi->close();
-        exit;
+    if ($stmt->execute()) {
+        $response['status'] = 'success';
+        $response['message'] = 'Data berhasil disimpan';
+    } else {
+        $response['message'] = "Error: " . $stmt->error;
     }
 
     $stmt->close();
     $koneksi->close();
-    echo "success";
-} else {
-    echo "No data received";
 }
+
+echo json_encode($response);

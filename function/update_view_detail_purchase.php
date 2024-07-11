@@ -1,5 +1,8 @@
 <?php
 include '../koneksi.php';
+header('Content-Type: application/json');
+
+$response = array('status' => 'error', 'message' => 'ID tidak ditemukan');
 
 if (isset($_POST['id'])) {
     $id = $_POST['id'];
@@ -35,15 +38,15 @@ if (isset($_POST['id'])) {
 
     // Execute the query
     if (mysqli_stmt_execute($stmtDetails)) {
-        echo "Data berhasil diupdate";
+        $response['status'] = 'success';
+        $response['message'] = 'Data berhasil diupdate';
     } else {
-        echo "Error: " . mysqli_error($koneksi);
+        $response['message'] = "Error: " . mysqli_error($koneksi);
     }
 
     // Close the statement
     mysqli_stmt_close($stmtDetails);
-} else {
-    echo "ID tidak ditemukan";
 }
 
+echo json_encode($response);
 mysqli_close($koneksi);
