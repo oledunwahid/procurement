@@ -200,31 +200,6 @@ function fsize($file)
     <script src="assets/libs/prismjs/prism.js"></script>
     <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/app.js"></script>
-    <script>
-        document.getElementById('chat-button').addEventListener('click', toggleChatWindow);
-
-        function toggleChatWindow() {
-            var chatWindow = document.getElementById('chat-window');
-            if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
-                chatWindow.style.display = 'flex';
-            } else {
-                chatWindow.style.display = 'none';
-            }
-        }
-
-        function sendMessage() {
-            var input = document.getElementById('chat-input');
-            var message = input.value;
-            if (message.trim() !== '') {
-                var chatBody = document.getElementById('chat-body');
-                var messageElement = document.createElement('div');
-                messageElement.textContent = message;
-                chatBody.appendChild(messageElement);
-                input.value = '';
-                chatBody.scrollTop = chatBody.scrollHeight;
-            }
-        }
-    </script>
 </body>
 
 </html>
