@@ -2,9 +2,7 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" />
 <!--datatable responsive css-->
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css" />
-
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
-
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -23,7 +21,6 @@
         background-color: #f8f9fa;
     }
 
-
     .btn-enhanced {
         transition: background-color .3s, transform .3s;
     }
@@ -32,28 +29,6 @@
         transform: translateY(-2px);
     }
 
-
-
-
-    /* Menyesuaikan lebar kolom pada tabel */
-
-
-    /* Custom button styles */
-    .btn-icon .ri {
-        margin-right: 4px;
-    }
-
-    .action-buttons .btn {
-        padding: 5px 10px;
-        font-size: 14px;
-    }
-
-    /* Responsive card body padding */
-    .card-body-enhanced {
-        padding: 1.5rem;
-    }
-
-    /* Customizing the input fields for a better look */
     .form-control {
         border-radius: 0.375rem;
     }
@@ -63,19 +38,100 @@
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
 </style>
+<style>
+    @media screen and (max-width: 767px) {
+        #detail-purchase-request thead {
+            display: none;
+        }
 
+        #detail-purchase-request,
+        #detail-purchase-request tbody,
+        #detail-purchase-request tr,
+        #detail-purchase-request td {
+            display: block;
+            width: 100%;
+        }
+
+        #detail-purchase-request tr {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        #detail-purchase-request td {
+            text-align: right;
+            padding-left: 50%;
+            position: relative;
+        }
+
+        #detail-purchase-request td:before {
+            content: attr(data-label);
+            position: absolute;
+            left: 6px;
+            width: 45%;
+            padding-right: 10px;
+            white-space: nowrap;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        #detail-purchase-request td input,
+        #detail-purchase-request td select,
+        #detail-purchase-request td textarea {
+            width: 100% !important;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+    }
+</style>
+<!-- comment style -->
+<style>
+    #commentSection {
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    .comment-bubble {
+        max-width: 100%;
+        margin-bottom: 15px;
+        clear: both;
+    }
+
+    .comment-bubble .card {
+        border-radius: 20px;
+    }
+
+    .comment-bubble.left .card {
+        background-color: #f0f0f0;
+    }
+
+    .comment-bubble.right .card {
+        background-color: #dcf8c6;
+        float: right;
+    }
+
+    .comment-bubble .card-body {
+        padding: 10px 15px;
+    }
+
+    .comment-bubble .card-text {
+        margin-bottom: 5px;
+    }
+
+    .comment-bubble .text-muted {
+        font-size: 0.8em;
+    }
+</style>
 
 <?php
 $id_proc_ch = $_GET['id'];
-$sql = mysqli_query($koneksi, "SELECT * FROM proc_purchase_requests WHERE  id_proc_ch ='$id_proc_ch' "); // query jika filter dipilih
-$row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
-?>
-
-
-<?php
-$sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category WHERE id_category = '" . $row['category'] . "'");
-$rowCategory = mysqli_fetch_assoc($sqlCategory);
-$categoryName = $rowCategory['nama_category'];
+$sql = mysqli_query($koneksi, "SELECT * FROM proc_purchase_requests WHERE id_proc_ch ='$id_proc_ch'");
+$row = mysqli_fetch_assoc($sql);
 ?>
 
 <div class="row">
@@ -85,25 +141,22 @@ $categoryName = $rowCategory['nama_category'];
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="card-title mb-0">Price Request Details</h5>
-                        <a href="index.php?page=PurchaseRequests" class="btn btn-close btn-lg">
-                        </a>
+                        <a href="index.php?page=PurchaseRequests" class="btn btn-close btn-lg"></a>
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- <button type="button" class="btn btn-primary btn-enhanced" id="addRow">
-                        <i class="ri-add-line icon-btn-space"></i>Add Row
-                    </button> -->
                     <div class="table-responsive mt-3">
                         <table class="table table-hover" id="detail-purchase-request">
                             <thead>
                                 <tr>
                                     <th style="display:none;">ID Request</th>
-                                    <th>Nama Barang</th>
-                                    <th width="20%">Detail Spec</th>
+                                    <th width="16%">Nama Barang</th>
+                                    <th width="12%">Detail Spec</th>
                                     <th width="6%">Qty</th>
-                                    <th width="7%">Uom</th>
+                                    <th width="16%">Category</th>
+                                    <th width="9%">Uom</th>
                                     <th width="10%">Harga</th>
-                                    <th width="13%">Total Harga</th>
+                                    <th width="5%">Total Harga</th>
                                     <th width="15%">Action</th>
                                     <th width="15%">Detail Notes</th>
                                 </tr>
@@ -122,7 +175,7 @@ $categoryName = $rowCategory['nama_category'];
                 <div class="card-body card-body-enhanced">
                     <h5 class="card-title">Price Request - <?= $row['status'] ?></h5>
                     <form id="updatePurchaseRequestForm" enctype="multipart/form-data">
-                        <div class="card-body border-bottom border-bottom-dashed ">
+                        <div class="card-body border-bottom border-bottom-dashed">
                             <div class="row g-3">
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="invoicenoInput">No Price Request</label>
@@ -131,7 +184,6 @@ $categoryName = $rowCategory['nama_category'];
                                 <?php
                                 $currentDateTime = date("Y-m-d H:i:s");
                                 ?>
-
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="date-field">Current Datetime</label>
@@ -141,17 +193,16 @@ $categoryName = $rowCategory['nama_category'];
                                 <?php
                                 $id_proc_ch = $_GET['id'];
                                 $sql = mysqli_query($koneksi, "
-    SELECT
-        pp.*, user1.nama AS nama_request
-    FROM
-        proc_purchase_requests AS pp
-        LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
-    WHERE
-        pp.id_proc_ch = '$id_proc_ch'
-");
+                                    SELECT
+                                        pp.*, user1.nama AS nama_request
+                                    FROM
+                                        proc_purchase_requests AS pp
+                                        LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
+                                    WHERE
+                                        pp.id_proc_ch = '$id_proc_ch'
+                                ");
                                 $row = mysqli_fetch_assoc($sql);
                                 ?>
-
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="choices-payment-status">Nama Requester</label>
                                     <div class="input-light">
@@ -164,66 +215,6 @@ $categoryName = $rowCategory['nama_category'];
                                         <input type="text" name="title" class="form-control" readonly value="<?= $row['title'] ?>">
                                     </div>
                                 </div>
-
-                                <div class="col-lg-3 col-md-6">
-                                    <div class="mb-3">
-                                        <label for="category" class="form-label">Category</label>
-                                        <?php
-                                        $isSupervior = in_array($niklogin, ['19000133', '20000308', '19000136', '19000078']);
-                                        if ($isSupervior) {
-                                        ?>
-                                            <select class="form-control" data-choices name="category" id="kategori" data-selected="<?= $row['category'] ?>" required>
-                                                <option value="">Select Category</option>
-                                                <?php
-                                                $sqlCategory = mysqli_query($koneksi, "SELECT * FROM proc_category");
-                                                while ($rowCategory = mysqli_fetch_assoc($sqlCategory)) {
-                                                    $selected = ($rowCategory['id_category'] == $row['category']) ? 'selected' : '';
-                                                    echo "<option value='" . $rowCategory['id_category'] . "' " . $selected . ">" . $rowCategory['nama_category'] . "</option>";
-                                                }
-                                                ?>
-                                            </select>
-                                        <?php
-                                        } else {
-                                        ?>
-                                            <input type="text" class="form-control" name="category" value="<?= $categoryName ?>" readonly>
-                                        <?php
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
-
-
-                                <div class="col-lg-3 col-sm-6">
-                                    <label for="choices-payment-status">PIC Category Select</label>
-                                    <div>
-                                        <?php
-                                        function getUserName($idnik)
-                                        {
-                                            global $koneksi;
-                                            $sql = "SELECT nama FROM user WHERE idnik = '$idnik'";
-                                            $result = mysqli_query($koneksi, $sql);
-                                            $row = mysqli_fetch_assoc($result);
-                                            return $row['nama'];
-                                        }
-                                        ?>
-                                        <?php
-                                        $isSupervidor = in_array($niklogin, ['19000133', '20000308', '19000136', '19000078']);
-                                        if ($isSupervidor) {
-                                        ?>
-                                            <select class="form-control" name="proc_pic" id="pic" data-selected="<?= $row['proc_pic'] ?>">
-                                                <option value="">Select PIC</option>
-                                            </select>
-                                        <?php
-                                        } else {
-                                            $picName = getUserName($row['proc_pic']);
-                                        ?>
-                                            <input type="text" class="form-control" name="proc_pic" value="<?= $picName ?>" readonly>
-                                        <?php
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
-
                                 <div class="col-lg-3 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Total Amount</label>
@@ -250,7 +241,7 @@ $categoryName = $rowCategory['nama_category'];
                                                     <div class="avatar-title bg-light rounded">
                                                         <?php
                                                         $file_extension = pathinfo($row['lampiran'], PATHINFO_EXTENSION);
-                                                        if ($file_extension === 'jpg' || $file_extension === 'jpeg' || $file_extension === 'png') {
+                                                        if (in_array($file_extension, ['jpg', 'jpeg', 'png'])) {
                                                             echo '<i class="ri-image-line fs-20 text-primary"></i>';
                                                         } elseif ($file_extension === 'pdf') {
                                                             echo '<i class="ri-file-pdf-line fs-20 text-danger"></i>';
@@ -294,7 +285,25 @@ $categoryName = $rowCategory['nama_category'];
                 </div>
             </div>
         </div>
-
+    </div>
+</div>
+<!--form comments -->
+<div class="col-lg-12 mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Comments</h5>
+            <div id="commentSection" class="mb-4">
+                <!-- Comments will be loaded here dynamically -->
+            </div>
+            <form id="addCommentForm">
+                <div class="mb-3">
+                    <label for="commentText" class="form-label">Leave a Comment</label>
+                    <textarea class="form-control" id="commentText" name="comment" rows="3" placeholder="Enter your comment"></textarea>
+                </div>
+                <input type="hidden" name="id_proc_ch" value="<?= htmlspecialchars($row['id_proc_ch']); ?>">
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -302,48 +311,6 @@ $categoryName = $rowCategory['nama_category'];
 <script>
     $(document).ready(function() {
         var idProcCh = <?= json_encode($_GET['id']); ?>;
-        var selectedCategory = $('#kategori').data('selected');
-        var selectedLocation = $('#lokasi').data('selected');
-        var selectedPIC = $('#pic').data('selected');
-
-        // Set selected values on page load
-        $('#kategori').val(selectedCategory).trigger('change');
-        $('#lokasi').val(selectedLocation).trigger('change');
-
-        // Load PIC options based on selected category and location
-        if (selectedCategory && selectedLocation) {
-            $.ajax({
-                url: "function/get_pic.php",
-                type: "POST",
-                data: {
-                    id_category: selectedCategory,
-                    location: selectedLocation
-                },
-                success: function(data) {
-                    $('#pic').html('<option value="">Select PIC</option>' + data);
-                    $('#pic').val(selectedPIC).trigger('change');
-                }
-            });
-        }
-
-        // Update PIC options when category or location changes
-        $('#kategori, #lokasi').change(function() {
-            if ($('#kategori').val() && $('#lokasi').val()) {
-                $.ajax({
-                    url: "function/get_pic.php",
-                    type: "POST",
-                    data: {
-                        id_category: $('#kategori').val(),
-                        location: $('#lokasi').val()
-                    },
-                    success: function(data) {
-                        $('#pic').html('<option value="">Select PIC</option>' + data);
-                    }
-                });
-            } else {
-                $('#pic').html('<option value="">Select PIC</option>');
-            }
-        });
 
         function formatRibuan(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -358,8 +325,18 @@ $categoryName = $rowCategory['nama_category'];
                 },
                 success: function(data) {
                     $('#detail-purchase-request tbody').html(data);
+                    applyDataLabels();
                     if (callback) callback();
                 }
+            });
+        }
+
+        function applyDataLabels() {
+            $('#detail-purchase-request tbody tr').each(function() {
+                $(this).find('td').each(function(index) {
+                    var label = $('#detail-purchase-request thead th').eq(index).text();
+                    $(this).attr('data-label', label + ':');
+                });
             });
         }
 
@@ -386,7 +363,6 @@ $categoryName = $rowCategory['nama_category'];
         // Cek keberadaan data saat halaman dimuat
         toggleClosedTicketButton();
 
-        // Memanggil updateTotalPrice setiap kali terjadi perubahan pada qty[] atau unit_price[]
         $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
             var row = $(this).closest('tr');
             var qty = parseInt(row.find("input[name='qty[]']").val()) || 0;
@@ -397,22 +373,55 @@ $categoryName = $rowCategory['nama_category'];
         });
 
         function addRow() {
-            var newRow = `<tr>
-            <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
-            <td><input type="text" name="nama_barang[]" class="form-control" style="width: 100%;" /></td>
-            <td><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
-            <td><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
-            <td><input type="text" name="uom[]" class="form-control" style="width: 80px;" /></td>
-            <td><input type="text" name="unit_price[]" class="form-control price-input" maxlength="11" style="width: 120px;" /></td>
-            <td><span class="totalHarga">0</span></td>
-            <td>
-                <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
-                <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
-                <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
-            </td>
-            <td><textarea name="detail_notes[]" class="form-control" style="width: 100%;"></textarea></td>
-        </tr>`;
-            $('#detail-purchase-request tbody').append(newRow);
+            $.ajax({
+                url: 'function/get_uom.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(uomData) {
+                    var uomOptions = uomData.map(function(uom) {
+                        return `<option value="${uom.uom_name}">${uom.uom_name}</option>`;
+                    }).join('');
+
+                    $.ajax({
+                        url: 'function/get_category.php',
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(categoryData) {
+                            var categoryOptions = categoryData.map(function(category) {
+                                return `<option value="${category.id_category}">${category.nama_category}</option>`;
+                            }).join('');
+
+                            var newRow = `<tr>
+                                <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
+                                <td data-label="Nama Barang:"><input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" /></td>
+                                <td data-label="Detail Spec:"><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
+                                <td data-label="Qty:"><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
+                                <td data-label="Category:">
+                                    <select name='category[]' class='form-control category-dropdown'>
+                                        ${categoryOptions}
+                                    </select>
+                                </td>
+                                <td data-label="Uom:">
+                                    <select name='uom[]' class='form-control uom-dropdown'>
+                                        ${uomOptions}
+                                    </select>
+                                </td>
+                                <td data-label="Harga:"><input type="text" name="unit_price[]" class="form-control price-input" value="0" /></td>
+                                <td data-label="Total Harga:"><span class="totalHarga">0</span></td>
+                                <td data-label="Action:">
+                                    <div class="action-buttons">
+                                        <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
+                                        <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
+                                        <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
+                                    </div>
+                                </td>
+                            </tr>`;
+                            $('#detail-purchase-request tbody').append(newRow);
+                            applyDataLabels();
+                        }
+                    });
+                }
+            });
         }
 
         $('#addRow').click(function() {
@@ -431,7 +440,8 @@ $categoryName = $rowCategory['nama_category'];
                 nama_barang: row.find("input[name='nama_barang[]']").val(),
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
-                uom: row.find("input[name='uom[]']").val(),
+                category: row.find("select[name='category[]']").val(),
+                uom: row.find("select[name='uom[]']").val(),
                 unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
                 detail_notes: row.find("textarea[name='detail_notes[]']").val()
             };
@@ -441,25 +451,43 @@ $categoryName = $rowCategory['nama_category'];
                 url: "function/insert_detail_purchase_request.php",
                 data: data,
                 success: function(response) {
-                    alert("Data berhasil disimpan");
-                    loadData(function() {
-                        toggleClosedTicketButton();
-                    });
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadData(function() {
+                            applyDataLabels();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message
+                        });
+                    }
                 },
-                error: function() {
-                    alert("Terjadi kesalahan saat menyimpan data");
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error updating the row.'
+                    });
                 }
             });
         });
 
         $(document).on('click', '.edit', function() {
             var $row = $(this).closest('tr');
-            $row.find('input, textarea').prop('readonly', false);
+            $row.find('input, textarea, select').prop('readonly', false);
             $(this).hide();
             $row.find('.saveRow').show();
         });
 
-        // Perbaikan pada fungsi saveRow
         $(document).on('click', '.saveRow', function() {
             var row = $(this).closest('tr');
             var data = {
@@ -468,7 +496,8 @@ $categoryName = $rowCategory['nama_category'];
                 nama_barang: row.find("input[name='nama_barang[]']").val(),
                 detail_specification: row.find("textarea[name='detail_specification[]']").val(),
                 qty: row.find("input[name='qty[]']").val(),
-                uom: row.find("input[name='uom[]']").val(),
+                category: row.find("select[name='category[]']").val(),
+                uom: row.find("select[name='uom[]']").val(),
                 unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
                 detail_notes: row.find("textarea[name='detail_notes[]']").val()
             };
@@ -478,39 +507,150 @@ $categoryName = $rowCategory['nama_category'];
                 url: "function/update_detail_purchase.php",
                 data: data,
                 success: function(response) {
-                    alert("Data berhasil diupdate");
-                    loadData(function() {
-                        toggleClosedTicketButton();
-                    });
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadData(function() {
+                            applyDataLabels();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message
+                        });
+                    }
                 },
-                error: function() {
-                    alert("Terjadi kesalahan saat menyimpan data");
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error updating the row.'
+                    });
                 }
             });
         });
 
-        // Perbaikan pada fungsi remove
         $(document).on('click', '.remove', function() {
             var id = $(this).data('id');
-            if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-                $.ajax({
-                    type: "POST",
-                    url: "function/delete_detail_purchase.php",
-                    data: {
-                        id: id
-                    },
-                    success: function(response) {
-                        alert("Data berhasil dihapus");
-                        loadData(function() {
-                            updateTotalPrice();
-                            toggleClosedTicketButton();
-                        });
-                    },
-                    error: function() {
-                        alert("Terjadi kesalahan saat menghapus data");
-                    }
+            if (!id) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Cannot identify the item to delete'
                 });
+                return;
             }
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "POST",
+                        url: "function/delete_detail_purchase.php",
+                        data: {
+                            id: id
+                        },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.message,
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                                loadData(function() {
+                                    applyDataLabels();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("AJAX Error:", status, error);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'There was an error deleting the row.'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        function loadComments() {
+            $.ajax({
+                url: 'function/get_comments.php',
+                type: 'GET',
+                data: {
+                    id_proc_ch: idProcCh
+                },
+                success: function(data) {
+                    $('#commentSection').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading comments:", status, error);
+                }
+            });
+        }
+
+        loadComments(); // Load comments when page loads
+
+        $('#addCommentForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            $.ajax({
+                type: "POST",
+                url: "function/add_comments.php",
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Comment added successfully',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadComments();
+                        $('#addCommentForm')[0].reset();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to add comment'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    console.error("Response Text:", xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error submitting the comment: ' + error
+                    });
+                }
+            });
         });
 
         function updateTotalPrice() {
@@ -521,16 +661,13 @@ $categoryName = $rowCategory['nama_category'];
                 var subtotal = (qty * price) || 0;
                 total += subtotal;
             });
-            $("input[name='total_price']").val(formatRibuan(total));
+            $("input[name='total_price']").val('Rp ' + formatRibuan(total));
             toggleClosedTicketButton();
         }
 
         $('#closedTicketBtn').on('click', function() {
             var formData = new FormData($('#updatePurchaseRequestForm')[0]);
             formData.append('status', 'Closed');
-            formData.append('category', $('#kategori').val());
-            formData.append('jobLocation', $('#lokasi').val());
-            formData.append('proc_pic', $('#pic').val());
 
             $.ajax({
                 type: "POST",
@@ -564,9 +701,6 @@ $categoryName = $rowCategory['nama_category'];
         $('#updateTicketBtn').on('click', function() {
             var formData = new FormData($('#updatePurchaseRequestForm')[0]);
             formData.append('status', 'Open');
-            formData.append('category', $('#kategori').val());
-            formData.append('jobLocation', $('#lokasi').val());
-            formData.append('proc_pic', $('#pic').val());
 
             $.ajax({
                 type: "POST",
@@ -596,5 +730,8 @@ $categoryName = $rowCategory['nama_category'];
                 }
             });
         });
+
+        // Panggil fungsi applyDataLabels saat halaman dimuat
+        applyDataLabels();
     });
 </script>
