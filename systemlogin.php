@@ -1,28 +1,39 @@
 <?php
-/// Start atau resume session
+// Start or resume session
 session_start();
 $url = $_SESSION['url-dituju'];
 
+// Include koneksi.php file
 include 'koneksi.php';
 
-// Menangkap data yang dikirim dari form login
+// Capture data sent from login form
 $username = $_POST['username'];
 $password = $_POST['password'];
 $rememberMe = isset($_POST['remember']) ? $_POST['remember'] : '';
 
-// Menyeleksi data user dengan username yang sesuai
+// Select user data with the matching username
 $login = mysqli_query($koneksi, "SELECT * FROM login WHERE username='$username' AND status_login='Aktif'");
-// Menghitung jumlah data yang ditemukan
 $cek = mysqli_num_rows($login);
 
 if ($cek > 0) {
 	$data = mysqli_fetch_assoc($login);
 
-	// Verifikasi password
+	// Verify password
 	if (password_verify($password, $data['password'])) {
-		// Jika passwordnya masih '123456', arahkan ke halaman reset password
+		$_SESSION['url-dituju'] = $url;
+		// Save user information in session
+		if ($password === '123456') {
+			$_SESSION['username'] = $username;
+			$_SESSION['reset_password'] = true; // Set session variable for password reset
+			$_SESSION['Messages'] = 'Please change your password for security reasons.';
+			$_SESSION['Icon'] = 'warning'; // Use 'warning' icon
+			header("location:changepassword2.php");
+			exit();
+		}
+
 		$_SESSION['idnik'] = $data['idnik'];
-		$idnik = $data['idnik']; // Ambil idnik
+
+		$idnik = $data['idnik'];
 		$_SESSION['url-dituju'] = $url;
 
 		$sqlroles = mysqli_query($koneksi, "SELECT id_role FROM user_roles WHERE idnik='$idnik'");
@@ -30,32 +41,35 @@ if ($cek > 0) {
 		while ($rowrole = mysqli_fetch_assoc($sqlroles)) {
 			$roles[] = $rowrole['id_role'];
 		}
-		$_SESSION['role'] = $roles; // Simpan role dalam session<br>
+		$_SESSION['role'] = $roles;
 
-		if ($password === '123456') {
-			header("location:changepassword2.php");
-			exit();
-		}
+		// Query the user's name from the user table
+		$user_query = mysqli_query($koneksi, "SELECT nama FROM user WHERE idnik='$idnik'");
+		$user_data = mysqli_fetch_assoc($user_query);
+		$user_name = $user_data['nama'];
 
-		// Jika "Remember me" dicentang
+		// If the password is '123456', redirect to the change password page
+
+		// If "Remember me" is checked
 		if ($rememberMe === 'yes') {
-			$cookie_lifetime = 30 * 24 * 60 * 60; // 1 bulan
+			$cookie_lifetime = 30 * 24 * 60 * 60; // 1 month
 			setcookie('username', $username, time() + $cookie_lifetime);
-			// Jangan simpan password di cookie, ini hanya contoh
-			// Simpan token aman sebagai pengganti jika diperlukan
 		}
 
-		// Setelah berhasil login, redirect ke halaman yang ditentukan
+		$_SESSION['Messages'] = 'Login successful! Welcome, ' . htmlspecialchars($user_name) . '.';
+		$_SESSION['Icon'] = 'success'; // Use 'success' icon
 		$url = isset($_SESSION['url-dituju']) ? $_SESSION['url-dituju'] : 'index.php?page=Dashboard';
 		header("location:$url");
 		exit();
 	} else {
-		$_SESSION['login_error'] = 'Username atau password tidak sesuai';
+		$_SESSION['Messages'] = 'Username or password is incorrect.';
+		$_SESSION['Icon'] = 'error'; // Use 'error' icon
 		header("location:login.php");
 		exit();
 	}
 } else {
-	$_SESSION['login_error'] = 'Username atau password tidak sesuai';
+	$_SESSION['Messages'] = 'Username or password is incorrect.';
+	$_SESSION['Icon'] = 'error'; // Use 'error' icon
 	header("location:login.php");
 	exit();
 }

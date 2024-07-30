@@ -1,22 +1,14 @@
 <?php session_start();
-if (isset($_SESSION['idnik']) && $_SESSION['idnik']) {
+if (isset($_SESSION['username']) && $_SESSION['username']) {
     // Jika sudah login, arahkan ke halaman akses (atau halaman home)
-    header("location:index.php?page=Dashboard");
-
-    exit();
-} ?>
-<?php session_start();
-if (isset($_SESSION['reset_password']) && $_SESSION['reset_password']) {
-    // Jika sudah login, arahkan ke halaman akses (atau halaman home)
-    header("location:changepassword2.php");
-
+    header("Location: location:index.php?Page=Dashboard");
     exit();
 } ?>
 <!doctype html>
 <html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
-<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <head>
+
 
     <meta charset="utf-8" />
     <title>Sign In | EIP MAA Group</title>
@@ -41,11 +33,9 @@ if (isset($_SESSION['reset_password']) && $_SESSION['reset_password']) {
 
 <body>
 
-
-
     <div class="auth-page-wrapper pt-5">
         <!-- auth page bg -->
-        <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
+        <div class="auth-one-bg-position auth-one-bg" id="auth-">
             <div class="bg-overlay"></div>
 
             <div class="shape">
@@ -67,7 +57,7 @@ if (isset($_SESSION['reset_password']) && $_SESSION['reset_password']) {
                                     <img src="assets/images/logo_MAAA.png" alt="" height="35">
                                 </a>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Employee Imformation Portal</p>
+                            <p class="mt-3 fs-15 fw-medium">Employee Information Portal</p>
                         </div>
                     </div>
                 </div>
@@ -83,34 +73,18 @@ if (isset($_SESSION['reset_password']) && $_SESSION['reset_password']) {
                                     <p class="text-muted">Sign in to continue to Procurement Requests.</p>
                                 </div>
                                 <div class="p-2 mt-4">
-                                    <form class="js-validation-signin" action="systemlogin.php" method="POST">
+                                    <form class="js-validation-signin" action="systemlogintoken.php" method="POST">
+                                        <!-- Switch Button -->
+
 
                                         <div class="mb-3">
-                                            <label for="username" class="form-label">Username</label>
-
-                                            <input type="text" class="form-control" id="username" placeholder="Enter username" name="username" required>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <div class="float-end">
-                                                <a href="forgotpassword.php" class="text-muted">Forgot password?</a>
-                                            </div>
-                                            <label class="form-label" for="password-input">Password</label>
-                                            <div class="position-relative auth-pass-inputgroup mb-3">
-                                                <input type="password" class="form-control pe-5 password-input" placeholder="Enter password" id="password-input" name="password" required>
-                                                <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" value="yes" id="auth-remember-check" name="remember">
-                                            <label class="form-check-label" for="auth-remember-check">Remember me</label>
+                                            <label for="token" class="form-label">Token</label>
+                                            <input type="password" class="form-control" placeholder="Enter token" required name="token">
                                         </div>
 
                                         <div class="mt-4">
                                             <button class="btn btn-success w-100" type="submit">Sign In</button>
                                         </div>
-
 
 
                                     </form>
@@ -119,6 +93,9 @@ if (isset($_SESSION['reset_password']) && $_SESSION['reset_password']) {
                             <!-- end card body -->
                         </div>
                         <!-- end card -->
+
+
+
                     </div>
                 </div>
                 <!-- end row -->
@@ -137,6 +114,7 @@ if (isset($_SESSION['reset_password']) && $_SESSION['reset_password']) {
                                 <script>
                                     document.write(new Date().getFullYear())
                                 </script> Procurement Requests Web Application <i class="mdi mdi-heart text-danger"></i> by Mineral Alam Abadi
+
                             </p>
                         </div>
                     </div>
@@ -148,6 +126,11 @@ if (isset($_SESSION['reset_password']) && $_SESSION['reset_password']) {
     <!-- end auth-page-wrapper -->
 
     <!-- JAVASCRIPT -->
+
+
+
+
+
     <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="assets/libs/simplebar/simplebar.min.js"></script>
     <script src="assets/libs/node-waves/waves.min.js"></script>
@@ -161,27 +144,6 @@ if (isset($_SESSION['reset_password']) && $_SESSION['reset_password']) {
     <script src="assets/js/pages/particles.app.js"></script>
     <!-- password-addon init -->
     <script src="assets/js/pages/password-addon.init.js"></script>
-
-
-
-
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            <?php if (isset($_SESSION['Messages'])) { ?>
-                Swal.fire({
-                    icon: '<?php echo $_SESSION['Icon']; ?>',
-                    title: '<?php echo ($_SESSION['Icon'] == 'success') ? 'Success' : 'Error'; ?>',
-                    text: '<?php echo $_SESSION['Messages']; ?>',
-                    showConfirmButton: false
-                });
-                <?php unset($_SESSION['Messages']); ?>
-                <?php unset($_SESSION['Icon']); ?>
-            <?php } ?>
-        });
-    </script>
-
-
 </body>
 
 </html>
