@@ -61,7 +61,6 @@
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
 </style>
-
 <style>
     @media screen and (max-width: 767px) {
         #detail-purchase-request thead {
@@ -121,6 +120,46 @@
         }
     }
 </style>
+<!-- comment style -->
+<style>
+    #commentSection {
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    .comment-bubble {
+        max-width: 100%;
+        margin-bottom: 15px;
+        clear: both;
+    }
+
+    .comment-bubble .card {
+        border-radius: 20px;
+    }
+
+    .comment-bubble.left .card {
+        background-color: #f0f0f0;
+    }
+
+    .comment-bubble.right .card {
+        background-color: #dcf8c6;
+        float: right;
+    }
+
+    .comment-bubble .card-body {
+        padding: 10px 15px;
+    }
+
+    .comment-bubble .card-text {
+        margin-bottom: 5px;
+    }
+
+    .comment-bubble .text-muted {
+        font-size: 0.8em;
+    }
+</style>
+
 
 <?php
 $id_proc_ch = $_GET['id'];
@@ -141,7 +180,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 </div>
                 <div class="card-body">
                     <div class="sticky-top bg-white py-2 mb-3">
-                        <button type="button" class="btn btn-primary btn-block" id="addRow">
+                        <button type="button" class="btn btn-primary" id="addRow">
                             <i class="ri-add-line icon-btn-space"></i>Add Row
                         </button>
                     </div>
@@ -236,10 +275,30 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         </div>
     </div>
 </div>
+<!--form comments -->
+<div class="col-lg-12 mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Comments</h5>
+            <div id="commentSection" class="mb-4">
+                <!-- Comments will be loaded here dynamically -->
+            </div>
+            <form id="addCommentForm">
+                <div class="mb-3">
+                    <label for="commentText" class="form-label">Leave a Comment</label>
+                    <textarea class="form-control" id="commentText" name="comment" rows="3" placeholder="Enter your comment"></textarea>
+                </div>
+                <input type="hidden" name="id_proc_ch" value="<?= htmlspecialchars($row['id_proc_ch']); ?>">
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script>
     $(document).ready(function() {
         var idProcCh = <?= json_encode($_GET['id']); ?>;
+
 
         function formatRibuan(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -438,6 +497,63 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                         icon: 'error',
                         title: 'Error',
                         text: 'There was an error updating the row.'
+                    });
+                }
+            });
+        });
+
+        function loadComments() {
+            $.ajax({
+                url: 'function/get_comments.php',
+                type: 'GET',
+                data: {
+                    id_proc_ch: idProcCh
+                },
+                success: function(data) {
+                    $('#commentSection').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading comments:", status, error);
+                }
+            });
+        }
+
+        loadComments(); // Load comments when page loads
+
+        $('#addCommentForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            $.ajax({
+                type: "POST",
+                url: "function/add_comments.php",
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Comment added successfully',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadComments();
+                        $('#addCommentForm')[0].reset();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to add comment'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    console.error("Response Text:", xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error submitting the comment: ' + error
                     });
                 }
             });
