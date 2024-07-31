@@ -24,8 +24,11 @@ if (isset($row7['admin']) && ($row7['admin'] == '1')) {
 		case 'LinkApprovalPurchase':
 			include "link-approval.php";
 			break;
-		case 'ViewPriceReq':
+		case 'PrintPriceReq':
 			include "print-price-request.php";
+			break;
+		case 'ViewPriceReq':
+			include "view-price-request.php";
 			break;
 		default:
 			include "pages-404.php";
@@ -39,8 +42,11 @@ if (isset($row7['admin']) && ($row7['admin'] == '1')) {
 		case 'DetailPurchase':
 			include "detail-purchase-request.php";
 			break;
-		case 'ViewPriceReq':
+		case 'PrintPriceReq':
 			include "print-price-request.php";
+			break;
+		case 'ViewPriceReq':
+			include "view-price-request.php";
 			break;
 		case 'PurchaseRequests':
 			include "purchase-requests.php";

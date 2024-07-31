@@ -157,8 +157,6 @@ $row = mysqli_fetch_assoc($sql);
                                     <th width="9%">Uom</th>
                                     <th width="10%">Harga</th>
                                     <th width="5%">Total Harga</th>
-                                    <th width="15%">Action</th>
-                                    <th width="15%">Detail Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -277,10 +275,6 @@ $row = mysqli_fetch_assoc($sql);
                                 </div>
                             </div>
                         </div>
-                        <div class="pt-3">
-                            <button type="button" class="btn btn-primary" id="closedTicketBtn">Closed Ticket</button>
-                            <button type="button" class="btn btn-secondary" id="updateTicketBtn">Update Ticket</button>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -307,7 +301,6 @@ $row = mysqli_fetch_assoc($sql);
     </div>
 </div>
 
-
 <script>
     $(document).ready(function() {
         var idProcCh = <?= json_encode($_GET['id']); ?>;
@@ -318,7 +311,7 @@ $row = mysqli_fetch_assoc($sql);
 
         function loadData(callback) {
             $.ajax({
-                url: 'function/fetch_detail_purchase_request.php',
+                url: 'function/fetch_view_price_request.php',
                 type: 'GET',
                 data: {
                     id_proc_ch: idProcCh
@@ -340,261 +333,7 @@ $row = mysqli_fetch_assoc($sql);
             });
         }
 
-        function hasDetailRows() {
-            var tableRows = $('#detail-purchase-request tbody tr');
-            return tableRows.length > 0;
-        }
-
-        function toggleClosedTicketButton() {
-            var hasRows = hasDetailRows();
-            var totalAmount = parseFloat($("input[name='total_price']").val().replace(/\./g, ''));
-
-            if (!hasRows || totalAmount === 0) {
-                $('#closedTicketBtn').prop('disabled', true);
-                $('#closedTicketBtn').html('<i class="ri-lock-line me-1"></i> Closed Ticket');
-            } else {
-                $('#closedTicketBtn').prop('disabled', false);
-                $('#closedTicketBtn').html('Closed Ticket');
-            }
-        }
-
         loadData();
-
-        // Cek keberadaan data saat halaman dimuat
-        toggleClosedTicketButton();
-
-        $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
-            var row = $(this).closest('tr');
-            var qty = parseInt(row.find("input[name='qty[]']").val()) || 0;
-            var price = parseInt(row.find("input[name='unit_price[]']").val().replace(/\./g, '')) || 0;
-            var total = qty * price;
-            row.find('.totalHarga').text(formatRibuan(total));
-            updateTotalPrice();
-        });
-
-        function addRow() {
-            $.ajax({
-                url: 'function/get_uom.php',
-                type: 'GET',
-                dataType: 'json',
-                success: function(uomData) {
-                    var uomOptions = uomData.map(function(uom) {
-                        return `<option value="${uom.uom_name}">${uom.uom_name}</option>`;
-                    }).join('');
-
-                    $.ajax({
-                        url: 'function/get_category.php',
-                        type: 'GET',
-                        dataType: 'json',
-                        success: function(categoryData) {
-                            var categoryOptions = categoryData.map(function(category) {
-                                return `<option value="${category.id_category}">${category.nama_category}</option>`;
-                            }).join('');
-
-                            var newRow = `<tr>
-                                <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
-                                <td data-label="Nama Barang:"><input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" /></td>
-                                <td data-label="Detail Spec:"><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
-                                <td data-label="Qty:"><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
-                                <td data-label="Category:">
-                                    <select name='category[]' class='form-control category-dropdown'>
-                                        ${categoryOptions}
-                                    </select>
-                                </td>
-                                <td data-label="Uom:">
-                                    <select name='uom[]' class='form-control uom-dropdown'>
-                                        ${uomOptions}
-                                    </select>
-                                </td>
-                                <td data-label="Harga:"><input type="text" name="unit_price[]" class="form-control price-input" value="0" /></td>
-                                <td data-label="Total Harga:"><span class="totalHarga">0</span></td>
-                                <td data-label="Action:">
-                                    <div class="action-buttons">
-                                        <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
-                                        <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
-                                        <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
-                                    </div>
-                                </td>
-                            </tr>`;
-                            $('#detail-purchase-request tbody').append(newRow);
-                            applyDataLabels();
-                        }
-                    });
-                }
-            });
-        }
-
-        $('#addRow').click(function() {
-            addRow();
-        });
-
-        $(document).on('input', '.price-input', function() {
-            var value = $(this).val().replace(/\./g, '');
-            $(this).val(formatRibuan(value));
-        });
-
-        $(document).on('click', '.saveNewRow', function() {
-            var row = $(this).closest('tr');
-            var data = {
-                id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
-                nama_barang: row.find("input[name='nama_barang[]']").val(),
-                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
-                qty: row.find("input[name='qty[]']").val(),
-                category: row.find("select[name='category[]']").val(),
-                uom: row.find("select[name='uom[]']").val(),
-                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
-                detail_notes: row.find("textarea[name='detail_notes[]']").val()
-            };
-
-            $.ajax({
-                type: "POST",
-                url: "function/insert_detail_purchase_request.php",
-                data: data,
-                success: function(response) {
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: response.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        loadData(function() {
-                            applyDataLabels();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'There was an error updating the row.'
-                    });
-                }
-            });
-        });
-
-        $(document).on('click', '.edit', function() {
-            var $row = $(this).closest('tr');
-            $row.find('input, textarea, select').prop('readonly', false);
-            $(this).hide();
-            $row.find('.saveRow').show();
-        });
-
-        $(document).on('click', '.saveRow', function() {
-            var row = $(this).closest('tr');
-            var data = {
-                id: $(this).data('id'),
-                id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
-                nama_barang: row.find("input[name='nama_barang[]']").val(),
-                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
-                qty: row.find("input[name='qty[]']").val(),
-                category: row.find("select[name='category[]']").val(),
-                uom: row.find("select[name='uom[]']").val(),
-                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
-                detail_notes: row.find("textarea[name='detail_notes[]']").val()
-            };
-
-            $.ajax({
-                type: "POST",
-                url: "function/update_detail_purchase.php",
-                data: data,
-                success: function(response) {
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: response.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        loadData(function() {
-                            applyDataLabels();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'There was an error updating the row.'
-                    });
-                }
-            });
-        });
-
-        $(document).on('click', '.remove', function() {
-            var id = $(this).data('id');
-            if (!id) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Cannot identify the item to delete'
-                });
-                return;
-            }
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        type: "POST",
-                        url: "function/delete_detail_purchase.php",
-                        data: {
-                            id: id
-                        },
-                        success: function(response) {
-                            if (response.status === 'success') {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Deleted!',
-                                    text: response.message,
-                                    showConfirmButton: false,
-                                    timer: 1500
-                                });
-                                loadData(function() {
-                                    applyDataLabels();
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: response.message
-                                });
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            console.error("AJAX Error:", status, error);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'There was an error deleting the row.'
-                            });
-                        }
-                    });
-                }
-            });
-        });
 
         function loadComments() {
             $.ajax({
@@ -648,62 +387,6 @@ $row = mysqli_fetch_assoc($sql);
                         icon: 'error',
                         title: 'Error',
                         text: 'There was an error submitting the comment: ' + error
-                    });
-                }
-            });
-        });
-
-        function updateTotalPrice() {
-            var total = 0;
-            $("#detail-purchase-request tbody tr").each(function() {
-                var qty = $(this).find("input[name='qty[]']").val();
-                var price = $(this).find("input[name='unit_price[]']").val().replace(/\./g, '');
-                var subtotal = (qty * price) || 0;
-                total += subtotal;
-            });
-            $("input[name='total_price']").val('Rp ' + formatRibuan(total));
-            toggleClosedTicketButton();
-        }
-
-        $('#closedTicketBtn').on('click', function() {
-            var formData = new FormData($('#updatePurchaseRequestForm')[0]);
-            formData.append('status', 'Closed');
-
-            $.ajax({
-                type: "POST",
-                url: "function/update_purchase.php",
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            title: 'Sukses!',
-                            text: response.message,
-                            icon: 'success',
-                            confirmButtonText: 'OK'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = "index.php?page=PurchaseRequests";
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: response.message,
-                            icon: 'error',
-                            confirmButtonText: 'OK'
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error(xhr.responseText);
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Terjadi kesalahan saat mengupdate data.',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
                     });
                 }
             });
