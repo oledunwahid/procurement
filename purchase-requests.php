@@ -213,7 +213,11 @@ if (!$result) {
                                             <li><a href="index.php?page=PrintPriceReq&id=<?= $row['id_proc_ch']; ?>" class="dropdown-item"><i class="ri-printer-fill align-bottom me-2 text-muted"></i> Print</a></li>
                                             <?php if ($isAdmin) { ?>
                                                 <li><a class="dropdown-item" href="index.php?page=DetailPurchase&id=<?= $row['id_proc_ch']; ?>"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</a></li>
-                                                <li><a class="dropdown-item" href="index.php?page=DeletePurchase&id=<?= $row['id_proc_ch']; ?>" onclick="return confirm('Are you sure you want to delete this item?');"><i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete</a></li>
+                                                <li>
+                                                    <a class="dropdown-item remove" href="javascript:void(0);" data-id="<?= $row['id_proc_ch']; ?>">
+                                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                                    </a>
+                                                </li>
                                             <?php } ?>
                                         </ul>
                                     </div>
@@ -243,3 +247,66 @@ if (!$result) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
 <script src="assets/js/pages/datatables.init.js"></script>
+
+<script>
+    $(document).on('click', '.remove', function(e) {
+        e.preventDefault();
+        var id = $(this).data('id');
+        if (!id) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Cannot identify the item to delete'
+            });
+            return;
+        }
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    type: "POST",
+                    url: "function/delete_purchase.php",
+                    data: {
+                        id: id
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: response.message,
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                // Reload halaman atau perbarui tabel
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error:", status, error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'There was an error deleting the item.'
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script>
