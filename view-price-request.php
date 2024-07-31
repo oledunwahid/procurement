@@ -295,8 +295,11 @@ $row = mysqli_fetch_assoc($sql);
                     <textarea class="form-control" id="commentText" name="comment" rows="3" placeholder="Enter your comment"></textarea>
                 </div>
                 <input type="hidden" name="id_proc_ch" value="<?= htmlspecialchars($row['id_proc_ch']); ?>">
-                <button type="submit" class="btn btn-primary">Post Comment</button>
+                <button type="submit" id="postCommentBtn" class="btn btn-primary" <?php echo (strtolower(trim($row['status'])) === 'closed') ? 'style="display:none;"' : ''; ?>>Post Comment</button>
             </form>
+            <div id="closedTicketInfo" class="alert alert-info mt-3" style="display: <?php echo (strtolower(trim($row['status'])) === 'closed') ? 'block' : 'none'; ?>;">
+                <i class="fas fa-info-circle"></i> This ticket is closed. No new comments can be added.
+            </div>
         </div>
     </div>
 </div>
@@ -304,6 +307,8 @@ $row = mysqli_fetch_assoc($sql);
 <script>
     $(document).ready(function() {
         var idProcCh = <?= json_encode($_GET['id']); ?>;
+        var status = <?= json_encode($row['status']); ?>;
+        console.log("Initial status:", status);
 
         function formatRibuan(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -320,6 +325,7 @@ $row = mysqli_fetch_assoc($sql);
                     $('#detail-purchase-request tbody').html(data);
                     applyDataLabels();
                     if (callback) callback();
+                    checkStatusAndToggleButton();
                 }
             });
         }
@@ -331,6 +337,20 @@ $row = mysqli_fetch_assoc($sql);
                     $(this).attr('data-label', label + ':');
                 });
             });
+        }
+
+        function checkStatusAndToggleButton() {
+            if (status && status.trim().toLowerCase() === 'closed') {
+                $('#postCommentBtn').hide();
+                $('#commentText').prop('disabled', true);
+                $('#closedTicketInfo').show();
+                console.log("Ticket is closed. Comment form disabled.");
+            } else {
+                $('#postCommentBtn').show();
+                $('#commentText').prop('disabled', false);
+                $('#closedTicketInfo').hide();
+                console.log("Ticket is open. Comment form enabled.");
+            }
         }
 
         loadData();
@@ -425,7 +445,14 @@ $row = mysqli_fetch_assoc($sql);
             });
         });
 
-        // Panggil fungsi applyDataLabels saat halaman dimuat
+        // Panggil fungsi applyDataLabels dan checkStatusAndToggleButton saat halaman dimuat
         applyDataLabels();
+        checkStatusAndToggleButton();
+
+        // Tambahkan event listener untuk perubahan status
+        $(document).on('change', '[name="status"]', function() {
+            status = $(this).val();
+            checkStatusAndToggleButton();
+        });
     });
 </script>
