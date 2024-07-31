@@ -1,11 +1,11 @@
-<?php session_start();
+<?php
 if (isset($_SESSION['idnik']) && $_SESSION['idnik']) {
     // Jika sudah login, arahkan ke halaman akses (atau halaman home)
     header("location:index.php?page=Dashboard");
 
     exit();
 } ?>
-<?php session_start();
+<?php
 if (isset($_SESSION['reset_password']) && $_SESSION['reset_password']) {
     // Jika sudah login, arahkan ke halaman akses (atau halaman home)
     header("location:changepassword2.php");
