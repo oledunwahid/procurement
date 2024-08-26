@@ -147,6 +147,7 @@ $row = mysqli_fetch_assoc($sql);
                 <div class="card-body">
                     <div class="table-responsive mt-3">
                         <table class="table table-hover" id="detail-purchase-request">
+                            <input type="hidden" name="niklogin" value="<?= $niklogin ?>">
                             <thead>
                                 <tr>
                                     <th style="display:none;">ID Request</th>
@@ -177,6 +178,7 @@ $row = mysqli_fetch_assoc($sql);
                     <form id="updatePurchaseRequestForm" enctype="multipart/form-data">
                         <div class="card-body border-bottom border-bottom-dashed">
                             <div class="row g-3">
+                                <input type="hidden" name="niklogin" value="<?= $niklogin ?>">
                                 <div class="col-lg-3 col-sm-6">
                                     <label for="invoicenoInput">No Price Request</label>
                                     <input type="text" name="id_proc_ch" class="form-control bg-light border-0" value="<?= $row['id_proc_ch'] ?>" readonly>
@@ -315,6 +317,8 @@ $row = mysqli_fetch_assoc($sql);
     $(document).ready(function() {
         var idProcCh = <?= json_encode($_GET['id']); ?>;
         var status = <?= json_encode($row['status']); ?>;
+        var niklogin = $('input[name="niklogin"]').val();
+        var idnik_pic = $('input[name="idnik_pic"]').val();
 
         function formatRibuan(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -362,7 +366,6 @@ $row = mysqli_fetch_assoc($sql);
             }
         }
 
-
         function checkStatusAndToggleButton() {
             if (status && status.trim().toLowerCase() === 'closed') {
                 $('#postCommentBtn').hide();
@@ -377,10 +380,7 @@ $row = mysqli_fetch_assoc($sql);
             }
         }
 
-
         loadData();
-
-        // Cek keberadaan data saat halaman dimuat
         toggleClosedTicketButton();
 
         $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
@@ -430,7 +430,7 @@ $row = mysqli_fetch_assoc($sql);
                                 <td data-label="Total Harga:"><span class="totalHarga">0</span></td>
                                 <td data-label="Action:">
                                     <div class="action-buttons">
-                                        <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
+                                        <button type="button" class="btn btn-success btn-sm saveNewRow" data-niklogin="${niklogin}" data-idnik-pic="${idnik_pic}">Save Now</button>
                                         <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
                                         <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
                                     </div>
@@ -463,7 +463,9 @@ $row = mysqli_fetch_assoc($sql);
                 category: row.find("select[name='category[]']").val(),
                 uom: row.find("select[name='uom[]']").val(),
                 unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
-                detail_notes: row.find("textarea[name='detail_notes[]']").val()
+                detail_notes: row.find("textarea[name='detail_notes[]']").val(),
+                niklogin: $(this).data('niklogin'),
+                idnik_pic: $(this).data('idnik-pic')
             };
 
             $.ajax({
@@ -519,7 +521,9 @@ $row = mysqli_fetch_assoc($sql);
                 category: row.find("select[name='category[]']").val(),
                 uom: row.find("select[name='uom[]']").val(),
                 unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
-                detail_notes: row.find("textarea[name='detail_notes[]']").val()
+                detail_notes: row.find("textarea[name='detail_notes[]']").val(),
+                niklogin: niklogin,
+                idnik_pic: idnik_pic
             };
 
             $.ajax({
@@ -581,7 +585,9 @@ $row = mysqli_fetch_assoc($sql);
                         type: "POST",
                         url: "function/delete_detail_purchase.php",
                         data: {
-                            id: id
+                            id: id,
+                            niklogin: niklogin,
+                            idnik_pic: idnik_pic
                         },
                         success: function(response) {
                             if (response.status === 'success') {
@@ -632,11 +638,12 @@ $row = mysqli_fetch_assoc($sql);
             });
         }
 
-        loadComments(); // Load comments when page loads
+        loadComments();
 
         $('#addCommentForm').on('submit', function(e) {
             e.preventDefault();
             var formData = $(this).serialize();
+            formData += '&niklogin=' + niklogin + '&idnik_pic=' + idnik_pic;
             $.ajax({
                 type: "POST",
                 url: "function/add_comments.php",
@@ -688,7 +695,8 @@ $row = mysqli_fetch_assoc($sql);
         $('#closedTicketBtn').on('click', function() {
             var formData = new FormData($('#updatePurchaseRequestForm')[0]);
             formData.append('status', 'closed');
-
+            formData.append('niklogin', niklogin);
+            formData.append('idnik_pic', idnik_pic);
             $.ajax({
                 type: "POST",
                 url: "function/update_purchase.php",
@@ -732,6 +740,8 @@ $row = mysqli_fetch_assoc($sql);
         $('#updateTicketBtn').on('click', function() {
             var formData = new FormData($('#updatePurchaseRequestForm')[0]);
             formData.append('status', 'Open');
+            formData.append('niklogin', niklogin);
+            formData.append('idnik_pic', idnik_pic);
 
             $.ajax({
                 type: "POST",
@@ -739,19 +749,30 @@ $row = mysqli_fetch_assoc($sql);
                 data: formData,
                 processData: false,
                 contentType: false,
+                dataType: 'json',
                 success: function(response) {
-                    Swal.fire({
-                        title: 'Sukses!',
-                        text: 'Data berhasil diupdate.',
-                        icon: 'success',
-                        confirmButtonText: 'OK'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = "index.php?page=PurchaseRequests";
-                        }
-                    });
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            title: 'Sukses!',
+                            text: 'Data berhasil diupdate.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = "index.php?page=PurchaseRequests";
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: response.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
                     Swal.fire({
                         title: 'Error!',
                         text: 'Terjadi kesalahan saat mengupdate data.',
@@ -762,11 +783,9 @@ $row = mysqli_fetch_assoc($sql);
             });
         });
 
-        // Panggil fungsi applyDataLabels saat halaman dimuat
         applyDataLabels();
         checkStatusAndToggleButton();
 
-        // Tambahkan event listener untuk perubahan status
         $(document).on('change', '[name="status"]', function() {
             status = $(this).val();
             checkStatusAndToggleButton();
