@@ -57,7 +57,7 @@
                 </li>
 
                 <!-- Administrator Access (if applicable) -->
-                <?php if (isset($row7['admin']) && ($row7['admin'] == '1')) : ?>
+                <?php if (!empty($role) && array_intersect($role, ['1', '5'])) : ?>
                     <li class="menu-title"><span data-key="t-menu">Admin Access</span></li>
                     <li class="nav-item">
                         <a class="nav-link menu-link<?= ($page == 'Administrator') ? ' active' : ''; ?>" href="#admin" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="admin">
@@ -66,10 +66,7 @@
                         <div class="collapse menu-dropdown" id="admin">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="index.php?page=editFAQ" class="nav-link">Edit FAQ</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="index.php?page=MenuAdministrator" class="nav-link"> Menu Admin </a>
+                                    <a href="index.php?page=AdminLog" class="nav-link">Admin Log</a>
                                 </li>
                             </ul>
                         </div>

@@ -1,61 +1,23 @@
 <?php
-$page = isset($_GET['page']) ? $_GET['page'] : '';
+$pageFiles = [
+	'Dashboard' => 'home-facility.php',
+	'PurchaseRequests' => 'purchase-requests.php',
+	'DetailPurchase' => 'detail-purchase-request.php',
+	'UserDetailPurchase' => 'view-detail-purchase.php',
+	'AccessAdministrator' => (in_array('1', $role) || in_array('5', $role)) ?  'akses_admin.php' : 'pages-404.php',
+	'MenuAdministrator' => (in_array('1', $role) || in_array('5', $role)) ?  'menu_admin.php' : 'pages-404.php',
+	'PrintPriceReq' => 'print-price-request.php',
+	'ViewPriceReq' => 'view-price-request.php',
+	'AdminLog' => (in_array('1', $role) || in_array('5', $role)) ?  'admin-log.php' : 'pages-404.php',
+];
 
-$sql7 = mysqli_query($koneksi, "SELECT * FROM access_level WHERE idnik = $niklogin");
-$row7 = mysqli_fetch_assoc($sql7);
 
-if (isset($row7['admin']) && ($row7['admin'] == '1')) {
-	switch ($page) {
-		case 'Dashboard':
-			include "home-facility.php";
-			break;
-		case 'PurchaseRequests':
-			include "purchase-requests.php";
-			break;
-		case 'DetailPurchase':
-			include "detail-purchase-request.php";
-			break;
-		case 'UserDetailPurchase':
-			include "view-detail-purchase.php";
-			break;
-		case 'ApprovalPurchase':
-			include "list-approval.php";
-			break;
-		case 'LinkApprovalPurchase':
-			include "link-approval.php";
-			break;
-		case 'PrintPriceReq':
-			include "print-price-request.php";
-			break;
-		case 'ViewPriceReq':
-			include "view-price-request.php";
-			break;
-		default:
-			include "pages-404.php";
-			break;
+if (isset($_SESSION['idnik'])) {
+	if (array_key_exists($page, $pageFiles)) {
+		include $pageFiles[$page];
+	} else {
+		include 'pages-404.php';
 	}
 } else {
-	switch ($page) {
-		case 'Dashboard':
-			include "home-facility.php";
-			break;
-		case 'DetailPurchase':
-			include "detail-purchase-request.php";
-			break;
-		case 'PrintPriceReq':
-			include "print-price-request.php";
-			break;
-		case 'ViewPriceReq':
-			include "view-price-request.php";
-			break;
-		case 'PurchaseRequests':
-			include "purchase-requests.php";
-			break;
-		case 'UserDetailPurchase':
-			include "view-detail-purchase.php";
-			break;
-		default:
-			include "pages-404.php";
-			break;
-	}
+	include 'login.php';
 }

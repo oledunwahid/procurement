@@ -91,6 +91,54 @@
                 <!-- Data will be filled by DataTables -->
             </tbody>
         </table>
+<div class="container-fluid mt-3">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Admin Log</h5>
+                    <div class="mt-2">
+                        <label for="dateRange">Filter by Date:</label>
+                        <input type="text" id="dateRange" name="dateRange" class="form-control" />
+                    </div>
+                    <div class="mt-2">
+                        <label for="actionTypeFilter">Action Type:</label>
+                        <select id="actionTypeFilter" class="form-control">
+                            <option value="">All</option>
+                            <option value="INSERT">INSERT</option>
+                            <option value="UPDATE">UPDATE</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+                    <div class="mt-2">
+                        <label for="tableNameFilter">Table Name:</label>
+                        <select id="tableNameFilter" class="form-control">
+                            <option value="">All</option>
+                            <!-- Populate this dynamically with table names from your database -->
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table id="adminLogTable" class="table table-bordered table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Log ID</th>
+                                <th>Admin NIK</th>
+                                <th>Action Type</th>
+                                <th>Table Name</th>
+                                <th>Record ID</th>
+                                <th>Old Value</th>
+                                <th>New Value</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data akan diisi oleh DataTables -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -100,112 +148,3 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.0.5/daterangepicker.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        console.log("DOM fully loaded");
-
-        // Check if DataTable is defined
-        if (typeof DataTable === 'undefined') {
-            console.error("DataTable is not defined. Make sure you've included the DataTables library correctly.");
-            return;
-        }
-
-        console.log("Initializing DataTable");
-
-        // Initialize DataTable
-        var table = new DataTable('#adminLogTable', {
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: "function/get_admin_log.php",
-                type: "POST",
-                data: function(d) {
-                    d.dateRange = document.getElementById('dateRange').value;
-                    d.actionType = document.getElementById('actionTypeFilter').value;
-                    d.tableName = document.getElementById('tableNameFilter').value;
-                },
-                dataSrc: function(json) {
-                    console.log("Data received from server:", json);
-                    if (!json.data) {
-                        console.error("No data property in the response");
-                        return [];
-                    }
-                    return json.data;
-                },
-                error: function(xhr, error, thrown) {
-                    console.error("Ajax error:", error);
-                    console.log("Server response:", xhr.responseText);
-                }
-            },
-            columns: [{
-                    data: 0
-                }, // Log ID
-                {
-                    data: 1
-                }, // Admin NIK
-                {
-                    data: 2
-                }, // Action Type
-                {
-                    data: 3
-                }, // Table Name
-                {
-                    data: 4
-                }, // Record ID
-                {
-                    data: 5
-                }, // Old Value
-                {
-                    data: 6
-                }, // New Value
-                {
-                    data: 7
-                } // Timestamp
-            ],
-            responsive: true,
-            lengthChange: false,
-            buttons: [{
-                extend: 'collection',
-                text: 'Export',
-                buttons: ['copy', 'excel', 'csv', 'pdf', 'print']
-            }],
-            dom: "<'row'<'col-sm-12'<'text-end mb-2'B>>>" +
-                "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
-        });
-
-        console.log("DataTable initialized");
-
-        // Reload table on filter change
-        ['dateRange', 'actionTypeFilter', 'tableNameFilter'].forEach(function(id) {
-            document.getElementById(id).addEventListener('change', function() {
-                console.log(id + " changed, reloading table");
-                table.ajax.reload();
-            });
-        });
-
-        // Clear filters
-        document.getElementById('clearFilters').addEventListener('click', function() {
-            console.log("Clearing filters");
-            document.getElementById('dateRange').value = '';
-            document.getElementById('actionTypeFilter').value = '';
-            document.getElementById('tableNameFilter').value = '';
-            table.ajax.reload();
-        });
-
-        // Populate table name filter dynamically
-        fetch('function/get_table_names.php')
-            .then(response => response.json())
-            .then(tableNames => {
-                console.log("Table names received:", tableNames);
-                const tableNameFilter = document.getElementById('tableNameFilter');
-                tableNames.forEach(tableName => {
-                    const option = document.createElement('option');
-                    option.value = tableName;
-                    option.textContent = tableName;
-                    tableNameFilter.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error fetching table names:', error));
-    });
-</script>

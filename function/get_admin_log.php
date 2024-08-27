@@ -98,6 +98,7 @@ while ($row = mysqli_fetch_assoc($result)) {
     // Escape HTML entities untuk mencegah XSS
     $escapedRow = array_map('htmlspecialchars', $row);
     $data[] = array_values($escapedRow);
+
 }
 
 // Output dalam format JSON
