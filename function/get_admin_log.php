@@ -44,12 +44,14 @@ if (!empty($search)) {
 
 // Add date range filter
 if (!empty($_POST['dateRange'])) {
-    $dates = explode(' - ', $_POST['dateRange']);
-    $start_date = date('Y-m-d', strtotime($dates[0]));
-    $end_date = date('Y-m-d', strtotime($dates[1]));
-    $sqlFiltered .= " AND DATE(timestamp) BETWEEN ? AND ?";
-    $params[] = $start_date;
-    $params[] = $end_date;
+    $dates = explode(' to ', $_POST['dateRange']);
+    if (count($dates) == 2) {
+        $start_date = date('Y-m-d', strtotime($dates[0]));
+        $end_date = date('Y-m-d', strtotime($dates[1]));
+        $sqlFiltered .= " AND DATE(timestamp) BETWEEN ? AND ?";
+        $params[] = $start_date;
+        $params[] = $end_date;
+    }
 }
 
 // Add action type filter
@@ -93,7 +95,10 @@ $totalRecordsFiltered = $rowFilteredCount['count'];
 
 $data = array();
 while ($row = mysqli_fetch_assoc($result)) {
-    $data[] = array_values($row);
+    // Escape HTML entities untuk mencegah XSS
+    $escapedRow = array_map('htmlspecialchars', $row);
+    $data[] = array_values($escapedRow);
+
 }
 
 // Output dalam format JSON
