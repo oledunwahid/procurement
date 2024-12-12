@@ -71,6 +71,11 @@
                             </ul>
                         </div>
                     </li>
+                    <li class="nav-item">
+                        <a href="index.php?page=CategoryManagement" class="nav-link <?php if ($page == 'CategoryManagement') echo 'active'; ?>">
+                            <i class="ri-admin-fill"></i> <span>Category Management</span>
+                        </a>
+                    </li>
                 <?php endif; ?>
 
             </ul>

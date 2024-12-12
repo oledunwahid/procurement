@@ -9,46 +9,62 @@
 $isAdmin = array_intersect([5, 1], $role);
 
 // Query untuk mendapatkan data purchase requests
-$sql = "
-SELECT
-pp.id_proc_ch,
-pp.title,
-pp.created_request,
-pp.status,
-pp.nik_request,
-pp.proc_pic,
-user1.nama AS nama_request,
-user1.divisi AS divisi_request,
-GROUP_CONCAT(DISTINCT prd.category SEPARATOR ', ') AS categories 
-FROM
-proc_purchase_requests AS pp
+$sql = "SELECT DISTINCT
+    pp.id_proc_ch,
+    pp.title,
+    pp.created_request,
+    pp.status,
+    pp.nik_request,
+    pp.proc_pic,
+    user1.nama AS nama_request,
+    user1.divisi AS divisi_request,
+    GROUP_CONCAT(DISTINCT prd.category SEPARATOR ', ') AS categories 
+FROM proc_purchase_requests AS pp
 LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
 LEFT JOIN proc_request_details AS prd ON pp.id_proc_ch = prd.id_proc_ch
-WHERE
-'$niklogin' IN (SELECT idnik FROM user_roles WHERE id_role = 5) OR pp.nik_request = '$niklogin'
-GROUP BY pp.id_proc_ch
-";
+LEFT JOIN proc_admin_category pac ON prd.category = pac.id_category
+WHERE (
+    -- Kondisi untuk admin
+    '$niklogin' IN (SELECT idnik FROM user_roles WHERE id_role = 5)
+    OR 
+    -- Kondisi untuk user biasa (requestor)
+    pp.nik_request = '$niklogin'
+    OR
+    -- Kondisi untuk PIC category
+    pac.idnik = '$niklogin'
+)
+GROUP BY pp.id_proc_ch";
 
-function getTotal($koneksi, $condition)
-{
-    $sql = mysqli_query($koneksi, "SELECT id_proc_ch FROM proc_purchase_requests WHERE $condition");
-    return mysqli_num_rows($sql);
+function getTotal($koneksi, $condition, $niklogin)
+{ // Tambahkan parameter $niklogin
+    $sql = "SELECT DISTINCT pp.id_proc_ch 
+            FROM proc_purchase_requests pp
+            LEFT JOIN proc_request_details prd ON pp.id_proc_ch = prd.id_proc_ch
+            LEFT JOIN proc_admin_category pac ON prd.category = pac.id_category
+            WHERE ($condition)
+            AND (
+                '$niklogin' IN (SELECT idnik FROM user_roles WHERE id_role = 5)
+                OR pp.nik_request = '$niklogin'
+                OR pac.idnik = '$niklogin'
+            )";
+
+    $result = mysqli_query($koneksi, $sql);
+    return mysqli_num_rows($result);
 }
 
-// Total Requests
+// Penggunaan function
 $total = ($isAdmin) ?
-    getTotal($koneksi, "1=1") : // No condition needed for total count if admin
-    getTotal($koneksi, "nik_request='$niklogin'");
+    getTotal($koneksi, "1=1", $niklogin) :
+    getTotal($koneksi, "nik_request='$niklogin'", $niklogin);
 
 // Created Requests
-$Created = getTotal($koneksi, "status = 'Created'" . ($isAdmin ? "" : " AND nik_request='$niklogin'"));
+$Created = getTotal($koneksi, "status = 'Created'", $niklogin);
 
 // Open Requests
-$Open = getTotal($koneksi, "status = 'Open'" . ($isAdmin ? "" : " AND nik_request='$niklogin'"));
+$Open = getTotal($koneksi, "status = 'Open'", $niklogin);
 
 // Closed Requests
-$Closed = getTotal($koneksi, "status = 'Closed'" . ($isAdmin ? "" : " AND nik_request='$niklogin'"));
-
+$Closed = getTotal($koneksi, "status = 'Closed'", $niklogin);
 // Eksekusi query dan cek apakah berhasil
 $result = mysqli_query($koneksi, $sql);
 

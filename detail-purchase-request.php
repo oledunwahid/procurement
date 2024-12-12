@@ -129,9 +129,57 @@
 </style>
 
 <?php
+// Di awal file detail-purchase-request.php
 $id_proc_ch = $_GET['id'];
+
+// Cek apakah user adalah admin
+$isAdmin = in_array(5, $role);
+
+if (!$isAdmin) {
+    // Cek apakah PIC memiliki akses ke kategori dalam request ini
+    $checkAccess = mysqli_query($koneksi, "
+        SELECT COUNT(*) as count 
+        FROM proc_request_details prd
+        JOIN proc_admin_category pac ON prd.category = pac.id_category
+        WHERE prd.id_proc_ch = '$id_proc_ch' 
+        AND pac.idnik = '$niklogin'
+    ");
+    $hasAccess = mysqli_fetch_assoc($checkAccess)['count'] > 0;
+
+    if (!$hasAccess) {
+        // Jika PIC tidak memiliki akses, redirect ke halaman list dengan pesan error
+        echo "<script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Access Denied',
+                text: 'You are not assigned to handle any items in this request.',
+                confirmButtonText: 'OK'
+            }).then((result) => {
+                window.location.href = 'index.php?page=PurchaseRequests';
+            });
+        </script>";
+        exit;
+    }
+}
+
+// Jika memiliki akses atau admin, lanjutkan dengan query normal
 $sql = mysqli_query($koneksi, "SELECT * FROM proc_purchase_requests WHERE id_proc_ch ='$id_proc_ch'");
 $row = mysqli_fetch_assoc($sql);
+
+// Tambahkan handler jika data kosong setelah fetch
+if (!$row) {
+    echo "<script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Data Not Found',
+            text: 'The requested data could not be found.',
+            confirmButtonText: 'OK'
+        }).then((result) => {
+            window.location.href = 'index.php?page=PurchaseRequests';
+        });
+    </script>";
+    exit;
+}
 ?>
 
 <div class="row">
@@ -163,7 +211,9 @@ $row = mysqli_fetch_assoc($sql);
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Data akan di-load menggunakan AJAX -->
+                                <tr class="no-data-row">
+                                    <td colspan="10" class="text-center">Loading...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -319,9 +369,14 @@ $row = mysqli_fetch_assoc($sql);
         var status = <?= json_encode($row['status']); ?>;
         var niklogin = $('input[name="niklogin"]').val();
         var idnik_pic = $('input[name="idnik_pic"]').val();
+        var isAdmin = $('input[name="isAdmin"]').val() == '1';
 
-        function formatRibuan(x) {
-            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        function showNoDataMessage() {
+            var message = isAdmin ?
+                'No items found in this request.' :
+                'No items assigned to you in this request.';
+
+            return `<tr class="no-data-row"><td colspan="10" class="text-center">${message}</td></tr>`;
         }
 
         function loadData(callback) {
@@ -329,12 +384,65 @@ $row = mysqli_fetch_assoc($sql);
                 url: 'function/fetch_detail_purchase_request.php',
                 type: 'GET',
                 data: {
-                    id_proc_ch: idProcCh
+                    id_proc_ch: idProcCh,
+                    niklogin: niklogin
                 },
                 success: function(data) {
-                    $('#detail-purchase-request tbody').html(data);
+                    if (!data.trim()) {
+                        // Jika data kosong
+                        $('#detail-purchase-request tbody').html(showNoDataMessage());
+                    } else {
+                        // Jika ada data
+                        $('#detail-purchase-request tbody').html(data);
+                    }
                     applyDataLabels();
+                    updateTotalPrice();
                     if (callback) callback();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading data:", error);
+                    $('#detail-purchase-request tbody').html(
+                        `<tr><td colspan="10" class="text-center text-danger">Error loading data. Please try again.</td></tr>`
+                    );
+                }
+            });
+        }
+
+        function hasDetailRows() {
+            var tableRows = $('#detail-purchase-request tbody tr').not('.no-data-row');
+            return tableRows.length > 0;
+        }
+
+        function loadData(callback) {
+            console.log('Loading data...');
+            $.ajax({
+                url: 'function/fetch_detail_purchase_request.php',
+                type: 'GET',
+                data: {
+                    id_proc_ch: idProcCh,
+                    niklogin: niklogin
+                },
+                beforeSend: function() {
+                    $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center">Loading...</td></tr>');
+                },
+                success: function(data) {
+                    console.log('Data received:', data);
+                    if (data.trim()) {
+                        $('#detail-purchase-request tbody').html(data);
+                        applyDataLabels();
+                        updateTotalPrice();
+                    } else {
+                        $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center">No data available</td></tr>');
+                    }
+                    if (callback) callback();
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', {
+                        xhr: xhr,
+                        status: status,
+                        error: error
+                    });
+                    $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center text-danger">Error loading data</td></tr>');
                 }
             });
         }
