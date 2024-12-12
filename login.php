@@ -67,7 +67,7 @@ if (isset($_SESSION['reset_password']) && $_SESSION['reset_password']) {
                                     <img src="assets/images/logo_MAAA.png" alt="" height="35">
                                 </a>
                             </div>
-                            <p class="mt-3 fs-15 fw-medium">Employee Imformation Portal</p>
+                            <p class="mt-3 fs-15 fw-medium">Procurement Employee Imformation Portal</p>
                         </div>
                     </div>
                 </div>

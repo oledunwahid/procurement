@@ -8,6 +8,7 @@ $pageFiles = [
 	'MenuAdministrator' => (in_array('1', $role) || in_array('5', $role)) ?  'menu_admin.php' : 'pages-404.php',
 	'PrintPriceReq' => 'print-price-request.php',
 	'ViewPriceReq' => 'view-price-request.php',
+	'CategoryManagement' => (in_array('1', $role) || in_array('5', $role)) ? 'category-management.php' : 'pages-404.php',
 	'AdminLog' => (in_array('1', $role) || in_array('5', $role)) ?  'admin-log.php' : 'pages-404.php',
 ];
 
