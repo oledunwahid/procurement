@@ -271,7 +271,7 @@ if (!$result) {
 <script>
     $(document).ready(function() {
         // Initialize DataTable with custom empty message
-        var isAdmin = <?php echo json_encode($isAdmin); ?>;
+        var isAdmin = <?php echo json_encode($isAdmin ? true : false); ?>;
 
         var table = $('#buttons-datatables').DataTable({
             // Basic DataTable configurations
@@ -288,14 +288,14 @@ if (!$result) {
             "language": {
                 "emptyTable": isAdmin ?
                     `<div class="text-center p-3">
-                    <i class="ri-information-line text-warning fs-4 mb-3 d-block"></i>
-                    <p class="mb-1">No purchase requests found in your assigned categories.</p>
-                    <small class="text-muted">You will see requests here once you are assigned to handle specific categories.</small>
-                </div>` : `<div class="text-center p-3">
-                    <i class="ri-inbox-line text-muted fs-4 mb-3 d-block"></i>
-                    <p class="mb-1">No purchase requests created yet.</p>
-                    <small class="text-muted">Click "Create Price Request" button above to create your first request.</small>
-                </div>`,
+                        <i class="ri-information-line text-warning fs-4 mb-3 d-block"></i>
+                        <p class="mb-1">No purchase requests found in your assigned categories.</p>
+                        <small class="text-muted">You will see requests here once you are assigned to handle specific categories.</small>
+                    </div>` : `<div class="text-center p-3">
+                        <i class="ri-inbox-line text-muted fs-4 mb-3 d-block"></i>
+                        <p class="mb-1">No purchase requests created yet.</p>
+                        <small class="text-muted">Click "Create Price Request" button above to create your first request.</small>
+                    </div>`,
                 "info": "Showing _START_ to _END_ of _TOTAL_ entries",
                 "infoEmpty": "Showing 0 to 0 of 0 entries",
                 "lengthMenu": "Show _MENU_ entries",
