@@ -432,7 +432,7 @@ if (!$row) {
                         applyDataLabels();
                         updateTotalPrice();
                     } else {
-                        $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center">No data available</td></tr>');
+                        $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center">This Request Belongs to Other PIC</td></tr>');
                     }
                     if (callback) callback();
                 },
@@ -611,29 +611,139 @@ if (!$row) {
             });
         });
 
+        function checkCategoryPIC(categoryId, callback) {
+            console.log("Checking category:", categoryId);
+            $.ajax({
+                url: 'function/check_category_pic.php',
+                type: 'GET',
+                data: {
+                    category_id: categoryId
+                },
+                success: function(response) {
+                    console.log("Raw response:", response);
+                    try {
+                        // Handle jika response bukan JSON
+                        let parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+                        console.log("Parsed response:", parsedResponse);
+                        callback(parsedResponse);
+                    } catch (e) {
+                        console.error("Error parsing response:", e);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Invalid response from server',
+                            icon: 'error'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error checking category PIC:", {
+                        xhr,
+                        status,
+                        error
+                    });
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to check category PIC',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
+
+        // Tambahkan event handler untuk perubahan kategori
+        $(document).on('change', 'select[name="category[]"]', function() {
+            var $row = $(this).closest('tr');
+            var selectedCategory = $(this).val();
+            var currentPIC = niklogin;
+
+            checkCategoryPIC(selectedCategory, function(response) {
+                if (response.success) {
+                    if (response.pic_list && !response.pic_list.includes(currentPIC)) {
+                        var picNames = response.pic_names.join(', ');
+                        Swal.fire({
+                            title: 'Warning!',
+                            html: `This category is assigned to: <br><b>${picNames}</b><br><br>After saving, this item will be handled by another PIC. Do you want to continue?`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, change category',
+                            cancelButtonText: 'No, keep current category'
+                        }).then((result) => {
+                            if (!result.isConfirmed) {
+                                $row.find('select[name="category[]"]').val($row.find('select[name="category[]"]').data('original-value'));
+                            } else {
+                                $row.find('select[name="category[]"]').data('original-value', selectedCategory);
+                            }
+                        });
+                    } else {
+                        $row.find('select[name="category[]"]').data('original-value', selectedCategory);
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.error || 'Failed to check category PIC',
+                        icon: 'error'
+                    });
+                }
+            });
+        });
+
+        // Modifikasi handler edit untuk menyimpan nilai kategori awal
         $(document).on('click', '.edit', function() {
             var $row = $(this).closest('tr');
             $row.find('input, textarea, select').prop('readonly', false);
+            // Simpan nilai kategori awal
+            $row.find('select[name="category[]"]').data('original-value', $row.find('select[name="category[]"]').val());
             $(this).hide();
             $row.find('.saveRow').show();
         });
 
+        // Modifikasi saveRow untuk menambahkan konfirmasi tambahan jika kategori berubah
         $(document).on('click', '.saveRow', function() {
-            var row = $(this).closest('tr');
+            var $row = $(this).closest('tr');
+            var newCategory = $row.find('select[name="category[]"]').val();
+            var originalCategory = $row.find('select[name="category[]"]').data('original-value');
+
+            if (newCategory !== originalCategory) {
+                checkCategoryPIC(newCategory, function(response) {
+                    if (response.pic_list && !response.pic_list.includes(niklogin)) {
+                        Swal.fire({
+                            title: 'Confirm Category Change',
+                            text: 'After saving, this item will be handled by another PIC. Are you sure you want to proceed?',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, save changes',
+                            cancelButtonText: 'No, cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                saveRowData($row);
+                            }
+                        });
+                    } else {
+                        saveRowData($row);
+                    }
+                });
+            } else {
+                saveRowData($row);
+            }
+        });
+
+        // Fungsi untuk menyimpan data row
+        function saveRowData($row) {
             var data = {
-                id: $(this).data('id'),
-                id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
-                nama_barang: row.find("input[name='nama_barang[]']").val(),
-                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
-                qty: row.find("input[name='qty[]']").val(),
-                category: row.find("select[name='category[]']").val(),
-                uom: row.find("select[name='uom[]']").val(),
-                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
-                detail_notes: row.find("textarea[name='detail_notes[]']").val(),
+                id: $row.find('.saveRow').data('id'),
+                id_proc_ch: $row.find("input[name='id_proc_ch[]']").val(),
+                nama_barang: $row.find("input[name='nama_barang[]']").val(),
+                detail_specification: $row.find("textarea[name='detail_specification[]']").val(),
+                qty: $row.find("input[name='qty[]']").val(),
+                category: $row.find("select[name='category[]']").val(),
+                uom: $row.find("select[name='uom[]']").val(),
+                unit_price: $row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
+                detail_notes: $row.find("textarea[name='detail_notes[]']").val(),
                 niklogin: niklogin,
                 idnik_pic: idnik_pic
             };
 
+            // Existing save AJAX call
             $.ajax({
                 type: "POST",
                 url: "function/update_detail_purchase.php",
@@ -667,7 +777,7 @@ if (!$row) {
                     });
                 }
             });
-        });
+        }
 
         $(document).on('click', '.remove', function() {
             var id = $(this).data('id');
