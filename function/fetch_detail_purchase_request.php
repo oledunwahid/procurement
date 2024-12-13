@@ -18,24 +18,16 @@ while ($uomRow = mysqli_fetch_assoc($uomResult)) {
     $uomOptions .= "<option value='" . $uomRow['uom_name'] . "'>" . $uomRow['uom_name'] . "</option>";
 }
 
-// Fetch Category data yang hanya bisa diakses oleh PIC
-$categoryQuery = "SELECT DISTINCT pc.id_category, pc.nama_category 
-                 FROM proc_category pc
-                 INNER JOIN proc_admin_category pac ON pc.id_category = pac.id_category
-                 WHERE pac.idnik = ?
-                 ORDER BY pc.nama_category";
-
-$stmt = mysqli_prepare($koneksi, $categoryQuery);
-mysqli_stmt_bind_param($stmt, "s", $niklogin);
-mysqli_stmt_execute($stmt);
-$categoryResult = mysqli_stmt_get_result($stmt);
+// Ubah query kategori untuk menampilkan semua kategori
+$categoryQuery = "SELECT id_category, nama_category FROM proc_category ORDER BY nama_category";
+$categoryResult = mysqli_query($koneksi, $categoryQuery);
 $categoryOptions = "";
 
 while ($categoryRow = mysqli_fetch_assoc($categoryResult)) {
     $categoryOptions .= "<option value='" . $categoryRow['id_category'] . "'>" . $categoryRow['nama_category'] . "</option>";
 }
 
-// Query utama dengan filter PIC
+// Query utama tetap dengan filter PIC (untuk tampilan awal)
 $query = "SELECT ppr.*, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, 
           prd.detail_specification, prd.detail_notes, prd.category, pc.nama_category
           FROM proc_request_details prd
@@ -49,6 +41,8 @@ $query = "SELECT ppr.*, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_pric
               AND pac.idnik = ?
           )
           ORDER BY prd.id ASC";
+
+
 
 $stmt = mysqli_prepare($koneksi, $query);
 mysqli_stmt_bind_param($stmt, "ss", $id_proc_ch, $niklogin);

@@ -1,14 +1,13 @@
-<!--datatable css-->
+<!-- CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" />
-<!--datatable responsive css-->
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css" />
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
-
 
 <?php
 $isAdmin = array_intersect([5, 1], $role);
 
 // Query untuk mendapatkan data purchase requests
+
 $sql = "SELECT DISTINCT
     pp.id_proc_ch,
     pp.title,
@@ -18,22 +17,19 @@ $sql = "SELECT DISTINCT
     pp.proc_pic,
     user1.nama AS nama_request,
     user1.divisi AS divisi_request,
-    GROUP_CONCAT(DISTINCT prd.category SEPARATOR ', ') AS categories 
+    GROUP_CONCAT(DISTINCT prd.category SEPARATOR ', ') AS categories,
+    GROUP_CONCAT(DISTINCT pac.idnik) as pic_list
 FROM proc_purchase_requests AS pp
 LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
 LEFT JOIN proc_request_details AS prd ON pp.id_proc_ch = prd.id_proc_ch
 LEFT JOIN proc_admin_category pac ON prd.category = pac.id_category
 WHERE (
-    -- Kondisi untuk admin
-    '$niklogin' IN (SELECT idnik FROM user_roles WHERE id_role = 5)
-    OR 
-    -- Kondisi untuk user biasa (requestor)
-    pp.nik_request = '$niklogin'
-    OR
-    -- Kondisi untuk PIC category
+    -- Kondisi untuk admin yang terassign atau user biasa
     pac.idnik = '$niklogin'
+    OR pp.nik_request = '$niklogin'
 )
 GROUP BY pp.id_proc_ch";
+
 
 function getTotal($koneksi, $condition, $niklogin)
 { // Tambahkan parameter $niklogin
@@ -204,15 +200,19 @@ if (!$result) {
                     <tbody>
                         <?php
                         $nomor = 1;
+                        // Modifikasi bagian tampilan data
                         while ($row = mysqli_fetch_assoc($result)) {
+                            $pic_list = explode(',', $row['pic_list']);
                         ?>
                             <tr>
                                 <td><?= $nomor++ ?></td>
                                 <td>
-                                    <?php if ($isAdmin) { ?>
-                                        <a href="index.php?page=DetailPurchase&id=<?= $row['id_proc_ch']; ?>"><?= $row['id_proc_ch'] ?></a>
+                                    <?php if (in_array($niklogin, $pic_list)) { ?>
+                                        <a href="index.php?page=DetailPurchase&id=<?= $row['id_proc_ch']; ?>">
+                                            <?= $row['id_proc_ch'] ?>
+                                        </a>
                                     <?php } else { ?>
-                                        <a href="index.php?page=ViewPriceReq&id=<?= $row['id_proc_ch']; ?>"><?= $row['id_proc_ch'] ?></a>
+                                        <?= $row['id_proc_ch'] ?>
                                     <?php } ?>
                                 </td>
                                 <td><?= $row['title'] ?></td>
@@ -226,9 +226,13 @@ if (!$result) {
                                             <i class="ri-more-fill align-middle"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a href="index.php?page=PrintPriceReq&id=<?= $row['id_proc_ch']; ?>" class="dropdown-item"><i class="ri-printer-fill align-bottom me-2 text-muted"></i> Print</a></li>
-                                            <?php if ($isAdmin) { ?>
-                                                <li><a class="dropdown-item" href="index.php?page=DetailPurchase&id=<?= $row['id_proc_ch']; ?>"><i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</a></li>
+                                            <li><a href="index.php?page=PrintPriceReq&id=<?= $row['id_proc_ch']; ?>" class="dropdown-item">
+                                                    <i class="ri-printer-fill align-bottom me-2 text-muted"></i> Print</a>
+                                            </li>
+                                            <?php if (in_array($niklogin, $pic_list)) { ?>
+                                                <li><a class="dropdown-item" href="index.php?page=DetailPurchase&id=<?= $row['id_proc_ch']; ?>">
+                                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit</a>
+                                                </li>
                                                 <li>
                                                     <a class="dropdown-item remove" href="javascript:void(0);" data-id="<?= $row['id_proc_ch']; ?>">
                                                         <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
@@ -251,78 +255,151 @@ if (!$result) {
 }
 ?>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-<!--datatable js-->
+
+<!-- JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-<script src="assets/js/pages/datatables.init.js"></script>
-
 <script>
-    $(document).on('click', '.remove', function(e) {
-        e.preventDefault();
-        var id = $(this).data('id');
-        if (!id) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Cannot identify the item to delete'
+    $(document).ready(function() {
+        // Initialize DataTable with custom empty message
+        var isAdmin = <?php echo json_encode($isAdmin); ?>;
+
+        var table = $('#buttons-datatables').DataTable({
+            // Basic DataTable configurations
+            "responsive": true,
+            "dom": 'Bfrtip',
+            "buttons": [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ],
+            "pageLength": 10,
+            "searching": true,
+            "ordering": true,
+
+            // Custom language for empty table message
+            "language": {
+                "emptyTable": isAdmin ?
+                    `<div class="text-center p-3">
+                    <i class="ri-information-line text-warning fs-4 mb-3 d-block"></i>
+                    <p class="mb-1">No purchase requests found in your assigned categories.</p>
+                    <small class="text-muted">You will see requests here once you are assigned to handle specific categories.</small>
+                </div>` : `<div class="text-center p-3">
+                    <i class="ri-inbox-line text-muted fs-4 mb-3 d-block"></i>
+                    <p class="mb-1">No purchase requests created yet.</p>
+                    <small class="text-muted">Click "Create Price Request" button above to create your first request.</small>
+                </div>`,
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "Showing 0 to 0 of 0 entries",
+                "lengthMenu": "Show _MENU_ entries",
+                "loadingRecords": "Loading...",
+                "processing": "Processing...",
+                "search": "Search:",
+                "zeroRecords": "No matching records found"
+            }
+        });
+
+        // Function to initialize tooltips
+        function initializeTooltips() {
+            // Dispose existing tooltips first
+            $('[data-bs-toggle="tooltip"]').each(function() {
+                let tooltip = bootstrap.Tooltip.getInstance(this);
+                if (tooltip) {
+                    tooltip.dispose();
+                }
             });
-            return;
+
+            // Initialize new tooltips
+            const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            tooltips.forEach(function(element) {
+                new bootstrap.Tooltip(element, {
+                    placement: 'right',
+                    trigger: 'hover'
+                });
+            });
         }
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    type: "POST",
-                    url: "function/delete_purchase.php",
-                    data: {
-                        id: id
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Deleted!',
-                                text: response.message,
-                                showConfirmButton: false,
-                                timer: 1500
-                            }).then(() => {
-                                // Reload halaman atau perbarui tabel
-                                window.location.reload();
-                            });
-                        } else {
+
+        // Initialize tooltips on page load
+        initializeTooltips();
+
+        // Reinitialize tooltips after DataTable updates
+        table.on('draw.dt', function() {
+            setTimeout(initializeTooltips, 0);
+        });
+
+        // Handle delete functionality
+        $(document).on('click', '.remove', function(e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+
+            if (!id) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Cannot identify the item to delete'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "POST",
+                        url: "function/delete_purchase.php",
+                        data: {
+                            id: id
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.message,
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                }).then(() => {
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("AJAX Error:", status, error);
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
-                                text: response.message
+                                text: 'There was an error deleting the item.'
                             });
                         }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("AJAX Error:", status, error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'There was an error deleting the item.'
-                        });
-                    }
-                });
-            }
+                    });
+                }
+            });
+        });
+
+        // Add responsive handling for table
+        $(window).on('resize', function() {
+            table.columns.adjust().responsive.recalc();
         });
     });
 </script>
