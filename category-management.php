@@ -29,6 +29,7 @@
                     <th>Category Name</th>
                     <th>Assigned PIC (NIK)</th>
                     <th>PIC Name</th>
+                    <th>WhatsApp Number</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -68,6 +69,18 @@
                         <label class="form-label">Assign PIC</label>
                         <select class="form-select" id="idnik" name="idnik" required>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">WhatsApp Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text">+62</span>
+                            <input type="text" class="form-control" id="no_wa" name="no_wa"
+                                placeholder="Example: 81234567890"
+                                pattern="[0-9]{10,13}"
+                                title="Please enter valid number without country code"
+                                required>
+                        </div>
+                        <small class="text-muted">Enter number without leading zero</small>
                     </div>
                 </form>
             </div>
@@ -116,21 +129,28 @@
                     data: 'nama'
                 },
                 {
+                    data: 'no_wa',
+                    render: function(data, type, row) {
+                        return data ? '+62' + data : '-';
+                    }
+                },
+                {
                     data: null,
                     render: function(data, type, row) {
                         return `<div class="d-flex gap-2">
-                           <button class="btn btn-sm btn-info edit-btn" data-id="${row.id}">
-                               <i class="ri-edit-2-line"></i>
-                           </button>
-                           <button class="btn btn-sm btn-danger delete-btn" data-id="${row.id}">
-                               <i class="ri-delete-bin-line"></i>
-                           </button>
-                       </div>`;
+                    <button class="btn btn-sm btn-info edit-btn" data-id="${row.id}">
+                        <i class="ri-edit-2-line"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-btn" data-id="${row.id}">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </div>`;
                     }
                 }
             ],
             responsive: true
         });
+
 
         // Load Categories
         $.ajax({
@@ -250,7 +270,7 @@
             });
         });
 
-        // Function to load category data
+        // loadCategoryData function
         function loadCategoryData(id) {
             $.ajax({
                 url: 'function/get_category_detail.php',
@@ -264,6 +284,7 @@
                     $('#category_id').val(id);
                     $('#location').val(data.location);
                     $('#id_category').val(data.id_category);
+                    $('#no_wa').val(data.no_wa);
 
                     $('#location, #id_category').trigger('change');
                     setTimeout(function() {
@@ -272,6 +293,7 @@
                 }
             });
         }
+
 
         // Handle Edit
         $('#categoryTable').on('click', '.edit-btn', function() {
