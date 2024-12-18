@@ -77,12 +77,7 @@
                         </a>
                     </li>
                 <?php endif; ?>
-
             </ul>
-
-
-
-
         </div>
         <!-- Sidebar -->
     </div>

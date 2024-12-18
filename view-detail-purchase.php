@@ -300,7 +300,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
 <script>
     $(document).ready(function() {
-        var idProcCh = <?= json_encode($_GET['id']); ?>;
+        const idProcCh = <?= json_encode($_GET['id']); ?>;
         let allDetailRowsSubmitted = true;
 
         function formatRibuan(x) {
@@ -310,7 +310,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         function applyDataLabels() {
             $('#detail-purchase-request tbody tr').each(function() {
                 $(this).find('td').each(function(index) {
-                    var label = $('#detail-purchase-request thead th').eq(index).text();
+                    const label = $('#detail-purchase-request thead th').eq(index).text();
                     $(this).attr('data-label', label + ':');
                 });
             });
@@ -344,143 +344,211 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                     allDetailRowsSubmitted = $('#detail-purchase-request tbody tr').length > 0;
                     updateMainFormSubmitButton();
                     if (callback) callback();
-                }
-            });
-        }
-
-        loadData(function() {
-            applyDataLabels();
-            updateMainFormSubmitButton();
-        });
-
-        function addRow() {
-            $.ajax({
-                url: 'function/get_uom.php',
-                type: 'GET',
-                dataType: 'json',
-                success: function(uomData) {
-                    var uomOptions = uomData.map(function(uom) {
-                        return `<option value="${uom.uom_name}">${uom.uom_name}</option>`;
-                    }).join('');
-
-                    $.ajax({
-                        url: 'function/get_category.php',
-                        type: 'GET',
-                        dataType: 'json',
-                        success: function(categoryData) {
-                            var categoryOptions = categoryData.map(function(category) {
-                                return `<option value="${category.id_category}">${category.nama_category}</option>`;
-                            }).join('');
-
-                            var newRow = `<tr>
-                                <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
-                                <td data-label="Nama Barang"><input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" /></td>
-                                <td data-label="Detail Spec"><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
-                                <td data-label="Qty"><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
-                                <td data-label="Category">
-                                    <select name='category[]' class='form-control category-dropdown'>
-                                        ${categoryOptions}
-                                    </select>
-                                </td>
-                                <td data-label="Uom">
-                                    <select name='uom[]' class='form-control uom-dropdown'>
-                                        ${uomOptions}
-                                    </select>
-                                </td>
-                                <td data-label="Harga"><span type="text" name="unit_price[]">0</span></td>
-                                <td data-label="Total Harga"><span class="totalHarga">0</span></td>
-                                <td data-label="Action">
-                                    <div class="action-buttons">
-                                        <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
-                                        <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
-                                        <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
-                                    </div>
-                                </td>
-                            </tr>`;
-                            $('#detail-purchase-request tbody').append(newRow);
-                            applyDataLabels();
-
-                            $('.nama-barang:last').autocomplete({
-                                source: function(request, response) {
-                                    $.ajax({
-                                        url: 'function/get_suggestion.php',
-                                        data: {
-                                            query: request.term
-                                        },
-                                        dataType: 'json',
-                                        success: function(data) {
-                                            response(data);
-                                        }
-                                    });
-                                }
-                            });
-
-                            allDetailRowsSubmitted = false;
-                            updateMainFormSubmitButton();
-                        }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Load Data Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load data. Please refresh the page.'
                     });
                 }
             });
         }
 
-        $('#addRow').click(function() {
-            addRow();
-        });
-
-        $(document).on('click', '.saveNewRow', function() {
-            var row = $(this).closest('tr');
-            var data = {
-                id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
-                nama_barang: row.find("input[name='nama_barang[]']").val(),
-                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
-                qty: row.find("input[name='qty[]']").val(),
-                category: row.find("select[name='category[]']").val(),
-                uom: row.find("select[name='uom[]']").val()
+        function submitDetailRow($row, url, method) {
+            const formData = new FormData();
+            const requiredFields = {
+                'id_proc_ch': $row.find("input[name='id_proc_ch[]']").val(),
+                'nama_barang': $row.find("input[name='nama_barang[]']").val(),
+                'qty': $row.find("input[name='qty[]']").val(),
+                'category': $row.find("select[name='category[]']").val(),
+                'uom': $row.find("select[name='uom[]']").val()
             };
 
+            for (const [key, value] of Object.entries(requiredFields)) {
+                if (!value) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: `${key.replace('_', ' ')} is required`
+                    });
+                    return;
+                }
+                formData.append(key, value);
+            }
+
+            formData.append('detail_specification', $row.find("textarea[name='detail_specification[]']").val() || '');
+            formData.append('detail_notes', '');
+            formData.append('unit_price', $row.find("[name='unit_price[]']").text().replace(/\./g, '') || '0');
+
+            if (method === 'update') {
+                formData.append('id', $row.find('.saveRow').data('id'));
+            }
+
             $.ajax({
-                type: "POST",
-                url: "function/insert_view_detail_purchase_request.php",
-                data: data,
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    Swal.fire({
+                        title: 'Saving...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+                },
                 success: function(response) {
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: response.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        loadData(function() {
-                            applyDataLabels();
-                            allDetailRowsSubmitted = true;
-                            updateMainFormSubmitButton();
-                        });
-                    } else {
+                    try {
+                        const result = typeof response === 'string' ? JSON.parse(response) : response;
+                        if (result.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: result.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                loadData(() => {
+                                    applyDataLabels();
+                                    allDetailRowsSubmitted = true;
+                                    updateMainFormSubmitButton();
+                                });
+                            });
+                        } else {
+                            throw new Error(result.message || 'Unknown error occurred');
+                        }
+                    } catch (e) {
+                        console.error('Response Error:', e, response);
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: response.message
+                            text: e.message
                         });
                         allDetailRowsSubmitted = false;
                         updateMainFormSubmitButton();
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
+                    console.error('AJAX Error:', {
+                        xhr,
+                        status,
+                        error
+                    });
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'There was an error updating the row.'
+                        text: 'Failed to save data. Please try again.'
                     });
                     allDetailRowsSubmitted = false;
                     updateMainFormSubmitButton();
                 }
             });
+        }
+
+        function addRow() {
+            Promise.all([
+                $.ajax({
+                    url: 'function/get_uom.php',
+                    type: 'GET',
+                    dataType: 'json'
+                }),
+                $.ajax({
+                    url: 'function/get_category.php',
+                    type: 'GET',
+                    dataType: 'json'
+                })
+            ]).then(([uomData, categoryData]) => {
+                const uomOptions = uomData.map(uom =>
+                    `<option value="${uom.uom_name}">${uom.uom_name}</option>`
+                ).join('');
+
+                const categoryOptions = categoryData.map(category =>
+                    `<option value="${category.id_category}">${category.nama_category}</option>`
+                ).join('');
+
+                const newRow = `<tr>
+                <td style="display:none;">
+                    <input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly />
+                </td>
+                <td data-label="Nama Barang">
+                    <input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" required />
+                </td>
+                <td data-label="Detail Spec">
+                    <textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea>
+                </td>
+                <td data-label="Qty">
+                    <input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" required />
+                </td>
+                <td data-label="Category">
+                    <select name='category[]' class='form-control category-dropdown' required>
+                        <option value="">Select Category</option>
+                        ${categoryOptions}
+                    </select>
+                </td>
+                <td data-label="Uom">
+                    <select name='uom[]' class='form-control uom-dropdown' required>
+                        <option value="">Select UOM</option>
+                        ${uomOptions}
+                    </select>
+                </td>
+                <td data-label="Harga"><span type="text" name="unit_price[]">0</span></td>
+                <td data-label="Total Harga"><span class="totalHarga">0</span></td>
+                <td data-label="Action">
+                    <div class="action-buttons">
+                        <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
+                        <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
+                        <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
+                    </div>
+                </td>
+            </tr>`;
+
+                $('#detail-purchase-request tbody').append(newRow);
+                applyDataLabels();
+
+                $('.nama-barang:last').autocomplete({
+                    source: function(request, response) {
+                        $.ajax({
+                            url: 'function/get_suggestion.php',
+                            data: {
+                                query: request.term
+                            },
+                            dataType: 'json',
+                            success: function(data) {
+                                response(data);
+                            }
+                        });
+                    }
+                });
+
+                allDetailRowsSubmitted = false;
+                updateMainFormSubmitButton();
+            }).catch(error => {
+                console.error('Error loading dropdowns:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to load form data. Please try again.'
+                });
+            });
+        }
+
+        // Initial load
+        loadData(function() {
+            applyDataLabels();
+            updateMainFormSubmitButton();
+        });
+
+        // Event Handlers
+        $('#addRow').click(addRow);
+
+        $(document).on('click', '.saveNewRow', function() {
+            submitDetailRow($(this).closest('tr'), 'function/insert_view_detail_purchase_request.php', 'insert');
         });
 
         $(document).on('click', '.edit', function() {
-            var $row = $(this).closest('tr');
+            const $row = $(this).closest('tr');
             $row.find('input, textarea, select').prop('readonly', false);
             $(this).hide();
             $row.find('.saveRow').show();
@@ -489,59 +557,10 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         });
 
         $(document).on('click', '.saveRow', function() {
-            var row = $(this).closest('tr');
-            var data = {
-                id: $(this).data('id'),
-                id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
-                nama_barang: row.find("input[name='nama_barang[]']").val(),
-                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
-                qty: row.find("input[name='qty[]']").val(),
-                category: row.find("select[name='category[]']").val(),
-                uom: row.find("select[name='uom[]']").val()
-            };
-
-            $.ajax({
-                type: "POST",
-                url: "function/update_view_detail_purchase.php",
-                data: data,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: response.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        loadData(function() {
-                            applyDataLabels();
-                            allDetailRowsSubmitted = true;
-                            updateMainFormSubmitButton();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message
-                        });
-                        allDetailRowsSubmitted = false;
-                        updateMainFormSubmitButton();
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'There was an error updating the row.'
-                    });
-                    allDetailRowsSubmitted = false;
-                    updateMainFormSubmitButton();
-                }
-            });
+            submitDetailRow($(this).closest('tr'), 'function/update_view_detail_purchase.php', 'update');
         });
 
+        // Comments handling
         function loadComments() {
             $.ajax({
                 url: 'function/get_comments.php',
@@ -599,6 +618,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             });
         });
 
+        // Remove handler
         $(document).on('click', '.remove', function() {
             var id = $(this).data('id');
             if (!id) {
@@ -660,6 +680,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             });
         });
 
+        // Main form submission
         $('#updatePurchaseRequestForm').on('submit', function(e) {
             e.preventDefault();
             if (!allDetailRowsSubmitted) {
