@@ -1,18 +1,24 @@
+// get_table_names.php
 <?php
-include '../koneksi.php';
+require_once '../koneksi.php';
+header('Content-Type: application/json');
 
-$sql = "SELECT DISTINCT table_name FROM proc_admin_log ORDER BY table_name";
-$result = mysqli_query($koneksi, $sql);
+try {
+    $stmt = $koneksi->prepare("SELECT DISTINCT table_name FROM proc_admin_log ORDER BY table_name");
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-if (!$result) {
-    die(json_encode(array('error' => 'Failed to fetch table names: ' . mysqli_error($koneksi))));
+    $tableNames = [];
+    while ($row = $result->fetch_assoc()) {
+        $tableNames[] = $row['table_name'];
+    }
+
+    echo json_encode($tableNames);
+} catch (Exception $e) {
+    error_log("Error fetching table names: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['error' => 'Failed to fetch table names']);
 }
 
-$tableNames = array();
-while ($row = mysqli_fetch_assoc($result)) {
-    $tableNames[] = $row['table_name'];
-}
-
-echo json_encode($tableNames);
-
-mysqli_close($koneksi);
+$stmt->close();
+$koneksi->close();

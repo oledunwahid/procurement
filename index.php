@@ -58,6 +58,7 @@ function fsize($file)
     <link href="assets/css/app.min.css" rel="stylesheet" type="text/css" />
     <link href="assets/css/custom.min.css" rel="stylesheet" type="text/css" />
     <link href="assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
     <style>
         /* Floating Chat Button */
         .chat-button {
@@ -170,23 +171,6 @@ function fsize($file)
         <i class="ri-arrow-up-line"></i>
     </button>
 
-    <!-- Floating Chat Button -->
-    <button class="chat-button" id="chat-button">💬</button>
-
-    <!-- Chat Window -->
-    <div class="chat-window" id="chat-window">
-        <div class="chat-header">
-            Chat
-            <button onclick="toggleChatWindow()">✖</button>
-        </div>
-        <div class="chat-body" id="chat-body">
-            <!-- Chat messages will appear here -->
-        </div>
-        <div class="chat-footer">
-            <input type="text" class="chat-input" id="chat-input" placeholder="Type a message">
-            <button class="chat-send" onclick="sendMessage()">Send</button>
-        </div>
-    </div>
 
     <script src="assets/libs/simplebar/simplebar.min.js"></script>
     <script src="assets/libs/node-waves/waves.min.js"></script>
@@ -200,6 +184,7 @@ function fsize($file)
     <script src="assets/libs/prismjs/prism.js"></script>
     <script src="assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/app.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 </body>
 
 </html>
