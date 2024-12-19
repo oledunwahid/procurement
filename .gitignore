@@ -1,1 +1,57 @@
 /.htaccess
+
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Editor & System Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+*.env
+*.bak
+
+# Build files
+dist/
+build/
+coverage/
+
+# Assets & Libraries
+assets/libs/
+assets/json/
+assets/lang/
+
+# Compiled JS & CSS
+assets/js/pages/plugins/
+assets/css/*.css.map
+assets/js/*.js.map
+
+# Temporary & Cache Files
+temp/
+.cache/
+*.tmp
+*.swp
+
+# Generated Files
+*.min.js
+*.min.css
+*.gz
+*.tar
+
+# OS-specific Files
+*.lock
+*.bak
+*.orig
+
+# Ignore specific directories
+assets/images/brands/
+assets/images/clients/
+assets/images/companies/
+assets/images/demos/
+assets/images/small/
+assets/images/svg/crypto-icons/
+assets/images/users/
+file/procurement/

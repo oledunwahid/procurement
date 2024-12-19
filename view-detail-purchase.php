@@ -189,13 +189,14 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                             <thead>
                                 <tr>
                                     <th style="display:none;">ID Request</th>
-                                    <th>Nama Barang</th>
+                                    <th width="20%">Nama Barang</th>
                                     <th width="20%">Detail Spec</th>
-                                    <th width="6%">Qty</th>
-                                    <th width="16%">Category</th>
-                                    <th width="8%">Uom</th>
-                                    <th width="10%">Harga</th>
-                                    <th width="13%">Total Harga</th>
+                                    <th width="5%">Qty</th>
+                                    <th width="15%">Category</th>
+                                    <th width="10%">Uom</th>
+                                    <th width="5%">Harga</th>
+                                    <th width="5%">Total Harga</th>
+                                    <th width="10%">Urgency Status</th>
                                     <th width="15%">Action</th>
                                 </tr>
                             </thead>
@@ -213,6 +214,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 <div class="card-body card-body-enhanced">
                     <h5 class="card-title">Price Request - <?= $row['status'] ?></h5>
                     <form id="updatePurchaseRequestForm">
+                        <input type="hidden" name="niklogin" value="<?= $niklogin ?>">
                         <div class="card-body border-bottom border-bottom-dashed">
                             <div class="row g-3">
                                 <div class="col-lg-3 col-sm-6">
@@ -358,12 +360,15 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
         function submitDetailRow($row, url, method) {
             const formData = new FormData();
+            const urgencyStatus = $row.find("select[name='urgency_status[]']").val();
+
             const requiredFields = {
                 'id_proc_ch': $row.find("input[name='id_proc_ch[]']").val(),
                 'nama_barang': $row.find("input[name='nama_barang[]']").val(),
                 'qty': $row.find("input[name='qty[]']").val(),
                 'category': $row.find("select[name='category[]']").val(),
-                'uom': $row.find("select[name='uom[]']").val()
+                'uom': $row.find("select[name='uom[]']").val(),
+                'urgency_status': $row.find("select[name='urgency_status[]']").val() // Ditambahkan ini
             };
 
             for (const [key, value] of Object.entries(requiredFields)) {
@@ -458,14 +463,23 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                     url: 'function/get_category.php',
                     type: 'GET',
                     dataType: 'json'
+                }), // Ditambahkan koma
+                $.ajax({
+                    url: 'function/get_urgency_status.php',
+                    type: 'GET',
+                    dataType: 'json'
                 })
-            ]).then(([uomData, categoryData]) => {
+            ]).then(([uomData, categoryData, urgencyData]) => {
                 const uomOptions = uomData.map(uom =>
                     `<option value="${uom.uom_name}">${uom.uom_name}</option>`
                 ).join('');
 
                 const categoryOptions = categoryData.map(category =>
                     `<option value="${category.id_category}">${category.nama_category}</option>`
+                ).join('');
+
+                const urgencyOptions = urgencyData.map(urgency =>
+                    `<option value="${urgency.id}">${urgency.name}</option>`
                 ).join('');
 
                 const newRow = `<tr>
@@ -495,6 +509,13 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 </td>
                 <td data-label="Harga"><span type="text" name="unit_price[]">0</span></td>
                 <td data-label="Total Harga"><span class="totalHarga">0</span></td>
+                <td data-label="Urgency Status">
+                <select name='urgency_status[]' class='form-control urgency-dropdown' required>
+            <option value="">Select Status</option>
+            <option value="normal">Normal</option>
+            <option value="urgent">Urgent</option>
+        </select>
+    </td>
                 <td data-label="Action">
                     <div class="action-buttons">
                         <button type="button" class="btn btn-success btn-sm saveNewRow">Save Now</button>
@@ -550,6 +571,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         $(document).on('click', '.edit', function() {
             const $row = $(this).closest('tr');
             $row.find('input, textarea, select').prop('readonly', false);
+            $row.find('select[name="urgency_status[]"]').prop('readonly', false); // Ditambahkan ini
             $(this).hide();
             $row.find('.saveRow').show();
             allDetailRowsSubmitted = false;
@@ -559,6 +581,19 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         $(document).on('click', '.saveRow', function() {
             submitDetailRow($(this).closest('tr'), 'function/update_view_detail_purchase.php', 'update');
         });
+
+        function validateRow($row) {
+            const urgencyStatus = $row.find("select[name='urgency_status[]']").val();
+            if (!urgencyStatus) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Please select urgency status'
+                });
+                return false;
+            }
+            return true;
+        }
 
         // Comments handling
         function loadComments() {
@@ -683,6 +718,9 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         // Main form submission
         $('#updatePurchaseRequestForm').on('submit', function(e) {
             e.preventDefault();
+
+            console.log("Form submitted");
+
             if (!allDetailRowsSubmitted) {
                 Swal.fire({
                     icon: 'error',
@@ -691,7 +729,39 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 });
                 return;
             }
+
             var formData = new FormData(this);
+
+            // Set id dari id_proc_ch untuk kebutuhan backend
+            formData.append('id', formData.get('id_proc_ch'));
+
+            // Debug: Log form data
+            for (var pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
+
+            // Validasi file
+            var fileInput = $('input[name="lampiran"]')[0];
+            var file = fileInput.files[0];
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) { // 2MB
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'File size must not exceed 2MB'
+                    });
+                    return;
+                }
+            }
+
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait while we process your request',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             $.ajax({
                 type: "POST",
@@ -700,21 +770,57 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    Swal.fire({
-                        title: 'Sukses!',
-                        text: 'Data berhasil di submit.',
-                        icon: 'success',
-                        confirmButtonText: 'OK'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = "index.php?page=PurchaseRequests";
+                    console.log("Raw response:", response);
+                    try {
+                        const result = typeof response === 'string' ? JSON.parse(response) : response;
+                        console.log("Parsed response:", result);
+
+                        if (result.status === 'success') {
+                            Swal.fire({
+                                title: 'Sukses!',
+                                text: result.message || 'Data berhasil di submit.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = "index.php?page=PurchaseRequests";
+                                }
+                            });
+                        } else {
+                            throw new Error(result.message || 'Unknown error occurred');
                         }
-                    });
+                    } catch (error) {
+                        console.error('Response Error:', error, response);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: error.message || 'Terjadi kesalahan saat memproses response.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', {
+                        xhr,
+                        status,
+                        error
+                    });
+                    console.log("Response Text:", xhr.responseText);
+
+                    let errorMessage = 'Terjadi kesalahan saat mengupdate data.';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMessage = response.message;
+                        }
+                        console.log("Debug logs:", response.debug_log);
+                    } catch (e) {
+                        console.error('Error parsing error response:', e);
+                    }
+
                     Swal.fire({
                         title: 'Error!',
-                        text: 'Terjadi kesalahan saat mengupdate data.',
+                        text: errorMessage,
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });

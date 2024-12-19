@@ -199,13 +199,14 @@ if (!$row) {
                             <thead>
                                 <tr>
                                     <th style="display:none;">ID Request</th>
-                                    <th width="16%">Nama Barang</th>
-                                    <th width="12%">Detail Spec</th>
-                                    <th width="6%">Qty</th>
-                                    <th width="16%">Category</th>
+                                    <th width="10%">Nama Barang</th>
+                                    <th width="10%">Detail Spec</th>
+                                    <th width="7%">Qty</th>
+                                    <th width="10%">Category</th>
                                     <th width="9%">Uom</th>
                                     <th width="10%">Harga</th>
                                     <th width="5%">Total Harga</th>
+                                    <th width="5%">Urgency status</th>
                                     <th width="15%">Action</th>
                                     <th width="15%">Detail Notes</th>
                                 </tr>
@@ -500,61 +501,6 @@ if (!$row) {
             updateTotalPrice();
         });
 
-        function addRow() {
-            $.ajax({
-                url: 'function/get_uom.php',
-                type: 'GET',
-                dataType: 'json',
-                success: function(uomData) {
-                    var uomOptions = uomData.map(function(uom) {
-                        return `<option value="${uom.uom_name}">${uom.uom_name}</option>`;
-                    }).join('');
-
-                    $.ajax({
-                        url: 'function/get_category.php',
-                        type: 'GET',
-                        dataType: 'json',
-                        success: function(categoryData) {
-                            var categoryOptions = categoryData.map(function(category) {
-                                return `<option value="${category.id_category}">${category.nama_category}</option>`;
-                            }).join('');
-
-                            var newRow = `<tr>
-                                <td style="display:none;"><input type="text" name="id_proc_ch[]" class="form-control" value="${idProcCh}" readonly /></td>
-                                <td data-label="Nama Barang:"><input type="text" name="nama_barang[]" class="form-control nama-barang" style="width: 100%;" /></td>
-                                <td data-label="Detail Spec:"><textarea name="detail_specification[]" class="form-control" style="width: 100%;"></textarea></td>
-                                <td data-label="Qty:"><input type="number" name="qty[]" class="form-control" maxlength="5" style="width: 80px;" /></td>
-                                <td data-label="Category:">
-                                    <select name='category[]' class='form-control category-dropdown'>
-                                        ${categoryOptions}
-                                    </select>
-                                </td>
-                                <td data-label="Uom:">
-                                    <select name='uom[]' class='form-control uom-dropdown'>
-                                        ${uomOptions}
-                                    </select>
-                                </td>
-                                <td data-label="Harga:"><input type="text" name="unit_price[]" class="form-control price-input" value="0" /></td>
-                                <td data-label="Total Harga:"><span class="totalHarga">0</span></td>
-                                <td data-label="Action:">
-                                    <div class="action-buttons">
-                                        <button type="button" class="btn btn-success btn-sm saveNewRow" data-niklogin="${niklogin}" data-idnik-pic="${idnik_pic}">Save Now</button>
-                                        <button type="button" class="btn btn-success btn-sm saveRow" style="display: none;">Save</button>
-                                        <button type="button" class="btn btn-danger remove" style="display: none;" data-id="">Remove</button>
-                                    </div>
-                                </td>
-                            </tr>`;
-                            $('#detail-purchase-request tbody').append(newRow);
-                            applyDataLabels();
-                        }
-                    });
-                }
-            });
-        }
-
-        $('#addRow').click(function() {
-            addRow();
-        });
 
         $(document).on('input', '.price-input', function() {
             var value = $(this).val().replace(/\./g, '');
@@ -729,6 +675,18 @@ if (!$row) {
 
         // Fungsi untuk menyimpan data row
         function saveRowData($row) {
+            // Store original values before update
+            const originalValues = {
+                nama_barang: $row.find("input[name='nama_barang[]']").val(),
+                detail_specification: $row.find("textarea[name='detail_specification[]']").val(),
+                qty: $row.find("input[name='qty[]']").val(),
+                category: $row.find("select[name='category[]']").val(),
+                uom: $row.find("select[name='uom[]']").val(),
+                unit_price: $row.find("input[name='unit_price[]']").val(),
+                urgency_status: $row.find("select[name='urgency_status[]']").val(),
+                detail_notes: $row.find("textarea[name='detail_notes[]']").val()
+            };
+
             var data = {
                 id: $row.find('.saveRow').data('id'),
                 id_proc_ch: $row.find("input[name='id_proc_ch[]']").val(),
@@ -738,17 +696,40 @@ if (!$row) {
                 category: $row.find("select[name='category[]']").val(),
                 uom: $row.find("select[name='uom[]']").val(),
                 unit_price: $row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
+                urgency_status: $row.find("select[name='urgency_status[]']").val(),
                 detail_notes: $row.find("textarea[name='detail_notes[]']").val(),
                 niklogin: niklogin,
                 idnik_pic: idnik_pic
             };
 
-            // Existing save AJAX call
+            // Check if urgency status changed to 'urgent'
+            if (originalValues.urgency_status !== 'urgent' && data.urgency_status === 'urgent') {
+                Swal.fire({
+                    title: 'Confirm Urgent Status',
+                    text: 'Are you sure you want to mark this item as urgent?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        performUpdate(data);
+                    } else {
+                        $row.find("select[name='urgency_status[]']").val(originalValues.urgency_status);
+                    }
+                });
+            } else {
+                performUpdate(data);
+            }
+        }
+
+        function performUpdate(data) {
             $.ajax({
                 type: "POST",
                 url: "function/update_detail_purchase.php",
                 data: data,
                 success: function(response) {
+                    console.log("Server response:", response);
                     if (response.status === 'success') {
                         Swal.fire({
                             icon: 'success',
@@ -764,12 +745,17 @@ if (!$row) {
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: response.message
+                            text: response.message || 'An error occurred while updating the data'
                         });
+                        console.error("Error details:", response.debug_log);
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
+                    console.error("AJAX Error:", {
+                        xhr: xhr,
+                        status: status,
+                        error: error
+                    });
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
