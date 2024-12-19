@@ -26,7 +26,14 @@ while ($categoryRow = mysqli_fetch_assoc($categoryResult)) {
     $categoryOptions .= "<option value='" . $categoryRow['id_category'] . "'>" . $categoryRow['nama_category'] . "</option>";
 }
 
-$query = "SELECT prd.*, pc.nama_category, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, prd.detail_specification, prd.category
+// Define urgency options
+$urgencyOptions = "
+    <option value='normal'>Normal</option>
+    <option value='urgent'>Urgent</option>
+";
+
+$query = "SELECT prd.*, pc.nama_category, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, 
+          prd.detail_specification, prd.category, prd.urgency_status
           FROM proc_request_details prd
           LEFT JOIN proc_category pc ON prd.category = pc.id_category
           WHERE prd.id_proc_ch = '$id_proc_ch'";
@@ -51,6 +58,13 @@ while ($row = mysqli_fetch_assoc($result)) {
         $categorySelectOptions .= str_replace("<option", "<option $selected", $option) . "</option>";
     }
 
+    // Generate Urgency options with selected attribute
+    $urgencySelectOptions = "";
+    foreach (explode('</option>', $urgencyOptions) as $option) {
+        $selected = strpos($option, "value='" . ($row['urgency_status'] ?? 'normal') . "'") !== false ? "selected" : "";
+        $urgencySelectOptions .= str_replace("<option", "<option $selected", $option) . "</option>";
+    }
+
     $output .= "<tr>
                     <td style='display:none;'><input type='text' name='id_proc_ch[]' class='form-control' value='" . $row['id_proc_ch'] . "' readonly /></td>
                     <td><input type='text' name='nama_barang[]' class='form-control' value='" . $row['nama_barang'] . "' readonly /></td>
@@ -68,6 +82,11 @@ while ($row = mysqli_fetch_assoc($result)) {
                     </td>
                     <td><span name='unit_price[]' value='" . nominal($row['unit_price']) . "' readonly maxlength='11'></span>" . nominal($row['unit_price']) . "</td>
                     <td><span class='totalHarga'><b>" . nominal($totalHarga) . "</b></span></td>
+                    <td>
+                        <select name='urgency_status[]' class='form-control' readonly>
+                            $urgencySelectOptions
+                        </select>
+                    </td>
                     <td>
                         <button type='button' class='btn btn-info btn-sm edit' data-id='" . $row['id'] . "'>Edit</button>
                         <button type='button' class='btn btn-success btn-sm saveRow' data-id='" . $row['id'] . "' style='display:none;'>Save</button>

@@ -25,7 +25,8 @@ if (isset($_POST['id']) && isset($_POST['niklogin'])) {
     $detail_specification = $_POST['detail_specification'];
     $detail_notes = $_POST['detail_notes'];
     $category = $_POST['category'];
-    $niklogin = $_POST['niklogin'];  // Ambil niklogin dari POST data
+    $urgency_status = $_POST['urgency_status'] ?? 'normal'; // Add default value
+    $niklogin = $_POST['niklogin'];
 
     debug_log("Logged in user NIK: " . $niklogin);
 
@@ -33,7 +34,8 @@ if (isset($_POST['id']) && isset($_POST['niklogin'])) {
 
     try {
         // Get the old values
-        $old_query = "SELECT nama_barang, qty, uom, category, detail_specification, unit_price, detail_notes FROM proc_request_details WHERE id = ?";
+        $old_query = "SELECT nama_barang, qty, uom, category, detail_specification, unit_price, detail_notes, urgency_status 
+                      FROM proc_request_details WHERE id = ?";
         $old_stmt = mysqli_prepare($koneksi, $old_query);
         if (!$old_stmt) {
             throw new Exception("Prepare failed: " . mysqli_error($koneksi));
@@ -48,12 +50,29 @@ if (isset($_POST['id']) && isset($_POST['niklogin'])) {
         debug_log("Old values fetched successfully");
 
         // Update the record
-        $update_query = "UPDATE proc_request_details SET id_proc_ch = ?, nama_barang = ?, qty = ?, uom = ?, category = ?, detail_specification = ?, unit_price = ?, detail_notes = ? WHERE id = ?";
+        $update_query = "UPDATE proc_request_details 
+                        SET id_proc_ch = ?, nama_barang = ?, qty = ?, uom = ?, 
+                            category = ?, detail_specification = ?, unit_price = ?, 
+                            detail_notes = ?, urgency_status = ? 
+                        WHERE id = ?";
         $update_stmt = mysqli_prepare($koneksi, $update_query);
         if (!$update_stmt) {
             throw new Exception("Prepare failed: " . mysqli_error($koneksi));
         }
-        mysqli_stmt_bind_param($update_stmt, "ssssssssi", $id_proc_ch, $nama_barang, $qty, $uom, $category, $detail_specification, $unit_price, $detail_notes, $id);
+        mysqli_stmt_bind_param(
+            $update_stmt,
+            "sssssssssi",
+            $id_proc_ch,
+            $nama_barang,
+            $qty,
+            $uom,
+            $category,
+            $detail_specification,
+            $unit_price,
+            $detail_notes,
+            $urgency_status,
+            $id
+        );
         if (!mysqli_stmt_execute($update_stmt)) {
             throw new Exception("Execute failed: " . mysqli_stmt_error($update_stmt));
         }
@@ -68,8 +87,10 @@ if (isset($_POST['id']) && isset($_POST['niklogin'])) {
             'uom' => $old_row['uom'],
             'detail_specification' => $old_row['detail_specification'],
             'unit_price' => $old_row['unit_price'],
-            'detail_notes' => $old_row['detail_notes']
+            'detail_notes' => $old_row['detail_notes'],
+            'urgency_status' => $old_row['urgency_status']
         ]);
+
         $new_value = json_encode([
             'nama_barang' => $nama_barang,
             'qty' => $qty,
@@ -77,10 +98,12 @@ if (isset($_POST['id']) && isset($_POST['niklogin'])) {
             'uom' => $uom,
             'detail_specification' => $detail_specification,
             'unit_price' => $unit_price,
-            'detail_notes' => $detail_notes
+            'detail_notes' => $detail_notes,
+            'urgency_status' => $urgency_status
         ]);
 
-        $log_query = "INSERT INTO proc_admin_log (idnik, action_type, table_name, record_id, old_value, new_value) VALUES (?, 'UPDATE', 'proc_request_details', ?, ?, ?)";
+        $log_query = "INSERT INTO proc_admin_log (idnik, action_type, table_name, record_id, old_value, new_value) 
+                      VALUES (?, 'UPDATE', 'proc_request_details', ?, ?, ?)";
         $log_stmt = mysqli_prepare($koneksi, $log_query);
         if (!$log_stmt) {
             throw new Exception("Prepare failed: " . mysqli_error($koneksi));

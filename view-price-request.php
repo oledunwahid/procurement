@@ -157,6 +157,7 @@ $row = mysqli_fetch_assoc($sql);
                                     <th width="9%">Uom</th>
                                     <th width="10%">Harga</th>
                                     <th width="5%">Total Harga</th>
+                                    <th width="10%">Urgency Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -321,11 +322,18 @@ $row = mysqli_fetch_assoc($sql);
                 data: {
                     id_proc_ch: idProcCh
                 },
+                beforeSend: function() {
+                    $('#detail-purchase-request tbody').html('<tr><td colspan="11" class="text-center">Loading...</td></tr>');
+                },
                 success: function(data) {
                     $('#detail-purchase-request tbody').html(data);
                     applyDataLabels();
                     if (callback) callback();
                     checkStatusAndToggleButton();
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    $('#detail-purchase-request tbody').html('<tr><td colspan="11" class="text-center text-danger">Error loading data</td></tr>');
                 }
             });
         }
@@ -338,6 +346,100 @@ $row = mysqli_fetch_assoc($sql);
                 });
             });
         }
+
+        function saveRowData($row) {
+            const data = {
+                id: $row.find('.saveRow').data('id'),
+                id_proc_ch: $row.find("input[name='id_proc_ch[]']").val(),
+                nama_barang: $row.find("input[name='nama_barang[]']").val(),
+                detail_specification: $row.find("textarea[name='detail_specification[]']").val(),
+                qty: $row.find("input[name='qty[]']").val(),
+                category: $row.find("select[name='category[]']").val(),
+                uom: $row.find("select[name='uom[]']").val(),
+                unit_price: $row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
+                urgency_status: $row.find("select[name='urgency_status[]']").val(),
+                detail_notes: $row.find("textarea[name='detail_notes[]']").val(),
+                niklogin: niklogin,
+                idnik_pic: idnik_pic
+            };
+
+            const originalUrgencyStatus = $row.find("select[name='urgency_status[]']").data('original-value');
+
+            if (originalUrgencyStatus !== 'urgent' && data.urgency_status === 'urgent') {
+                Swal.fire({
+                    title: 'Confirm Urgent Status',
+                    text: 'Are you sure you want to mark this item as urgent?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        performUpdate(data);
+                    } else {
+                        $row.find("select[name='urgency_status[]']").val(originalUrgencyStatus);
+                    }
+                });
+            } else {
+                performUpdate(data);
+            }
+        }
+
+        function performUpdate(data) {
+            $.ajax({
+                type: "POST",
+                url: "function/update_detail_purchase.php",
+                data: data,
+                success: function(response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadData(function() {
+                            applyDataLabels();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error updating the row.'
+                    });
+                }
+            });
+        }
+
+        // Edit button handler
+        $(document).on('click', '.edit', function() {
+            var $row = $(this).closest('tr');
+            $row.find('input, textarea, select').prop('readonly', false).prop('disabled', false);
+
+            // Store original values
+            $row.find('input, textarea, select').each(function() {
+                $(this).data('original-value', $(this).val());
+            });
+
+            $(this).hide();
+            $row.find('.saveRow').show();
+        });
+
+        // Save button handler
+        $(document).on('click', '.saveRow', function() {
+            var $row = $(this).closest('tr');
+            saveRowData($row);
+        });
 
         function checkStatusAndToggleButton() {
             if (status && status.trim().toLowerCase() === 'closed') {
@@ -352,8 +454,6 @@ $row = mysqli_fetch_assoc($sql);
                 console.log("Ticket is open. Comment form enabled.");
             }
         }
-
-        loadData();
 
         function loadComments() {
             $.ajax({
@@ -371,7 +471,8 @@ $row = mysqli_fetch_assoc($sql);
             });
         }
 
-        loadComments(); // Load comments when page loads
+        loadData();
+        loadComments();
 
         $('#addCommentForm').on('submit', function(e) {
             e.preventDefault();
@@ -423,18 +524,37 @@ $row = mysqli_fetch_assoc($sql);
                 processData: false,
                 contentType: false,
                 success: function(response) {
-                    Swal.fire({
-                        title: 'Sukses!',
-                        text: 'Data berhasil diupdate.',
-                        icon: 'success',
-                        confirmButtonText: 'OK'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = "index.php?page=PurchaseRequests";
+                    try {
+                        response = typeof response === 'string' ? JSON.parse(response) : response;
+                        if (response.status === 'success') {
+                            Swal.fire({
+                                title: 'Sukses!',
+                                text: 'Data berhasil diupdate.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = "index.php?page=PurchaseRequests";
+                                }
+                            });
+                        } else {
+                            throw new Error(response.message || 'Unknown error occurred');
                         }
-                    });
+                    } catch (e) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: e.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.error("Update Error:", {
+                        xhr,
+                        status,
+                        error
+                    });
                     Swal.fire({
                         title: 'Error!',
                         text: 'Terjadi kesalahan saat mengupdate data.',
@@ -445,11 +565,9 @@ $row = mysqli_fetch_assoc($sql);
             });
         });
 
-        // Panggil fungsi applyDataLabels dan checkStatusAndToggleButton saat halaman dimuat
         applyDataLabels();
         checkStatusAndToggleButton();
 
-        // Tambahkan event listener untuk perubahan status
         $(document).on('change', '[name="status"]', function() {
             status = $(this).val();
             checkStatusAndToggleButton();
