@@ -4,6 +4,80 @@ header('Content-Type: application/json');
 
 $response = array('status' => 'error', 'message' => 'ID tidak ditemukan');
 
+function sendWhatsAppNotifications($koneksi, $id_proc_ch, $item_name, $urgency_status, $old_data, $new_data)
+{
+    // Get WhatsApp configuration
+    $config_query = "SELECT token FROM T_L_EIP_HRGA_HRGA_RF_WHATSAPP_CONFIG WHERE is_active = 1 ORDER BY id DESC LIMIT 1";
+    $config_result = mysqli_query($koneksi, $config_query);
+    $config = mysqli_fetch_assoc($config_result);
+
+    if ($config) {
+        // Get request details
+        $request_query = "SELECT pr.title, u.nama as requester_name 
+                         FROM proc_purchase_requests pr 
+                         JOIN user u ON pr.nik_request = u.idnik 
+                         WHERE pr.id_proc_ch = ?";
+        $stmt_req = mysqli_prepare($koneksi, $request_query);
+        mysqli_stmt_bind_param($stmt_req, "s", $id_proc_ch);
+        mysqli_stmt_execute($stmt_req);
+        $request_result = mysqli_stmt_get_result($stmt_req);
+        $request_data = mysqli_fetch_assoc($request_result);
+        mysqli_stmt_close($stmt_req);
+
+        // Get admin numbers
+        $admin_query = "SELECT paw.no_wa, u.nama 
+                       FROM proc_admin_wa paw
+                       JOIN user u ON paw.idnik = u.idnik
+                       WHERE paw.is_active = 1";
+        $admin_result = mysqli_query($koneksi, $admin_query);
+
+        // Format changes for message
+        $changes = array();
+        foreach ($new_data as $key => $value) {
+            if ($old_data[$key] != $value) {
+                $changes[] = ucfirst($key) . ": " . $old_data[$key] . " → " . $value;
+            }
+        }
+
+        while ($admin = mysqli_fetch_assoc($admin_result)) {
+            $message = "Halo {$admin['nama']},\n\n"
+                . "Ada update pada item request pembelian:\n"
+                . "Request ID: {$id_proc_ch}\n"
+                . "Request Title: {$request_data['title']}\n"
+                . "Requester: {$request_data['requester_name']}\n"
+                . "Item Name: {$item_name}\n"
+                . "Urgency Status: {$urgency_status}\n\n"
+                . "Perubahan:\n" . implode("\n", $changes) . "\n\n"
+                . "Update time: " . date('Y-m-d H:i:s') . "\n\n"
+                . "Silakan cek di: https://proc.maagroup.co.id/\n\n"
+                . "Note: Pesan ini dikirim secara otomatis.";
+
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $admin['no_wa'],
+                    'message' => $message,
+                    'countryCode' => '62'
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization:' . $config['token']
+                ),
+            ));
+
+            $response = curl_exec($curl);
+            curl_close($curl);
+        }
+    }
+}
+
 if (isset($_POST['id'])) {
     $id = $_POST['id'];
     $id_proc_ch = $_POST['id_proc_ch'];
@@ -105,6 +179,18 @@ if (isset($_POST['id'])) {
             );
             mysqli_stmt_execute($stmtLog);
             mysqli_stmt_close($stmtLog);
+
+            // Send WhatsApp notifications with old and new data comparison
+            $oldDataArray = json_decode($oldValue, true);
+            $newDataArray = json_decode($newValue, true);
+            sendWhatsAppNotifications(
+                $koneksi,
+                $id_proc_ch,
+                $nama_barang,
+                $urgency_status,
+                $oldDataArray,
+                $newDataArray
+            );
 
             $response['status'] = 'success';
             $response['message'] = 'Data berhasil diupdate';

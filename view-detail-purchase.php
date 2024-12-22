@@ -304,6 +304,10 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
     $(document).ready(function() {
         const idProcCh = <?= json_encode($_GET['id']); ?>;
         let allDetailRowsSubmitted = true;
+        const currentUser = {
+            id: <?= json_encode($_SESSION['idnik'] ?? ''); ?>,
+            name: <?= json_encode($current_user['nama'] ?? ''); ?>
+        };
 
         function formatRibuan(x) {
             return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -360,7 +364,25 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
         function submitDetailRow($row, url, method) {
             const formData = new FormData();
-            const urgencyStatus = $row.find("select[name='urgency_status[]']").val();
+
+            // Store old values before changes (for update cases)
+            if (method === 'update') {
+                const oldData = {
+                    nama_barang: $row.find("input[name='nama_barang[]']").data('original-value'),
+                    qty: $row.find("input[name='qty[]']").data('original-value'),
+                    category: $row.find("select[name='category[]']").data('original-value'),
+                    uom: $row.find("select[name='uom[]']").data('original-value'),
+                    detail_specification: $row.find("textarea[name='detail_specification[]']").data('original-value'),
+                    urgency_status: $row.find("select[name='urgency_status[]']").data('original-value'),
+                    unit_price: $row.find("[name='unit_price[]']").data('original-value'),
+                };
+                formData.append('old_data', JSON.stringify(oldData));
+            }
+
+            // Add user info for logging
+            formData.append('user_id', currentUser.id);
+            formData.append('user_name', currentUser.name);
+            formData.append('action_timestamp', new Date().toISOString());
 
             const requiredFields = {
                 'id_proc_ch': $row.find("input[name='id_proc_ch[]']").val(),
@@ -368,7 +390,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 'qty': $row.find("input[name='qty[]']").val(),
                 'category': $row.find("select[name='category[]']").val(),
                 'uom': $row.find("select[name='uom[]']").val(),
-                'urgency_status': $row.find("select[name='urgency_status[]']").val() // Ditambahkan ini
+                'urgency_status': $row.find("select[name='urgency_status[]']").val()
             };
 
             for (const [key, value] of Object.entries(requiredFields)) {
@@ -569,9 +591,24 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
         });
 
         $(document).on('click', '.edit', function() {
+            // Ambil row yang sesuai
             const $row = $(this).closest('tr');
+
+            // Simpan nilai original sebelum edit
+            $row.find("input[name='nama_barang[]']").data('original-value', $row.find("input[name='nama_barang[]']").val());
+            $row.find("input[name='qty[]']").data('original-value', $row.find("input[name='qty[]']").val());
+            $row.find("select[name='category[]']").data('original-value', $row.find("select[name='category[]']").val());
+            $row.find("select[name='uom[]']").data('original-value', $row.find("select[name='uom[]']").val());
+            $row.find("textarea[name='detail_specification[]']").data('original-value',
+                $row.find("textarea[name='detail_specification[]']").val());
+            $row.find("select[name='urgency_status[]']").data('original-value',
+                $row.find("select[name='urgency_status[]']").val());
+            $row.find("[name='unit_price[]']").data('original-value',
+                $row.find("[name='unit_price[]']").text().replace(/\./g, ''));
+
+            // Enable editing
             $row.find('input, textarea, select').prop('readonly', false);
-            $row.find('select[name="urgency_status[]"]').prop('readonly', false); // Ditambahkan ini
+            $row.find('select[name="urgency_status[]"]').prop('readonly', false);
             $(this).hide();
             $row.find('.saveRow').show();
             allDetailRowsSubmitted = false;
