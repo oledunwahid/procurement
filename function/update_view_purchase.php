@@ -14,6 +14,67 @@ $response = array('status' => 'error', 'message' => 'ID tidak ditemukan');
 error_log("POST Data: " . print_r($_POST, true));
 error_log("FILES Data: " . print_r($_FILES, true));
 
+function sendWhatsAppNotifications($koneksi, $id_proc_ch, $title, $requester_name, $status)
+{
+    // Get WhatsApp configuration
+    $config_query = "SELECT token FROM T_L_EIP_HRGA_HRGA_RF_WHATSAPP_CONFIG WHERE is_active = 1 ORDER BY id DESC LIMIT 1";
+    $config_result = mysqli_query($koneksi, $config_query);
+    $config = mysqli_fetch_assoc($config_result);
+
+    if ($config) {
+        // Get requester details
+        $user_query = "SELECT nama FROM user WHERE idnik = ?";
+        $user_stmt = mysqli_prepare($koneksi, $user_query);
+        mysqli_stmt_bind_param($user_stmt, "s", $requester_name);
+        mysqli_stmt_execute($user_stmt);
+        $user_result = mysqli_stmt_get_result($user_stmt);
+        $user = mysqli_fetch_assoc($user_result);
+        $user_stmt->close();
+
+        // Get admin numbers
+        $admin_query = "SELECT paw.no_wa, u.nama 
+                      FROM proc_admin_wa paw
+                      JOIN user u ON paw.idnik = u.idnik
+                      WHERE paw.is_active = 1";
+        $admin_result = mysqli_query($koneksi, $admin_query);
+
+        while ($admin = mysqli_fetch_assoc($admin_result)) {
+            $message = "Halo {$admin['nama']},\n\n"
+                . "Ada update pada request pembelian:\n"
+                . "Request ID: {$id_proc_ch}\n"
+                . "Title: {$title}\n"
+                . "Requester: {$user['nama']}\n"
+                . "Status: {$status}\n"
+                . "Update time: " . date('Y-m-d H:i:s') . "\n\n"
+                . "Silakan cek di: https://proc.maagroup.co.id/\n\n"
+                . "Note: Pesan ini dikirim secara otomatis.";
+
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => 'https://api.fonnte.com/send',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'POST',
+                CURLOPT_POSTFIELDS => array(
+                    'target' => $admin['no_wa'],
+                    'message' => $message,
+                    'countryCode' => '62'
+                ),
+                CURLOPT_HTTPHEADER => array(
+                    'Authorization:' . $config['token']
+                ),
+            ));
+
+            $response = curl_exec($curl);
+            curl_close($curl);
+        }
+    }
+}
+
 if (isset($_POST['id_proc_ch'])) {
     mysqli_begin_transaction($koneksi);
 
@@ -142,6 +203,9 @@ if (isset($_POST['id_proc_ch'])) {
 
         mysqli_stmt_close($stmtLog);
         mysqli_stmt_close($stmtUpdate);
+
+        // Send WhatsApp notifications
+        sendWhatsAppNotifications($koneksi, $id_proc_ch, $title, $nik_request, $status);
 
         mysqli_commit($koneksi);
 
