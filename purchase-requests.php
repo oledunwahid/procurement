@@ -273,7 +273,10 @@ if (!$result) {
     $(document).ready(function() {
         // Initialize DataTable with custom empty message
         var isAdmin = <?php echo json_encode($isAdmin ? true : false); ?>;
-
+        const currentUser = {
+            id: <?= json_encode($_SESSION['idnik'] ?? ''); ?>,
+            name: <?= json_encode($current_user['nama'] ?? ''); ?>
+        };
         var table = $('#buttons-datatables').DataTable({
             // Basic DataTable configurations
             "responsive": true,
@@ -363,7 +366,9 @@ if (!$result) {
                         type: "POST",
                         url: "function/delete_purchase.php",
                         data: {
-                            id: id
+                            id: id,
+                            user_id: '<?= $_SESSION['idnik'] ?? "0" ?>',
+                            user_name: '<?= $_SESSION['nama'] ?? "System" ?>'
                         },
                         dataType: 'json',
                         success: function(response) {
@@ -381,7 +386,7 @@ if (!$result) {
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error',
-                                    text: response.message
+                                    text: response.message || 'Failed to delete data'
                                 });
                             }
                         },
@@ -397,7 +402,6 @@ if (!$result) {
                 }
             });
         });
-
         // Add responsive handling for table
         $(window).on('resize', function() {
             table.columns.adjust().responsive.recalc();
