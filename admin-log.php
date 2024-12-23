@@ -1,3 +1,4 @@
+<!-- admin-log.php -->
 <?php include 'koneksi.php'; ?>
 
 <!-- CSS -->
@@ -114,142 +115,178 @@
 
 <script>
     $(document).ready(function() {
-        // Initialize date picker
-        $('#dateRange').flatpickr({
+        // Initialize flatpickr
+        $("#dateRange").flatpickr({
             mode: "range",
             dateFormat: "Y-m-d",
-            maxDate: "today"
+            maxDate: "today",
+            rangeSeparator: " to ",
+            placeholder: "Select date range",
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length === 2) {
+                    table.ajax.reload();
+                }
+            }
         });
 
-        // Initialize DataTable
+        // Helper function untuk format JSON
+        function formatJsonValue(data) {
+            if (!data || data === '-') return '-';
+            try {
+                const obj = typeof data === 'string' ? JSON.parse(data) : data;
+                let formattedHtml = '<div class="small bg-light p-2 rounded" style="max-height:200px;overflow-y:auto">';
+
+                // Format key-value pairs
+                Object.entries(obj).forEach(([key, value]) => {
+                    if (key === 'logged_by' || key === 'logged_at') return;
+
+                    // Format key label
+                    const label = key.split('_')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
+
+                    // Format value based on type
+                    let displayValue = value;
+                    if (value === null || value === '') {
+                        displayValue = '-';
+                    } else if (typeof value === 'boolean') {
+                        displayValue = value ? 'Yes' : 'No';
+                    } else if (key.toLowerCase().includes('date') || key.toLowerCase().includes('created')) {
+                        displayValue = moment(value).format('YYYY-MM-DD HH:mm:ss');
+                    }
+
+                    formattedHtml += `<div class="mb-1"><strong>${label}:</strong> ${displayValue}</div>`;
+                });
+
+                formattedHtml += '</div>';
+                return formattedHtml;
+            } catch (e) {
+                return data || '-';
+            }
+        }
+
         var table = $('#adminLogTable').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
                 url: 'function/get_admin_log.php',
                 type: 'POST',
+                dataType: 'json',
                 data: function(d) {
                     var dates = $('#dateRange').val().split(' to ');
                     return {
                         ...d,
                         date_start: dates[0] || '',
                         date_end: dates[1] || '',
-                        action_type: $('#actionTypeFilter').val(),
-                        table_name: $('#tableNameFilter').val()
+                        action_type: $('#actionTypeFilter').val()
                     };
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('DataTables error:', error, thrown);
                 }
             },
             columns: [{
-                    data: 'log_id'
+                    data: 'log_id',
+                    width: '80px'
                 },
                 {
                     data: 'idnik',
-                    render: function(data, type, row) {
+                    render: function(data) {
                         return `<span class="text-primary">${data}</span>`;
                     }
                 },
                 {
                     data: 'action_type',
                     render: function(data) {
-                        let badge = '';
-                        switch (data) {
-                            case 'INSERT':
-                                badge = 'bg-success';
-                                break;
-                            case 'UPDATE':
-                                badge = 'bg-warning';
-                                break;
-                            case 'DELETE':
-                                badge = 'bg-danger';
-                                break;
-                        }
-                        return `<span class="badge ${badge}">${data}</span>`;
+                        const badges = {
+                            'INSERT': 'success',
+                            'UPDATE': 'warning',
+                            'DELETE': 'danger'
+                        };
+                        const text = {
+                            'INSERT': 'New Entry',
+                            'UPDATE': 'Updated',
+                            'DELETE': 'Deleted'
+                        };
+                        return `<span class="badge bg-${badges[data] || 'secondary'}">${text[data] || data}</span>`;
                     }
                 },
                 {
-                    data: 'table_name'
+                    data: 'table_name',
+                    render: function(data) {
+                        return data.replace('proc_', '').replace(/_/g, ' ');
+                    }
                 },
                 {
                     data: 'record_id'
                 },
                 {
                     data: 'old_value',
-                    render: function(data) {
-                        try {
-                            if (!data) return '';
-                            const obj = JSON.parse(data);
-                            return `<div class="json-value">${JSON.stringify(obj, null, 2)}</div>`;
-                        } catch {
-                            return data || '';
-                        }
-                    }
+                    render: formatJsonValue
                 },
                 {
                     data: 'new_value',
-                    render: function(data) {
-                        try {
-                            if (!data) return '';
-                            const obj = JSON.parse(data);
-                            return `<div class="json-value">${JSON.stringify(obj, null, 2)}</div>`;
-                        } catch {
-                            return data || '';
-                        }
-                    }
+                    render: formatJsonValue
                 },
                 {
                     data: 'timestamp',
                     render: function(data) {
-                        return moment(data).format('DD MMM YYYY HH:mm:ss');
+                        return `<span class="text-muted small">${moment(data).format('DD MMM YYYY HH:mm:ss')}</span>`;
                     }
                 }
             ],
             order: [
                 [0, 'desc']
             ],
-            pageLength: 25,
-            dom: '<"row mb-3"<"col-md-6"B><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>',
+            pageLength: 5, // Menampilkan 5 data per halaman
+            lengthMenu: [
+                [5, 10, 25, 50],
+                [5, 10, 25, 50]
+            ], // Opsi jumlah data per halaman
+            dom: '<"row mb-3"<"col-md-6"B><"col-md-6"f>>' +
+                '<"row"<"col-12"tr>>' +
+                '<"row mt-3"<"col-md-4"l><"col-md-4"i><"col-md-4"p>>', // Custom layout dengan pagination
             buttons: [{
                     extend: 'excel',
                     text: '<i class="ri-file-excel-line me-1"></i> Excel',
-                    className: 'btn btn-sm btn-success btn-export'
+                    className: 'btn btn-sm btn-success me-2'
                 },
                 {
                     extend: 'pdf',
                     text: '<i class="ri-file-pdf-line me-1"></i> PDF',
-                    className: 'btn btn-sm btn-danger btn-export'
+                    className: 'btn btn-sm btn-danger me-2'
                 },
                 {
                     extend: 'print',
                     text: '<i class="ri-printer-line me-1"></i> Print',
-                    className: 'btn btn-sm btn-info btn-export'
+                    className: 'btn btn-sm btn-info'
                 }
             ],
             responsive: true,
             language: {
                 search: "Search logs:",
-                processing: '<div class="spinner-border text-primary" role="status"></div>',
+                lengthMenu: "Show _MENU_ entries per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                paginate: {
+                    first: '<i class="ri-arrow-left-double-line"></i>',
+                    last: '<i class="ri-arrow-right-double-line"></i>',
+                    next: '<i class="ri-arrow-right-s-line"></i>',
+                    previous: '<i class="ri-arrow-left-s-line"></i>'
+                },
+                processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
                 emptyTable: "No activity logs found",
-                zeroRecords: "No matching logs found",
+                zeroRecords: "No matching logs found"
             }
         });
 
-        // Load table names for filter
-        $.get('function/get_table_names.php', function(data) {
-            $('#tableNameFilter').append(
-                data.map(name => `<option value="${name}">${name.replace('proc_', '').replace('_', ' ')}</option>`)
-            );
-        });
-
-        // Handle filter changes
-        $('#dateRange, #actionTypeFilter, #tableNameFilter').on('change', function() {
+        // Event handlers untuk filter
+        $('#dateRange, #actionTypeFilter').on('change', function() {
             table.ajax.reload();
         });
 
-        // Handle clear filters
         $('#clearFilters').on('click', function() {
             $('#dateRange').val('');
             $('#actionTypeFilter').val('');
-            $('#tableNameFilter').val('');
             table.ajax.reload();
         });
     });

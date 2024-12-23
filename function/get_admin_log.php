@@ -2,95 +2,33 @@
 require_once '../koneksi.php';
 header('Content-Type: application/json');
 
-function getUserName($koneksi, $idnik)
-{
-    $stmt = $koneksi->prepare("SELECT nama FROM user WHERE idnik = ?");
-    $stmt->bind_param("s", $idnik);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $user = $result->fetch_assoc();
-    $stmt->close();
-    return $user ? $user['nama'] : $idnik;
-}
-
-function formatActionType($type)
-{
-    $labels = [
-        'INSERT' => '<span class="badge bg-success">New Entry</span>',
-        'UPDATE' => '<span class="badge bg-warning">Updated</span>',
-        'DELETE' => '<span class="badge bg-danger">Deleted</span>'
-    ];
-    return $labels[$type] ?? $type;
-}
-
-function formatTableName($table)
-{
-    $labels = [
-        'proc_request_details' => 'Purchase Request Items',
-        'proc_purchase_requests' => 'Purchase Requests',
-        'proc_admin_category' => 'Category Assignments',
-        'proc_admin_wa' => 'WhatsApp Contacts'
-    ];
-    return $labels[$table] ?? ucwords(str_replace(['proc_', '_'], ['', ' '], $table));
-}
-
-function formatJsonValue($value)
-{
-    if (empty($value)) return '-';
-
-    try {
-        $data = json_decode($value, true);
-        if (json_last_error() === JSON_ERROR_NONE && is_array($data)) {
-            $formatted = [];
-            $labelMappings = [
-                'nama_barang' => 'Item Name',
-                'qty' => 'Quantity',
-                'uom' => 'Unit',
-                'category' => 'Category',
-                'unit_price' => 'Price',
-                'detail_specification' => 'Specifications',
-                'detail_notes' => 'Notes'
-            ];
-
-            foreach ($data as $key => $val) {
-                $label = $labelMappings[$key] ?? ucwords(str_replace('_', ' ', $key));
-                if ($key === 'unit_price') {
-                    $val = 'Rp ' . number_format($val, 0, ',', '.');
-                }
-                $formatted[] = "<strong>{$label}:</strong> {$val}";
-            }
-            return implode('<br>', $formatted);
-        }
-    } catch (Exception $e) {
-        error_log("JSON formatting error: " . $e->getMessage());
-    }
-
-    return htmlspecialchars($value);
-}
-
 try {
+    // Get request parameters
     $draw = isset($_POST['draw']) ? intval($_POST['draw']) : 1;
     $start = isset($_POST['start']) ? intval($_POST['start']) : 0;
     $length = isset($_POST['length']) ? intval($_POST['length']) : 10;
+    $search = isset($_POST['search']['value']) ? $_POST['search']['value'] : '';
 
-    // Query building
+    // Base query
     $sql = "SELECT l.*, u.nama as user_name 
             FROM proc_admin_log l 
             LEFT JOIN user u ON l.idnik = u.idnik 
             WHERE 1=1";
+
+    $countSql = "SELECT COUNT(*) as total FROM proc_admin_log";
+
+    // Search condition
     $params = [];
     $types = "";
 
-    // Apply filters
-    if (!empty($_POST['search']['value'])) {
-        $searchValue = $_POST['search']['value'];
+    if (!empty($search)) {
         $sql .= " AND (l.idnik LIKE ? OR u.nama LIKE ? OR l.action_type LIKE ? OR l.table_name LIKE ? OR l.record_id LIKE ?)";
-        $searchParam = "%{$searchValue}%";
-        array_push($params, $searchParam, $searchParam, $searchParam, $searchParam, $searchParam);
-        $types .= "sssss";
+        $searchParam = "%$search%";
+        $params = array_fill(0, 5, $searchParam);
+        $types .= str_repeat("s", 5);
     }
 
-    // Date range filter
+    // Date filter
     if (!empty($_POST['date_start'])) {
         $sql .= " AND DATE(l.timestamp) >= ?";
         $params[] = $_POST['date_start'];
@@ -102,36 +40,32 @@ try {
         $types .= "s";
     }
 
-    // Action type and table filters
+    // Action type filter
     if (!empty($_POST['action_type'])) {
         $sql .= " AND l.action_type = ?";
         $params[] = $_POST['action_type'];
         $types .= "s";
     }
-    if (!empty($_POST['table_name'])) {
-        $sql .= " AND l.table_name = ?";
-        $params[] = $_POST['table_name'];
-        $types .= "s";
-    }
 
-    // Get total and filtered counts
-    $totalRecords = $koneksi->query("SELECT COUNT(*) FROM proc_admin_log")->fetch_row()[0];
+    // Get total records count
+    $totalRecords = $koneksi->query($countSql)->fetch_assoc()['total'];
 
-    $stmtFiltered = $koneksi->prepare(str_replace("SELECT l.*, u.nama as user_name", "SELECT COUNT(*)", $sql));
+    // Get filtered records count
+    $stmtCount = $koneksi->prepare(str_replace("l.*, u.nama as user_name", "COUNT(*) as total", $sql));
     if (!empty($params)) {
-        $stmtFiltered->bind_param($types, ...$params);
+        $stmtCount->bind_param($types, ...$params);
     }
-    $stmtFiltered->execute();
-    $filteredRecords = $stmtFiltered->get_result()->fetch_row()[0];
-    $stmtFiltered->close();
+    $stmtCount->execute();
+    $filteredRecords = $stmtCount->get_result()->fetch_assoc()['total'];
+    $stmtCount->close();
 
-    // Get data with ordering and pagination
-    $sql .= " ORDER BY l." . $_POST['columns'][$_POST['order'][0]['column']]['data'] . " " . $_POST['order'][0]['dir'];
-    $sql .= " LIMIT ?, ?";
+    // Add sorting and pagination
+    $sql .= " ORDER BY l.timestamp DESC LIMIT ?, ?";
     $params[] = $start;
     $params[] = $length;
     $types .= "ii";
 
+    // Execute main query
     $stmt = $koneksi->prepare($sql);
     if (!empty($params)) {
         $stmt->bind_param($types, ...$params);
@@ -141,26 +75,57 @@ try {
 
     $data = [];
     while ($row = $result->fetch_assoc()) {
+        // Handle old_value and new_value properly
+        $oldValue = !empty($row['old_value']) ? $row['old_value'] : null;
+        $newValue = !empty($row['new_value']) ? $row['new_value'] : null;
+
+        // Ensure JSON is valid before returning
+        if ($oldValue) {
+            $decodedOld = json_decode($oldValue);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $oldValue = json_encode($decodedOld, JSON_UNESCAPED_UNICODE);
+            }
+        }
+
+        if ($newValue) {
+            $decodedNew = json_decode($newValue);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $newValue = json_encode($decodedNew, JSON_UNESCAPED_UNICODE);
+            }
+        }
+
+        // Format action type badge
+        $actionType = $row['action_type'];
+
         $data[] = [
             'log_id' => $row['log_id'],
-            'idnik' => $row['user_name'] ?? $row['idnik'],
-            'action_type' => formatActionType($row['action_type']),
-            'table_name' => formatTableName($row['table_name']),
-            'record_id' => $row['record_id'],
-            'old_value' => formatJsonValue($row['old_value']),
-            'new_value' => formatJsonValue($row['new_value']),
-            'timestamp' => date('d M Y H:i:s', strtotime($row['timestamp']))
+            'idnik' => htmlspecialchars($row['user_name'] ?? $row['idnik']),
+            'action_type' => $actionType,
+            'table_name' => htmlspecialchars($row['table_name']),
+            'record_id' => htmlspecialchars($row['record_id']),
+            'old_value' => $oldValue,
+            'new_value' => $newValue,
+            'timestamp' => date('Y-m-d H:i:s', strtotime($row['timestamp']))
         ];
     }
 
-    echo json_encode([
+    $response = [
         'draw' => $draw,
-        'recordsTotal' => (int)$totalRecords,
-        'recordsFiltered' => (int)$filteredRecords,
+        'recordsTotal' => intval($totalRecords),
+        'recordsFiltered' => intval($filteredRecords),
         'data' => $data
-    ]);
+    ];
+
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    exit;
 } catch (Exception $e) {
     error_log("Admin Log Error: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['error' => 'Failed to fetch data']);
+    echo json_encode([
+        'draw' => $draw,
+        'recordsTotal' => 0,
+        'recordsFiltered' => 0,
+        'data' => [],
+        'error' => 'Failed to fetch data'
+    ]);
+    exit;
 }
