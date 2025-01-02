@@ -150,7 +150,7 @@ $row = mysqli_fetch_assoc($sql);
                             <thead>
                                 <tr>
                                     <th style="display:none;">ID Request</th>
-                                    <th width="16%">Nama Barang</th>
+                                    <th width="16%">Item Description</th>
                                     <th width="12%">Detail Spec</th>
                                     <th width="6%">Qty</th>
                                     <th width="16%">Category</th>
