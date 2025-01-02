@@ -189,7 +189,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                             <thead>
                                 <tr>
                                     <th style="display:none;">ID Request</th>
-                                    <th width="20%">Nama Barang</th>
+                                    <th width="20%">Item Description</th>
                                     <th width="20%">Detail Spec</th>
                                     <th width="5%">Qty</th>
                                     <th width="15%">Category</th>

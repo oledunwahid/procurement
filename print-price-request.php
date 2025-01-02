@@ -231,22 +231,33 @@ function formatRupiah($value)
 $id_proc_ch = $_GET['id'];
 
 $queryPR = "SELECT
-                pp.id_proc_ch,
-                pp.title,
-                pp.created_request,
-                pp.status,
-                pp.nik_request,
-                pp.proc_pic,
-                user1.nama AS nama_request,
-                user1.divisi AS divisi_request,
-                user2.nama AS nama_pic
-            FROM
-                proc_purchase_requests AS pp
-                LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
-                LEFT JOIN user AS user2 ON pp.proc_pic = user2.idnik
-            WHERE
-                pp.id_proc_ch = '$id_proc_ch'";
-$resultPR = mysqli_query($koneksi, $queryPR);
+    pp.id_proc_ch,
+    pp.title,
+    pp.created_request,
+    pp.status,
+    pp.nik_request,
+    pp.proc_pic,
+    user1.nama AS nama_request,
+    user1.divisi AS divisi_request,
+    user2.nama AS nama_pic,
+    (SELECT l.timestamp 
+     FROM proc_admin_log l 
+     WHERE l.table_name = 'proc_purchase_requests' 
+     AND l.record_id = pp.id_proc_ch 
+     AND l.new_value LIKE '%\"status\":\"Closed\"%'
+     ORDER BY l.timestamp DESC 
+     LIMIT 1) as closed_date
+FROM
+    proc_purchase_requests AS pp
+    LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
+    LEFT JOIN user AS user2 ON pp.proc_pic = user2.idnik
+WHERE
+    pp.id_proc_ch = ?";
+
+$stmt = mysqli_prepare($koneksi, $queryPR);
+mysqli_stmt_bind_param($stmt, "s", $id_proc_ch);
+mysqli_stmt_execute($stmt);
+$resultPR = mysqli_stmt_get_result($stmt);
 $dataPR = mysqli_fetch_assoc($resultPR);
 
 $queryDetail = "SELECT prd.*, pc.nama_category 
@@ -290,19 +301,33 @@ mysqli_data_seek($resultDetail, 0);
 
     <div class="pr-details">
         <label>Date Request:</label>
-        <span><?= date('j F Y', strtotime($dataPR['created_request'])); ?></span>
+        <span><?= date('j F Y H:i:s', strtotime($dataPR['created_request'])); ?></span>
+
+        <?php if (!empty($dataPR['closed_date'])): ?>
+            <label>Date Closed:</label>
+            <span><?= date('j F Y H:i:s', strtotime($dataPR['closed_date'])); ?></span>
+        <?php endif; ?>
+
         <label>Title:</label>
         <span><?= htmlspecialchars($dataPR['title']); ?></span>
+
         <label>Request By:</label>
         <span><?= htmlspecialchars($dataPR['nama_request']); ?></span>
+
+        <label>Division:</label>
+        <span><?= htmlspecialchars($dataPR['divisi_request']); ?></span>
+
         <label>PIC:</label>
         <span><?= htmlspecialchars($dataPR['nama_pic']); ?></span>
+
+        <label>Status:</label>
+        <span><?= htmlspecialchars($dataPR['status']); ?></span>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Name Product</th>
+                <th>Item Description</th>
                 <th>Detail Specification</th>
                 <th>Qty</th>
                 <th>Uom</th>

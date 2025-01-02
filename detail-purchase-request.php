@@ -199,7 +199,7 @@ if (!$row) {
                             <thead>
                                 <tr>
                                     <th style="display:none;">ID Request</th>
-                                    <th width="10%">Nama Barang</th>
+                                    <th width="10%">Item Description</th>
                                     <th width="10%">Detail Spec</th>
                                     <th width="7%">Qty</th>
                                     <th width="10%">Category</th>
