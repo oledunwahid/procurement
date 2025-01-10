@@ -7,6 +7,34 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
+    /* Table Styles */
+    .gdocs-style {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        background-color: #ffffff;
+    }
+
+    .gdocs-style thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        color: #495057;
+        font-weight: 600;
+        padding: 12px 8px;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .gdocs-style tbody td {
+        padding: 8px;
+        border: 1px solid #dee2e6;
+        vertical-align: middle;
+        background-color: #fff;
+        transition: all 0.2s;
+    }
+
     .card-enhanced {
         transition: transform .3s, box-shadow .3s;
         cursor: pointer;
@@ -39,6 +67,25 @@
     }
 </style>
 <style>
+    .form-field-adjustable {
+        min-height: 60px;
+        height: auto;
+        resize: none;
+        overflow: hidden;
+        line-height: 1.5;
+        padding: 8px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        transition: height 0.1s ease-in-out;
+    }
+
+    textarea.form-control {
+        min-height: 60px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        resize: vertical;
+    }
+
     @media screen and (max-width: 767px) {
         #detail-purchase-request thead {
             display: none;
@@ -127,6 +174,8 @@
         font-size: 0.8em;
     }
 </style>
+<!-- desc input style -->
+
 
 <?php
 $id_proc_ch = $_GET['id'];
@@ -146,13 +195,13 @@ $row = mysqli_fetch_assoc($sql);
                 </div>
                 <div class="card-body">
                     <div class="table-responsive mt-3">
-                        <table class="table table-hover" id="detail-purchase-request">
+                        <table class="table table-hover gdocs-style" id="detail-purchase-request">
                             <thead>
                                 <tr>
                                     <th style="display:none;">ID Request</th>
-                                    <th width="16%">Item Description</th>
-                                    <th width="12%">Detail Spec</th>
-                                    <th width="6%">Qty</th>
+                                    <th width="16%">Nama Barang</th>
+                                    <th width="16%">Detail Spec</th>
+                                    <th width="5%">Qty</th>
                                     <th width="16%">Category</th>
                                     <th width="9%">Uom</th>
                                     <th width="10%">Harga</th>
@@ -161,7 +210,7 @@ $row = mysqli_fetch_assoc($sql);
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Data akan di-load menggunakan AJAX -->
+                                <!-- Data loaded via AJAX -->
                             </tbody>
                         </table>
                     </div>
@@ -282,23 +331,24 @@ $row = mysqli_fetch_assoc($sql);
         </div>
     </div>
 </div>
-<!--form comments -->
+<!-- Comments Section -->
 <div class="col-lg-12 mt-4">
     <div class="card">
         <div class="card-body">
             <h5 class="card-title mb-4">Comments</h5>
             <div id="commentSection" class="mb-4">
-                <!-- Comments will be loaded here dynamically -->
+                <!-- Comments loaded dynamically -->
             </div>
             <form id="addCommentForm">
                 <div class="mb-3">
                     <label for="commentText" class="form-label">Leave a Comment</label>
-                    <textarea class="form-control" id="commentText" name="comment" rows="3" placeholder="Enter your comment"></textarea>
+                    <textarea class="form-control" id="commentText" name="comment" rows="3"
+                        placeholder="Enter your comment"></textarea>
                 </div>
                 <input type="hidden" name="id_proc_ch" value="<?= htmlspecialchars($row['id_proc_ch']); ?>">
-                <button type="submit" id="postCommentBtn" class="btn btn-primary" <?php echo (strtolower(trim($row['status'])) === 'closed') ? 'style="display:none;"' : ''; ?>>Post Comment</button>
+                <button type="submit" id="postCommentBtn" class="btn btn-primary">Post Comment</button>
             </form>
-            <div id="closedTicketInfo" class="alert alert-info mt-3" style="display: <?php echo (strtolower(trim($row['status'])) === 'closed') ? 'block' : 'none'; ?>;">
+            <div id="closedTicketInfo" class="alert alert-info mt-3" style="display: none;">
                 <i class="fas fa-info-circle"></i> This ticket is closed. No new comments can be added.
             </div>
         </div>
@@ -316,6 +366,9 @@ $row = mysqli_fetch_assoc($sql);
         }
 
         function loadData(callback) {
+            const table = $('#detail-purchase-request');
+            const tbody = table.find('tbody');
+
             $.ajax({
                 url: 'function/fetch_view_price_request.php',
                 type: 'GET',
@@ -323,19 +376,79 @@ $row = mysqli_fetch_assoc($sql);
                     id_proc_ch: idProcCh
                 },
                 beforeSend: function() {
-                    $('#detail-purchase-request tbody').html('<tr><td colspan="11" class="text-center">Loading...</td></tr>');
+                    tbody.html('<tr><td colspan="11" class="text-center p-4"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div></td></tr>');
+                    table.closest('.table-responsive').addClass('loading-overlay');
                 },
                 success: function(data) {
-                    $('#detail-purchase-request tbody').html(data);
+                    tbody.html(data);
                     applyDataLabels();
+                    initializeInputHandlers();
                     if (callback) callback();
                     checkStatusAndToggleButton();
                 },
                 error: function(xhr, status, error) {
                     console.error('AJAX Error:', error);
-                    $('#detail-purchase-request tbody').html('<tr><td colspan="11" class="text-center text-danger">Error loading data</td></tr>');
+                    tbody.html('<tr><td colspan="11" class="text-center text-danger p-3"><i class="fas fa-exclamation-circle mr-2"></i>Error loading data</td></tr>');
+                },
+                complete: function() {
+                    table.closest('.table-responsive').removeClass('loading-overlay');
                 }
             });
+        }
+
+        function initializeInputHandlers() {
+            function autoResizeTextarea(element) {
+                element.style.height = '60px';
+                element.style.height = (element.scrollHeight) + 'px';
+            }
+
+            // Handle textarea auto-resize
+            $('textarea.form-field-adjustable, textarea.desc-input').each(function() {
+                autoResizeTextarea(this);
+            }).on('input', function() {
+                autoResizeTextarea(this);
+            });
+
+            // Format price inputs
+            $('input[name="unit_price[]"]').on('input', function() {
+                let value = this.value.replace(/[^\d]/g, '');
+                this.value = formatRibuan(value);
+                calculateRowTotal($(this).closest('tr'));
+            });
+
+            // Handle quantity inputs
+            $('input[name="qty[]"]').on('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                if (this.value === '') this.value = 0;
+                calculateRowTotal($(this).closest('tr'));
+            });
+
+            // Calculate row total
+            function calculateRowTotal($row) {
+                const qty = parseInt($row.find('input[name="qty[]"]').val()) || 0;
+                const price = parseInt($row.find('input[name="unit_price[]"]').val().replace(/\./g, '')) || 0;
+                const total = qty * price;
+                $row.find('.total-price').text('Rp ' + formatRibuan(total.toString()));
+                updateGrandTotal();
+            }
+
+            // Update grand total
+            function updateGrandTotal() {
+                let grandTotal = 0;
+                $('.total-price').each(function() {
+                    const value = $(this).text().replace('Rp ', '').replace(/\./g, '');
+                    grandTotal += parseInt(value) || 0;
+                });
+                $('#total_price').val('Rp ' + formatRibuan(grandTotal.toString()));
+            }
+
+            // Initialize select2 if available
+            if ($.fn.select2) {
+                $('select[name="category[]"], select[name="uom[]"], select[name="urgency_status[]"]').select2({
+                    width: '100%',
+                    dropdownParent: $('.table-responsive')
+                });
+            }
         }
 
         function applyDataLabels() {
@@ -347,43 +460,26 @@ $row = mysqli_fetch_assoc($sql);
             });
         }
 
-        function saveRowData($row) {
-            const data = {
-                id: $row.find('.saveRow').data('id'),
-                id_proc_ch: $row.find("input[name='id_proc_ch[]']").val(),
-                nama_barang: $row.find("input[name='nama_barang[]']").val(),
-                detail_specification: $row.find("textarea[name='detail_specification[]']").val(),
-                qty: $row.find("input[name='qty[]']").val(),
-                category: $row.find("select[name='category[]']").val(),
-                uom: $row.find("select[name='uom[]']").val(),
-                unit_price: $row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
-                urgency_status: $row.find("select[name='urgency_status[]']").val(),
-                detail_notes: $row.find("textarea[name='detail_notes[]']").val(),
-                niklogin: niklogin,
-                idnik_pic: idnik_pic
-            };
 
-            const originalUrgencyStatus = $row.find("select[name='urgency_status[]']").data('original-value');
-
-            if (originalUrgencyStatus !== 'urgent' && data.urgency_status === 'urgent') {
-                Swal.fire({
-                    title: 'Confirm Urgent Status',
-                    text: 'Are you sure you want to mark this item as urgent?',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'No'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        performUpdate(data);
-                    } else {
-                        $row.find("select[name='urgency_status[]']").val(originalUrgencyStatus);
-                    }
-                });
-            } else {
-                performUpdate(data);
-            }
+        function autoResizeTextarea(element) {
+            element.style.height = 'auto';
+            element.style.height = (element.scrollHeight) + 'px';
         }
+
+        // Initialize all textareas
+        $('textarea.form-field-adjustable, textarea.desc-input').each(function() {
+            autoResizeTextarea(this);
+            $(this).on('input', function() {
+                autoResizeTextarea(this);
+            });
+        });
+
+        // Trigger resize on window resize for responsive behavior
+        $(window).on('resize', function() {
+            $('textarea.form-field-adjustable, textarea.desc-input').each(function() {
+                autoResizeTextarea(this);
+            });
+        });
 
         function performUpdate(data) {
             $.ajax({
@@ -421,12 +517,10 @@ $row = mysqli_fetch_assoc($sql);
             });
         }
 
-        // Edit button handler
         $(document).on('click', '.edit', function() {
             var $row = $(this).closest('tr');
             $row.find('input, textarea, select').prop('readonly', false).prop('disabled', false);
 
-            // Store original values
             $row.find('input, textarea, select').each(function() {
                 $(this).data('original-value', $(this).val());
             });
@@ -435,7 +529,6 @@ $row = mysqli_fetch_assoc($sql);
             $row.find('.saveRow').show();
         });
 
-        // Save button handler
         $(document).on('click', '.saveRow', function() {
             var $row = $(this).closest('tr');
             saveRowData($row);
@@ -572,5 +665,19 @@ $row = mysqli_fetch_assoc($sql);
             status = $(this).val();
             checkStatusAndToggleButton();
         });
+        let resizeTimeout;
+        $(window).on('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                if ($.fn.select2) {
+                    $('.custom-table select').select2('destroy').select2({
+                        width: '100%',
+                        dropdownParent: $('.table-responsive')
+                    });
+                }
+            }, 250);
+        });
+
+
     });
 </script>

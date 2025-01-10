@@ -64,15 +64,15 @@ while ($row = mysqli_fetch_assoc($result)) {
     $urgencyLabel = ucfirst($row['urgency_status'] ?? 'normal');
 
     $output .= "<tr>
-                    <td style='display:none;'>
-                        <input type='text' name='id_proc_ch[]' class='form-control' value='" . htmlspecialchars($row['id_proc_ch']) . "' readonly />
-                    </td>
-                    <td>
-                        <input type='text' name='nama_barang[]' class='form-control' value='" . htmlspecialchars($row['nama_barang']) . "' readonly />
-                    </td>
-                    <td>
-                        <textarea name='detail_specification[]' class='form-control' readonly style='width: 100%;'>" . htmlspecialchars($row['detail_specification']) . "</textarea>
-                    </td>
+                     <td style='display:none;'>
+        <input type='text' name='id_proc_ch[]' class='form-control' value='" . htmlspecialchars($row['id_proc_ch']) . "' readonly />
+    </td>
+    <td>
+        <textarea name='nama_barang[]' class='form-control form-field-adjustable desc-input' rows='auto' style='resize:none;overflow:hidden;min-height:60px;' readonly>" . htmlspecialchars($row['nama_barang']) . "</textarea>
+    </td>
+    <td>
+        <textarea name='detail_specification[]' class='form-control form-field-adjustable desc-input' rows='auto' style='resize:none;overflow:hidden;min-height:60px;' readonly>" . htmlspecialchars($row['detail_specification']) . "</textarea>
+    </td>
                     <td>
                         <input type='number' name='qty[]' class='form-control' value='" . htmlspecialchars($row['qty']) . "' readonly maxlength='5' />
                     </td>
