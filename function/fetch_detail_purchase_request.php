@@ -72,7 +72,7 @@ while ($row = mysqli_fetch_assoc($result)) {
 
     $output .= "<tr>
         <td style='display:none;'><input type='text' name='id_proc_ch[]' class='form-control' value='" . $row['id_proc_ch'] . "' readonly /></td>
-        <td data-label='Nama Barang:'><input type='text' name='nama_barang[]' class='form-control' value='" . htmlspecialchars($row['nama_barang']) . "' readonly /></td>
+        <td data-label='Nama Barang:'><textarea name='nama_barang[]' class='form-control form-field-adjustable desc-input' readonly>" . htmlspecialchars($row['nama_barang']) . "</textarea></td>
         <td data-label='Detail Spec:'><textarea name='detail_specification[]' class='form-control' readonly>" . htmlspecialchars($row['detail_specification']) . "</textarea></td>
         <td data-label='Qty:'><input type='number' name='qty[]' class='form-control' value='" . $row['qty'] . "' readonly maxlength='5' /></td>
         <td data-label='Category:'>
