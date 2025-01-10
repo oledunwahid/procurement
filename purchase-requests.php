@@ -6,7 +6,7 @@
 
 
 <?php
-$isAdmin = array_intersect([5, 1], $role);
+$isAdmin = array_intersect([5], $role);
 
 // Query untuk mendapatkan data purchase requests
 

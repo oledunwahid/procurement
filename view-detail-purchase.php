@@ -263,7 +263,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                                 <div class="col-lg-6 col-sm-6">
                                     <div>
                                         <label for="totalamountInput">Attachment <strong>* MAX 2MB (PDF, JPG , PDF ,JPEG)</strong></label>
-                                        <input type="file" name="lampiran" class="form-control" accept=".pdf,.jpg,.png,.jpeg" required>
+                                        <input type="file" name="lampiran" class="form-control" accept=".pdf,.jpg,.png,.jpeg">
                                     </div>
                                 </div>
                             </div>
