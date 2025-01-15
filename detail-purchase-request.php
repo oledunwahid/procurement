@@ -381,10 +381,18 @@ if (!$row) {
             <div id="commentSection" class="mb-4">
                 <!-- Comments will be loaded here dynamically -->
             </div>
-            <form id="addCommentForm">
+            <form id="addCommentForm" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="commentText" class="form-label">Leave a Comment</label>
                     <textarea class="form-control" id="commentText" name="comment" rows="3" placeholder="Enter your comment"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="attachments" class="form-label">Attachments (Optional)</label>
+                    <input type="file" class="form-control" id="attachments" name="attachments[]" multiple>
+                    <div id="filePreview" class="mt-2"></div>
+                    <small class="text-muted">
+                        Max size: 5MB per file
+                    </small>
                 </div>
                 <input type="hidden" name="id_proc_ch" value="<?= htmlspecialchars($row['id_proc_ch']); ?>">
                 <button type="submit" id="postCommentBtn" class="btn btn-primary" <?php echo (strtolower(trim($row['status'])) === 'closed') ? 'style="display:none;"' : ''; ?>>Post Comment</button>
@@ -395,7 +403,6 @@ if (!$row) {
         </div>
     </div>
 </div>
-
 
 <script>
     $(document).ready(function() {
@@ -835,12 +842,17 @@ if (!$row) {
         // Handle form submissions
         $('#addCommentForm').on('submit', function(e) {
             e.preventDefault();
-            const formData = $(this).serialize() + '&niklogin=' + niklogin + '&idnik_pic=' + idnik_pic;
+            const $submitBtn = $(this).find('button[type="submit"]');
+            $submitBtn.prop('disabled', true);
+
+            const formData = new FormData(this);
 
             $.ajax({
                 type: "POST",
                 url: "function/add_comments.php",
                 data: formData,
+                processData: false,
+                contentType: false,
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
@@ -853,6 +865,7 @@ if (!$row) {
                         });
                         loadComments();
                         $('#addCommentForm')[0].reset();
+                        $('#filePreview').empty();
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -863,12 +876,14 @@ if (!$row) {
                 },
                 error: function(xhr, status, error) {
                     console.error("AJAX Error:", status, error);
-                    console.error("Response Text:", xhr.responseText);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
                         text: 'There was an error submitting the comment: ' + error
                     });
+                },
+                complete: function() {
+                    $submitBtn.prop('disabled', false);
                 }
             });
         });
