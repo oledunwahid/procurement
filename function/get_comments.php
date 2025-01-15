@@ -4,16 +4,19 @@ session_start();
 
 $id_proc_ch = $_GET['id_proc_ch'];
 
-$query = "SELECT c.*, u.nama, u.divisi FROM proc_comments c 
+$query = "SELECT c.*, u.nama, u.divisi, 
+          GROUP_CONCAT(CONCAT(a.id_attachment, ':', a.file_name) SEPARATOR '|') as attachments 
+          FROM proc_comments c 
           JOIN user u ON c.idnik = u.idnik 
+          LEFT JOIN proc_comment_attachments a ON c.id_comments = a.id_comments 
           WHERE c.id_proc_ch = ? 
+          GROUP BY c.id_comments
           ORDER BY c.timestamp ASC";
 
 $stmt = $koneksi->prepare($query);
 $stmt->bind_param("s", $id_proc_ch);
 $stmt->execute();
 $result = $stmt->get_result();
-
 function formatTimestamp($timestamp)
 {
     $now = new DateTime();
@@ -46,6 +49,20 @@ while ($row = $result->fetch_assoc()) {
     echo "<div class='card-body'>";
     echo "<p class='card-text'><strong>" . htmlspecialchars($row['nama']) . "</strong> (" . htmlspecialchars($row['divisi']) . ") - " . $formattedTime . "</p>";
     echo "<p class='card-text'>" . htmlspecialchars($row['comment']) . "</p>";
+
+    // Display attachments if any
+    if (!empty($row['attachments'])) {
+        echo "<div class='attachments mt-2'>";
+        foreach (explode('|', $row['attachments']) as $attachment) {
+            list($id, $filename) = explode(':', $attachment);
+            echo "<div class='attachment-item'>";
+            echo "<i class='bi bi-paperclip'></i> ";
+            echo "<a href='function/download_attachment.php?id=" . htmlspecialchars($id) . "' target='_blank'>" . htmlspecialchars($filename) . "</a>";
+            echo "</div>";
+        }
+        echo "</div>";
+    }
+
     echo "</div>";
     echo "</div>";
     echo "</div>";

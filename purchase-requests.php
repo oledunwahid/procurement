@@ -7,7 +7,7 @@
 
 <?php
 $isAdmin = array_intersect([5], $role);
-
+$isSuperadmin = array_intersect([1], $role);
 // Query untuk mendapatkan data purchase requests
 
 $sql = "SELECT DISTINCT
@@ -26,24 +26,27 @@ LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
 LEFT JOIN proc_request_details AS prd ON pp.id_proc_ch = prd.id_proc_ch
 LEFT JOIN proc_admin_category pac ON prd.category = pac.id_category
 WHERE (
-    -- Kondisi untuk admin yang terassign atau user biasa
-    pac.idnik = '$niklogin'
+    -- Kondisi untuk superadmin, admin yang terassign, atau user biasa
+    '$niklogin' IN (SELECT idnik FROM user_roles WHERE id_role = 1)
+    OR pac.idnik = '$niklogin'
     OR pp.nik_request = '$niklogin'
 )
-GROUP BY pp.id_proc_ch";
+GROUP BY pp.id_proc_ch
+ORDER BY pp.created_request DESC";
 
 
 function getTotal($koneksi, $condition, $niklogin)
-{ // Tambahkan parameter $niklogin
+{
     $sql = "SELECT DISTINCT pp.id_proc_ch 
             FROM proc_purchase_requests pp
             LEFT JOIN proc_request_details prd ON pp.id_proc_ch = prd.id_proc_ch
             LEFT JOIN proc_admin_category pac ON prd.category = pac.id_category
             WHERE ($condition)
             AND (
-                '$niklogin' IN (SELECT idnik FROM user_roles WHERE id_role = 5)
-                OR pp.nik_request = '$niklogin'
-                OR pac.idnik = '$niklogin'
+                '$niklogin' IN (SELECT idnik FROM user_roles WHERE id_role = 1)  -- Superadmin
+                OR '$niklogin' IN (SELECT idnik FROM user_roles WHERE id_role = 5)  -- Admin
+                OR pp.nik_request = '$niklogin'  -- User biasa
+                OR pac.idnik = '$niklogin'  -- Admin kategori
             )";
 
     $result = mysqli_query($koneksi, $sql);
@@ -51,9 +54,10 @@ function getTotal($koneksi, $condition, $niklogin)
 }
 
 // Penggunaan function
-$total = ($isAdmin) ?
-    getTotal($koneksi, "1=1", $niklogin) :
-    getTotal($koneksi, "nik_request='$niklogin'", $niklogin);
+$total = ($isSuperadmin) ?
+    getTotal($koneksi, "1=1", $niklogin) : ($isAdmin ?
+        getTotal($koneksi, "1=1", $niklogin) :
+        getTotal($koneksi, "nik_request='$niklogin'", $niklogin));
 
 // Created Requests
 $Created = getTotal($koneksi, "status = 'Created'", $niklogin);

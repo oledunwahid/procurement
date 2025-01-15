@@ -331,26 +331,32 @@ $row = mysqli_fetch_assoc($sql);
         </div>
     </div>
 </div>
-<!-- Comments Section -->
+<!--form comments -->
 <div class="col-lg-12 mt-4">
     <div class="card">
         <div class="card-body">
             <h5 class="card-title mb-4">Comments</h5>
             <div id="commentSection" class="mb-4">
-                <!-- Comments loaded dynamically -->
+                <!-- Comments will be loaded here dynamically -->
             </div>
-            <form id="addCommentForm">
+            <form id="addCommentForm" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="commentText" class="form-label">Leave a Comment</label>
-                    <textarea class="form-control" id="commentText" name="comment" rows="3"
-                        placeholder="Enter your comment"></textarea>
+                    <textarea class="form-control" id="commentText" name="comment" rows="3" placeholder="Enter your comment"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="attachments" class="form-label">Attachments (Optional)</label>
+                    <input type="file" class="form-control" id="attachments" name="attachments[]" multiple>
+                    <div id="filePreview" class="mt-2">
+                        <!-- File previews will appear here -->
+                    </div>
+                    <small class="text-muted">
+                        Allowed file types: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, ZIP (Max size: 5MB per file)
+                    </small>
                 </div>
                 <input type="hidden" name="id_proc_ch" value="<?= htmlspecialchars($row['id_proc_ch']); ?>">
-                <button type="submit" id="postCommentBtn" class="btn btn-primary">Post Comment</button>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
             </form>
-            <div id="closedTicketInfo" class="alert alert-info mt-3" style="display: none;">
-                <i class="fas fa-info-circle"></i> This ticket is closed. No new comments can be added.
-            </div>
         </div>
     </div>
 </div>
@@ -569,11 +575,19 @@ $row = mysqli_fetch_assoc($sql);
 
         $('#addCommentForm').on('submit', function(e) {
             e.preventDefault();
-            var formData = $(this).serialize();
+
+            // Disable submit button to prevent double submission
+            const $submitBtn = $(this).find('button[type="submit"]');
+            $submitBtn.prop('disabled', true);
+
+            var formData = new FormData(this);
+
             $.ajax({
                 type: "POST",
                 url: "function/add_comments.php",
                 data: formData,
+                processData: false,
+                contentType: false,
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
@@ -586,6 +600,7 @@ $row = mysqli_fetch_assoc($sql);
                         });
                         loadComments();
                         $('#addCommentForm')[0].reset();
+                        $('#filePreview').empty();
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -596,12 +611,15 @@ $row = mysqli_fetch_assoc($sql);
                 },
                 error: function(xhr, status, error) {
                     console.error("AJAX Error:", status, error);
-                    console.error("Response Text:", xhr.responseText);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
                         text: 'There was an error submitting the comment: ' + error
                     });
+                },
+                complete: function() {
+                    // Re-enable submit button
+                    $submitBtn.prop('disabled', false);
                 }
             });
         });

@@ -189,7 +189,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                             <thead>
                                 <tr>
                                     <th style="display:none;">ID Request</th>
-                                    <th width="20%">Item Description</th>
+                                    <th width="20%">Nama Barang</th>
                                     <th width="20%">Detail Spec</th>
                                     <th width="5%">Qty</th>
                                     <th width="15%">Category</th>
@@ -288,10 +288,20 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             <div id="commentSection" class="mb-4">
                 <!-- Comments will be loaded here dynamically -->
             </div>
-            <form id="addCommentForm">
+            <form id="addCommentForm" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="commentText" class="form-label">Leave a Comment</label>
                     <textarea class="form-control" id="commentText" name="comment" rows="3" placeholder="Enter your comment"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="attachments" class="form-label">Attachments (Optional)</label>
+                    <input type="file" class="form-control" id="attachments" name="attachments[]" multiple>
+                    <div id="filePreview" class="mt-2">
+                        <!-- File previews will appear here -->
+                    </div>
+                    <small class="text-muted">
+                        Allowed file types: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, ZIP (Max size: 5MB per file)
+                    </small>
                 </div>
                 <input type="hidden" name="id_proc_ch" value="<?= htmlspecialchars($row['id_proc_ch']); ?>">
                 <button type="submit" class="btn btn-primary">Post Comment</button>
@@ -619,6 +629,19 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
             submitDetailRow($(this).closest('tr'), 'function/update_view_detail_purchase.php', 'update');
         });
 
+        function autoResizeTextarea(element) {
+            element.style.height = '60px';
+            element.style.height = (element.scrollHeight) + 'px';
+        }
+
+        function initializeTextareaHandlers() {
+            $('textarea.form-field-adjustable, textarea.desc-input').each(function() {
+                autoResizeTextarea(this);
+            }).on('input', function() {
+                autoResizeTextarea(this);
+            });
+        }
+
         function validateRow($row) {
             const urgencyStatus = $row.find("select[name='urgency_status[]']").val();
             if (!urgencyStatus) {
@@ -653,11 +676,19 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
 
         $('#addCommentForm').on('submit', function(e) {
             e.preventDefault();
-            var formData = $(this).serialize();
+
+            // Disable submit button to prevent double submission
+            const $submitBtn = $(this).find('button[type="submit"]');
+            $submitBtn.prop('disabled', true);
+
+            var formData = new FormData(this);
+
             $.ajax({
                 type: "POST",
                 url: "function/add_comments.php",
                 data: formData,
+                processData: false,
+                contentType: false,
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
@@ -670,6 +701,7 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                         });
                         loadComments();
                         $('#addCommentForm')[0].reset();
+                        $('#filePreview').empty();
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -680,12 +712,15 @@ $row = mysqli_fetch_assoc($sql) // fetch query yang sesuai ke dalam array
                 },
                 error: function(xhr, status, error) {
                     console.error("AJAX Error:", status, error);
-                    console.error("Response Text:", xhr.responseText);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
                         text: 'There was an error submitting the comment: ' + error
                     });
+                },
+                complete: function() {
+                    // Re-enable submit button
+                    $submitBtn.prop('disabled', false);
                 }
             });
         });
