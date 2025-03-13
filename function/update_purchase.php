@@ -24,6 +24,10 @@ if (isset($_POST['id_proc_ch']) && isset($_POST['niklogin'])) {
     $status = $_POST['status'];
     $niklogin = $_POST['niklogin'];
 
+    // Add closed_date and proc_pic handling
+    $closed_date = ($status == 'closed') ? date('Y-m-d H:i:s') : NULL;
+    $proc_pic = ($status == 'closed' || $status == 'Open') ? $niklogin : NULL;
+
     if (empty($niklogin)) {
         $response['message'] = "NIK login tidak valid";
         debug_log("Invalid niklogin");
@@ -35,7 +39,7 @@ if (isset($_POST['id_proc_ch']) && isset($_POST['niklogin'])) {
 
     try {
         // Get the old values
-        $old_query = "SELECT created_request, title, total_price, lampiran, status FROM proc_purchase_requests WHERE id_proc_ch = ?";
+        $old_query = "SELECT created_request, title, total_price, lampiran, status, closed_date, proc_pic FROM proc_purchase_requests WHERE id_proc_ch = ?";
         $old_stmt = mysqli_prepare($koneksi, $old_query);
         mysqli_stmt_bind_param($old_stmt, "s", $id_proc_ch);
         mysqli_stmt_execute($old_stmt);
@@ -61,29 +65,33 @@ if (isset($_POST['id_proc_ch']) && isset($_POST['niklogin'])) {
             $lampiran = $existing_lampiran;
         }
 
-        // Update the record
-        $sql = "UPDATE proc_purchase_requests SET created_request = ?, title = ?, total_price = ?, lampiran = ?, status = ? WHERE id_proc_ch = ?";
+        // Update the record with closed_date and proc_pic
+        $sql = "UPDATE proc_purchase_requests SET created_request = ?, title = ?, total_price = ?, lampiran = ?, status = ?, closed_date = ?, proc_pic = ? WHERE id_proc_ch = ?";
         $stmt = mysqli_prepare($koneksi, $sql);
-        mysqli_stmt_bind_param($stmt, "ssssss", $created_request, $title, $total_price, $lampiran, $status, $id_proc_ch);
+        mysqli_stmt_bind_param($stmt, "ssssssss", $created_request, $title, $total_price, $lampiran, $status, $closed_date, $proc_pic, $id_proc_ch);
         $update_result = mysqli_stmt_execute($stmt);
 
         if ($update_result) {
             debug_log("Record updated successfully");
 
-            // Log the change
+            // Log the change including closed_date and proc_pic
             $old_value = json_encode([
                 'created_request' => $old_row['created_request'],
                 'title' => $old_row['title'],
                 'total_price' => $old_row['total_price'],
                 'lampiran' => $old_row['lampiran'],
-                'status' => $old_row['status']
+                'status' => $old_row['status'],
+                'closed_date' => $old_row['closed_date'],
+                'proc_pic' => $old_row['proc_pic']
             ]);
             $new_value = json_encode([
                 'created_request' => $created_request,
                 'title' => $title,
                 'total_price' => $total_price,
                 'lampiran' => $lampiran,
-                'status' => $status
+                'status' => $status,
+                'closed_date' => $closed_date,
+                'proc_pic' => $proc_pic
             ]);
 
             $log_query = "INSERT INTO proc_admin_log (idnik, action_type, table_name, record_id, old_value, new_value) VALUES (?, 'UPDATE', 'proc_purchase_requests', ?, ?, ?)";
