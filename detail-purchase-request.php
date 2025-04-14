@@ -7,6 +7,19 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
+    textarea[name="detail_specification[]"] {
+        min-height: 60px;
+        overflow-y: hidden;
+        resize: vertical;
+        transition: height 0.1s ease-in-out;
+        width: 100%;
+    }
+
+    #filePreview .alert {
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 1rem;
+    }
+
     .card-enhanced {
         transition: transform .3s, box-shadow .3s;
         cursor: pointer;
@@ -403,69 +416,30 @@ if (!$row) {
         </div>
     </div>
 </div>
-
+<!-- 
 <script>
+    // 1. INITIALIZATION & UTILITIES
     $(document).ready(function() {
-        // Constants and Initial Variables
-        const idProcCh = <?= json_encode($_GET['id']); ?>;
-        let status = <?= json_encode($row['status']); ?>;
-        const niklogin = $('input[name="niklogin"]').val();
-        const idnik_pic = $('input[name="idnik_pic"]').val();
-        const isAdmin = $('input[name="isAdmin"]').val() === '1';
+        // Global variables
+        var idProcCh = $('input[name="id_proc_ch"]').val();
+        var status = $('input[name="status"]').val();
+        var niklogin = $('input[name="niklogin"]').val();
+        var idnik_pic = $('input[name="idnik_pic"]').val();
+        var isAdmin = $('input[name="isAdmin"]').val() == '1';
 
         // Utility Functions
-        function formatRibuan(number) {
-            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        function formatRibuan(angka) {
+            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
 
         function showNoDataMessage() {
-            const message = isAdmin ? 'No items found in this request.' : 'No items assigned to you in this request.';
+            var message = isAdmin ?
+                'No items found in this request.' :
+                'No items assigned to you in this request.';
             return `<tr class="no-data-row"><td colspan="10" class="text-center">${message}</td></tr>`;
         }
 
-        function showLoadingMessage() {
-            return '<tr><td colspan="10" class="text-center">Loading...</td></tr>';
-        }
-
-        function showErrorMessage(message = 'Error loading data') {
-            return `<tr><td colspan="10" class="text-center text-danger">${message}</td></tr>`;
-        }
-
-        // Auto-resize Functions
-        function autoResizeTextarea(element) {
-            element.style.height = '60px';
-            element.style.height = (element.scrollHeight) + 'px';
-        }
-
-        function initializeInputHandlers() {
-            const textareaSelectors = 'textarea.form-field-adjustable, textarea.desc-input';
-
-            // Initial setup for all textareas
-            $(textareaSelectors).each(function() {
-                autoResizeTextarea(this);
-            }).on('input', function() {
-                autoResizeTextarea(this);
-            });
-
-            // Apply consistent styling
-            $(textareaSelectors).css({
-                'min-height': '60px',
-                'height': 'auto',
-                'white-space': 'pre-wrap',
-                'word-wrap': 'break-word',
-                'resize': 'none',
-                'overflow': 'hidden'
-            });
-
-            // Handle window resize events
-            $(window).off('resize.textarea').on('resize.textarea', function() {
-                $(textareaSelectors).each(function() {
-                    autoResizeTextarea(this);
-                });
-            });
-        }
-
-        // Data Loading and Handling Functions
+        // 2. DATA LOADING & TABLE MANAGEMENT
         function loadData(callback) {
             console.log('Loading data...');
             $.ajax({
@@ -476,24 +450,18 @@ if (!$row) {
                     niklogin: niklogin
                 },
                 beforeSend: function() {
-                    $('#detail-purchase-request tbody').html(showLoadingMessage());
+                    $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center">Loading...</td></tr>');
                 },
                 success: function(data) {
                     console.log('Data received:', data);
-                    const tbody = $('#detail-purchase-request tbody');
-
-                    if (!data.trim()) {
-                        tbody.html('<tr><td colspan="10" class="text-center">This Request Belongs to Other PIC</td></tr>');
-                    } else {
-                        tbody.html(data);
+                    if (data.trim()) {
+                        $('#detail-purchase-request tbody').html(data);
                         applyDataLabels();
-                        initializeInputHandlers();
                         updateTotalPrice();
+                    } else {
+                        $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center">This Request Belongs to Other PIC</td></tr>');
                     }
-
-                    if (callback && typeof callback === 'function') {
-                        callback();
-                    }
+                    if (callback) callback();
                 },
                 error: function(xhr, status, error) {
                     console.error('AJAX Error:', {
@@ -501,7 +469,7 @@ if (!$row) {
                         status,
                         error
                     });
-                    $('#detail-purchase-request tbody').html(showErrorMessage());
+                    $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center text-danger">Error loading data</td></tr>');
                 }
             });
         }
@@ -509,50 +477,45 @@ if (!$row) {
         function applyDataLabels() {
             $('#detail-purchase-request tbody tr').each(function() {
                 $(this).find('td').each(function(index) {
-                    const label = $('#detail-purchase-request thead th').eq(index).text();
+                    var label = $('#detail-purchase-request thead th').eq(index).text();
                     $(this).attr('data-label', label + ':');
                 });
             });
         }
 
         function hasDetailRows() {
-            return $('#detail-purchase-request tbody tr').not('.no-data-row').length > 0;
+            var tableRows = $('#detail-purchase-request tbody tr');
+            return tableRows.length > 0;
         }
 
-        function toggleClosedTicketButton() {
-            const hasRows = hasDetailRows();
-            const totalAmount = parseFloat($("input[name='total_price']").val().replace(/\./g, '')) || 0;
-            const $button = $('#closedTicketBtn');
-
-            if (!hasRows || totalAmount === 0) {
-                $button.prop('disabled', true)
-                    .html('<i class="ri-lock-line me-1"></i> Closed Ticket');
-            } else {
-                $button.prop('disabled', false)
-                    .html('Closed Ticket');
-            }
-        }
-
-        function checkStatusAndToggleButton() {
-            const isTicketClosed = status && status.trim().toLowerCase() === 'closed';
-            $('#postCommentBtn').toggle(!isTicketClosed);
-            $('#commentText').prop('disabled', isTicketClosed);
-            $('#closedTicketInfo').toggle(isTicketClosed);
-            console.log(`Ticket is ${isTicketClosed ? 'closed' : 'open'}. Comment form ${isTicketClosed ? 'disabled' : 'enabled'}.`);
-        }
-
+        // 3. PRICE CALCULATIONS & UPDATES
         function updateTotalPrice() {
-            let total = 0;
+            var total = 0;
             $("#detail-purchase-request tbody tr").each(function() {
-                const qty = parseInt($(this).find("input[name='qty[]']").val()) || 0;
-                const price = parseInt($(this).find("input[name='unit_price[]']").val().replace(/\./g, '')) || 0;
-                total += (qty * price);
+                var qty = $(this).find("input[name='qty[]']").val();
+                var price = $(this).find("input[name='unit_price[]']").val().replace(/\./g, '');
+                var subtotal = (qty * price) || 0;
+                total += subtotal;
             });
             $("input[name='total_price']").val('Rp ' + formatRibuan(total));
             toggleClosedTicketButton();
         }
 
-        // Category PIC Check Function
+        $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
+            var row = $(this).closest('tr');
+            var qty = parseInt(row.find("input[name='qty[]']").val()) || 0;
+            var price = parseInt(row.find("input[name='unit_price[]']").val().replace(/\./g, '')) || 0;
+            var total = qty * price;
+            row.find('.totalHarga').text(formatRibuan(total));
+            updateTotalPrice();
+        });
+
+        $(document).on('input', '.price-input', function() {
+            var value = $(this).val().replace(/\./g, '');
+            $(this).val(formatRibuan(value));
+        });
+
+        // 4. CATEGORY PIC MANAGEMENT
         function checkCategoryPIC(categoryId, callback) {
             console.log("Checking category:", categoryId);
             $.ajax({
@@ -564,7 +527,7 @@ if (!$row) {
                 success: function(response) {
                     console.log("Raw response:", response);
                     try {
-                        const parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+                        let parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
                         console.log("Parsed response:", parsedResponse);
                         callback(parsedResponse);
                     } catch (e) {
@@ -591,7 +554,262 @@ if (!$row) {
             });
         }
 
-        // Save Row Function
+        // 5. BUTTON STATE MANAGEMENT
+        function toggleClosedTicketButton() {
+            var hasRows = hasDetailRows();
+            var totalAmount = parseFloat($("input[name='total_price']").val().replace(/\./g, ''));
+
+            if (!hasRows || totalAmount === 0) {
+                $('#closedTicketBtn').prop('disabled', true);
+                $('#closedTicketBtn').html('<i class="ri-lock-line me-1"></i> Closed Ticket');
+            } else {
+                $('#closedTicketBtn').prop('disabled', false);
+                $('#closedTicketBtn').html('Closed Ticket');
+            }
+        }
+
+        function checkStatusAndToggleButton() {
+            if (status && status.trim().toLowerCase() === 'closed') {
+                $('#postCommentBtn').hide();
+                $('#commentText').prop('disabled', true);
+                $('#closedTicketInfo').show();
+            } else {
+                $('#postCommentBtn').show();
+                $('#commentText').prop('disabled', false);
+                $('#closedTicketInfo').hide();
+            }
+        }
+
+        // 6. COMMENT SYSTEM
+        function loadComments() {
+            $.ajax({
+                url: 'function/get_comments.php',
+                type: 'GET',
+                data: {
+                    id_proc_ch: idProcCh
+                },
+                success: function(data) {
+                    $('#commentSection').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading comments:", status, error);
+                }
+            });
+        }
+
+        $('#addCommentForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            formData += '&niklogin=' + niklogin + '&idnik_pic=' + idnik_pic;
+
+            $.ajax({
+                type: "POST",
+                url: "function/add_comments.php",
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Comment added successfully',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadComments();
+                        $('#addCommentForm')[0].reset();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to add comment'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error submitting the comment: ' + error
+                    });
+                }
+            });
+        });
+
+        // 7. INITIALIZATION CALLS
+        loadData();
+        loadComments();
+        toggleClosedTicketButton();
+        applyDataLabels();
+        checkStatusAndToggleButton();
+
+        // Event listener for status changes
+        $(document).on('change', '[name="status"]', function() {
+            status = $(this).val();
+            checkStatusAndToggleButton();
+        });
+    });
+</script>
+
+
+<script>
+    $(document).ready(function() {
+        // Definisi variabel global yang dibutuhkan
+        var idProcCh = $('input[name="id_proc_ch"]').val();
+        var niklogin = $('input[name="niklogin"]').val();
+        var idnik_pic = $('input[name="idnik_pic"]').val();
+
+        // 1. CREATE OPERATIONS - Save New Row
+        $(document).on('click', '.saveNewRow', function() {
+            var row = $(this).closest('tr');
+            var data = {
+                id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
+                nama_barang: row.find("input[name='nama_barang[]']").val(),
+                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
+                qty: row.find("input[name='qty[]']").val(),
+                category: row.find("select[name='category[]']").val(),
+                uom: row.find("select[name='uom[]']").val(),
+                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
+                detail_notes: row.find("textarea[name='detail_notes[]']").val(),
+                niklogin: niklogin,
+                idnik_pic: idnik_pic
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "function/insert_detail_purchase_request.php",
+                data: data,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadData(function() {
+                            applyDataLabels();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to save data'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    console.log("Response:", xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error saving the row.'
+                    });
+                }
+            });
+        });
+
+        // Event handler untuk button edit
+        $(document).on('click', '.edit', function() {
+            var $row = $(this).closest('tr');
+            $row.find('input, textarea, select').prop('readonly', false).prop('disabled', false);
+            $row.find('select[name="category[]"]').data('original-value', $row.find('select[name="category[]"]').val());
+            $(this).hide();
+            $row.find('.saveRow').show();
+        });
+
+        function checkCategoryPIC(categoryId, callback) {
+            console.log("Checking category:", categoryId);
+            $.ajax({
+                url: 'function/check_category_pic.php',
+                type: 'GET',
+                data: {
+                    category_id: categoryId
+                },
+                success: function(response) {
+                    console.log("Raw response:", response);
+                    try {
+                        // Handle jika response bukan JSON
+                        let parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+                        console.log("Parsed response:", parsedResponse);
+                        callback(parsedResponse);
+                    } catch (e) {
+                        console.error("Error parsing response:", e);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Invalid response from server',
+                            icon: 'error'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error checking category PIC:", {
+                        xhr,
+                        status,
+                        error
+                    });
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to check category PIC',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
+
+        // Tambahkan event handler untuk perubahan kategori
+        $(document).on('change', 'select[name="category[]"]', function() {
+            var $row = $(this).closest('tr');
+            var selectedCategory = $(this).val();
+            var currentPIC = niklogin;
+
+            checkCategoryPIC(selectedCategory, function(response) {
+                if (response.success) {
+                    if (response.pic_list && !response.pic_list.includes(currentPIC)) {
+                        var picNames = response.pic_names.join(', ');
+                        Swal.fire({
+                            title: 'Warning!',
+                            html: `This category is assigned to: <br><b>${picNames}</b><br><br>After saving, this item will be handled by another PIC. Do you want to continue?`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, change category',
+                            cancelButtonText: 'No, keep current category'
+                        }).then((result) => {
+                            if (!result.isConfirmed) {
+                                $row.find('select[name="category[]"]').val($row.find('select[name="category[]"]').data('original-value'));
+                            } else {
+                                $row.find('select[name="category[]"]').data('original-value', selectedCategory);
+                            }
+                        });
+                    } else {
+                        $row.find('select[name="category[]"]').data('original-value', selectedCategory);
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.error || 'Failed to check category PIC',
+                        icon: 'error'
+                    });
+                }
+            });
+        });
+
+        // Modifikasi handler edit untuk menyimpan nilai kategori awal
+        $(document).on('click', '.edit', function() {
+            var $row = $(this).closest('tr');
+            $row.find('input, textarea, select').prop('readonly', false);
+            // Simpan nilai kategori awal
+            $row.find('select[name="category[]"]').data('original-value', $row.find('select[name="category[]"]').val());
+            $(this).hide();
+            $row.find('.saveRow').show();
+        });
+
+
+        // Fungsi untuk menyimpan data row yang diedit
         function saveRowData($row) {
             const originalValues = {
                 nama_barang: $row.find("input[name='nama_barang[]']").val(),
@@ -604,15 +822,707 @@ if (!$row) {
                 detail_notes: $row.find("textarea[name='detail_notes[]']").val()
             };
 
-            const data = {
+            var data = {
                 id: $row.find('.saveRow').data('id'),
                 id_proc_ch: $row.find("input[name='id_proc_ch[]']").val(),
-                ...originalValues,
-                unit_price: originalValues.unit_price.replace(/\./g, ''),
+                nama_barang: $row.find("input[name='nama_barang[]']").val(),
+                detail_specification: $row.find("textarea[name='detail_specification[]']").val(),
+                qty: $row.find("input[name='qty[]']").val(),
+                category: $row.find("select[name='category[]']").val(),
+                uom: $row.find("select[name='uom[]']").val(),
+                unit_price: $row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
+                urgency_status: $row.find("select[name='urgency_status[]']").val(),
+                detail_notes: $row.find("textarea[name='detail_notes[]']").val(),
                 niklogin: niklogin,
                 idnik_pic: idnik_pic
             };
 
+            if (originalValues.urgency_status !== 'urgent' && data.urgency_status === 'urgent') {
+                Swal.fire({
+                    title: 'Confirm Urgent Status',
+                    text: 'Are you sure you want to mark this item as urgent?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        performUpdate(data);
+                    } else {
+                        $row.find("select[name='urgency_status[]']").val(originalValues.urgency_status);
+                    }
+                });
+            } else {
+                performUpdate(data);
+            }
+        }
+
+        // Fungsi untuk melakukan update ke server
+        function performUpdate(data) {
+            $.ajax({
+                type: "POST",
+                url: "function/update_detail_purchase.php",
+                data: data,
+                dataType: 'json',
+                success: function(response) {
+                    console.log("Server response:", response);
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadData(function() {
+                            applyDataLabels();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'An error occurred while updating the data'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", {
+                        xhr: xhr,
+                        status: status,
+                        error: error
+                    });
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error updating the row.'
+                    });
+                }
+            });
+        }
+
+        // Event handler untuk kalkulasi harga
+        $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
+            var row = $(this).closest('tr');
+            var qty = parseInt(row.find("input[name='qty[]']").val()) || 0;
+            var price = parseInt(row.find("input[name='unit_price[]']").val().replace(/\./g, '')) || 0;
+            var total = qty * price;
+            row.find('.totalHarga').text(formatRibuan(total));
+            updateTotalPrice();
+        });
+
+        // Fungsi format ribuan
+        function formatRibuan(angka) {
+            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        // Event handler untuk format input harga
+        $(document).on('input', '.price-input', function() {
+            var value = $(this).val().replace(/\./g, '');
+            $(this).val(formatRibuan(value));
+        });
+
+        // DELETE OPERATIONS
+        $(document).on('click', '.remove', function() {
+            var id = $(this).data('id');
+            if (!id) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Cannot identify the item to delete'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: "POST",
+                        url: "function/delete_detail_purchase.php",
+                        data: {
+                            id: id,
+                            niklogin: niklogin,
+                            idnik_pic: idnik_pic
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.message,
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                                loadData(function() {
+                                    applyDataLabels();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message || 'Failed to delete item'
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("AJAX Error:", status, error);
+                            console.log("Response:", xhr.responseText);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'There was an error deleting the row.'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Fungsi untuk memuat data
+        function loadData(callback) {
+            $.ajax({
+                url: 'function/fetch_detail_purchase_request.php',
+                type: 'GET',
+                data: {
+                    id_proc_ch: idProcCh,
+                    niklogin: niklogin
+                },
+                success: function(data) {
+                    $('#detail-purchase-request tbody').html(data);
+                    if (callback) callback();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading data:", error);
+                    $('#detail-purchase-request tbody').html(
+                        '<tr><td colspan="10" class="text-center text-danger">Error loading data</td></tr>'
+                    );
+                }
+            });
+        }
+
+        // Fungsi untuk menerapkan data labels
+        function applyDataLabels() {
+            $('#detail-purchase-request tbody tr').each(function() {
+                $(this).find('td').each(function(index) {
+                    var label = $('#detail-purchase-request thead th').eq(index).text();
+                    $(this).attr('data-label', label + ':');
+                });
+            });
+        }
+
+        // Fungsi update total price
+        function updateTotalPrice() {
+            var total = 0;
+            $("#detail-purchase-request tbody tr").each(function() {
+                var qty = parseInt($(this).find("input[name='qty[]']").val()) || 0;
+                var price = parseInt($(this).find("input[name='unit_price[]']").val().replace(/\./g, '')) || 0;
+                total += (qty * price);
+            });
+            $("input[name='total_price']").val('Rp ' + formatRibuan(total));
+        }
+
+        // Initial load
+        loadData(function() {
+            applyDataLabels();
+            updateTotalPrice();
+        });
+    });
+</script>
+
+
+<script>
+    // Category Change Event Handlers
+    $(document).on('change', 'select[name="category[]"]', function() {
+        var $row = $(this).closest('tr');
+        var selectedCategory = $(this).val();
+        var currentPIC = niklogin;
+
+        checkCategoryPIC(selectedCategory, function(response) {
+            if (response.success) {
+                if (response.pic_list && !response.pic_list.includes(currentPIC)) {
+                    var picNames = response.pic_names.join(', ');
+                    Swal.fire({
+                        title: 'Warning!',
+                        html: `This category is assigned to: <br><b>${picNames}</b><br><br>After saving, this item will be handled by another PIC. Do you want to continue?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, change category',
+                        cancelButtonText: 'No, keep current category'
+                    }).then((result) => {
+                        if (!result.isConfirmed) {
+                            $row.find('select[name="category[]"]').val($row.find('select[name="category[]"]').data('original-value'));
+                        } else {
+                            $row.find('select[name="category[]"]').data('original-value', selectedCategory);
+                        }
+                    });
+                } else {
+                    $row.find('select[name="category[]"]').data('original-value', selectedCategory);
+                }
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: response.error || 'Failed to check category PIC',
+                    icon: 'error'
+                });
+            }
+        });
+    });
+</script> -->
+
+<script>
+    $(document).ready(function() {
+        var idProcCh = <?= json_encode($_GET['id']); ?>;
+        var status = <?= json_encode($row['status']); ?>;
+        var niklogin = $('input[name="niklogin"]').val();
+        var idnik_pic = $('input[name="idnik_pic"]').val();
+        var isAdmin = $('input[name="isAdmin"]').val() == '1';
+
+        $("<style>")
+            .prop("type", "text/css")
+            .html(`
+                textarea[name="detail_specification[]"] {
+                    min-height: 60px;
+                    overflow-y: hidden;
+                    resize: vertical;
+                    transition: height 0.1s ease-in-out;
+                    width: 100%;
+                }
+                #filePreview .alert {
+                    margin-bottom: 0.5rem;
+                    padding: 0.5rem 1rem;
+                }
+            `)
+            .appendTo("head");
+
+        // Fungsi auto-resize textarea
+        function autoResizeTextarea(element) {
+            element.style.height = 'auto';
+            element.style.height = (element.scrollHeight) + 'px';
+        }
+
+        // Event handler untuk auto-resize textarea yang ada dan yang baru
+        $('textarea[name="detail_specification[]"]').each(function() {
+            autoResizeTextarea(this);
+        }).on('input', function() {
+            autoResizeTextarea(this);
+        });
+
+        $(document).on('input', 'textarea[name="detail_specification[]"]', function() {
+            autoResizeTextarea(this);
+        });
+
+        // File upload handler
+        $('#attachments').on('change', function() {
+            const files = Array.from(this.files);
+            const filePreview = $('#filePreview');
+            filePreview.empty();
+
+            files.forEach(file => {
+                const size = (file.size / 1024 / 1024).toFixed(2);
+                if (size > 5) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File too large',
+                        text: `${file.name} is larger than 5MB`
+                    });
+                    this.value = '';
+                    return;
+                }
+
+                filePreview.append(`
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        <strong>${file.name}</strong> (${size} MB)
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `);
+            });
+        });
+
+        // Override comment form submit untuk handle file upload
+        $('#addCommentForm').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            formData.append('niklogin', niklogin);
+            formData.append('idnik_pic', idnik_pic);
+
+            $.ajax({
+                type: "POST",
+                url: "function/add_comments.php",
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Comment added successfully',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadComments();
+                        $('#addCommentForm')[0].reset();
+                        $('#filePreview').empty();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to add comment'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    console.error("Response Text:", xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error submitting the comment: ' + error
+                    });
+                }
+            });
+        });
+
+        function showNoDataMessage() {
+            var message = isAdmin ?
+                'No items found in this request.' :
+                'No items assigned to you in this request.';
+
+            return `<tr class="no-data-row"><td colspan="10" class="text-center">${message}</td></tr>`;
+        }
+
+        function loadData(callback) {
+            $.ajax({
+                url: 'function/fetch_detail_purchase_request.php',
+                type: 'GET',
+                data: {
+                    id_proc_ch: idProcCh,
+                    niklogin: niklogin
+                },
+                success: function(data) {
+                    if (!data.trim()) {
+                        // Jika data kosong
+                        $('#detail-purchase-request tbody').html(showNoDataMessage());
+                    } else {
+                        // Jika ada data
+                        $('#detail-purchase-request tbody').html(data);
+                    }
+                    applyDataLabels();
+                    updateTotalPrice();
+                    if (callback) callback();
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading data:", error);
+                    $('#detail-purchase-request tbody').html(
+                        `<tr><td colspan="10" class="text-center text-danger">Error loading data. Please try again.</td></tr>`
+                    );
+                }
+            });
+        }
+
+        function hasDetailRows() {
+            var tableRows = $('#detail-purchase-request tbody tr').not('.no-data-row');
+            return tableRows.length > 0;
+        }
+
+        function loadData(callback) {
+            console.log('Loading data...');
+            $.ajax({
+                url: 'function/fetch_detail_purchase_request.php',
+                type: 'GET',
+                data: {
+                    id_proc_ch: idProcCh,
+                    niklogin: niklogin
+                },
+                beforeSend: function() {
+                    $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center">Loading...</td></tr>');
+                },
+                success: function(data) {
+                    console.log('Data received:', data);
+                    if (data.trim()) {
+                        $('#detail-purchase-request tbody').html(data);
+                        applyDataLabels();
+                        updateTotalPrice();
+                    } else {
+                        $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center">This Request Belongs to Other PIC</td></tr>');
+                    }
+                    if (callback) callback();
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', {
+                        xhr: xhr,
+                        status: status,
+                        error: error
+                    });
+                    $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center text-danger">Error loading data</td></tr>');
+                }
+            });
+        }
+
+        function applyDataLabels() {
+            $('#detail-purchase-request tbody tr').each(function() {
+                $(this).find('td').each(function(index) {
+                    var label = $('#detail-purchase-request thead th').eq(index).text();
+                    $(this).attr('data-label', label + ':');
+                });
+            });
+        }
+
+        function hasDetailRows() {
+            var tableRows = $('#detail-purchase-request tbody tr');
+            return tableRows.length > 0;
+        }
+
+        function toggleClosedTicketButton() {
+            var hasRows = hasDetailRows();
+            var totalAmount = parseFloat($("input[name='total_price']").val().replace(/\./g, ''));
+
+            if (!hasRows || totalAmount === 0) {
+                $('#closedTicketBtn').prop('disabled', true);
+                $('#closedTicketBtn').html('<i class="ri-lock-line me-1"></i> Closed Ticket');
+            } else {
+                $('#closedTicketBtn').prop('disabled', false);
+                $('#closedTicketBtn').html('Closed Ticket');
+            }
+        }
+
+        function checkStatusAndToggleButton() {
+            if (status && status.trim().toLowerCase() === 'closed') {
+                $('#postCommentBtn').hide();
+                $('#commentText').prop('disabled', true);
+                $('#closedTicketInfo').show();
+                console.log("Ticket is closed. Comment form disabled.");
+            } else {
+                $('#postCommentBtn').show();
+                $('#commentText').prop('disabled', false);
+                $('#closedTicketInfo').hide();
+                console.log("Ticket is open. Comment form enabled.");
+            }
+        }
+
+        loadData();
+        toggleClosedTicketButton();
+
+        $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
+            var row = $(this).closest('tr');
+            var qty = parseInt(row.find("input[name='qty[]']").val()) || 0;
+            var price = parseInt(row.find("input[name='unit_price[]']").val().replace(/\./g, '')) || 0;
+            var total = qty * price;
+            row.find('.totalHarga').text(formatRibuan(total));
+            updateTotalPrice();
+        });
+
+
+        $(document).on('input', '.price-input', function() {
+            var value = $(this).val().replace(/\./g, '');
+            $(this).val(formatRibuan(value));
+        });
+
+        $(document).on('click', '.saveNewRow', function() {
+            var row = $(this).closest('tr');
+            var data = {
+                id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
+                nama_barang: row.find("input[name='nama_barang[]']").val(),
+                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
+                qty: row.find("input[name='qty[]']").val(),
+                category: row.find("select[name='category[]']").val(),
+                uom: row.find("select[name='uom[]']").val(),
+                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
+                detail_notes: row.find("textarea[name='detail_notes[]']").val(),
+                niklogin: $(this).data('niklogin'),
+                idnik_pic: $(this).data('idnik-pic')
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "function/insert_detail_purchase_request.php",
+                data: data,
+                success: function(response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadData(function() {
+                            applyDataLabels();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error updating the row.'
+                    });
+                }
+            });
+        });
+
+        function checkCategoryPIC(categoryId, callback) {
+            console.log("Checking category:", categoryId);
+            $.ajax({
+                url: 'function/check_category_pic.php',
+                type: 'GET',
+                data: {
+                    category_id: categoryId
+                },
+                success: function(response) {
+                    console.log("Raw response:", response);
+                    try {
+                        // Handle jika response bukan JSON
+                        let parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+                        console.log("Parsed response:", parsedResponse);
+                        callback(parsedResponse);
+                    } catch (e) {
+                        console.error("Error parsing response:", e);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Invalid response from server',
+                            icon: 'error'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error checking category PIC:", {
+                        xhr,
+                        status,
+                        error
+                    });
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Failed to check category PIC',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
+
+        // Tambahkan event handler untuk perubahan kategori
+        $(document).on('change', 'select[name="category[]"]', function() {
+            var $row = $(this).closest('tr');
+            var selectedCategory = $(this).val();
+            var currentPIC = niklogin;
+
+            checkCategoryPIC(selectedCategory, function(response) {
+                if (response.success) {
+                    if (response.pic_list && !response.pic_list.includes(currentPIC)) {
+                        var picNames = response.pic_names.join(', ');
+                        Swal.fire({
+                            title: 'Warning!',
+                            html: `This category is assigned to: <br><b>${picNames}</b><br><br>After saving, this item will be handled by another PIC. Do you want to continue?`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, change category',
+                            cancelButtonText: 'No, keep current category'
+                        }).then((result) => {
+                            if (!result.isConfirmed) {
+                                $row.find('select[name="category[]"]').val($row.find('select[name="category[]"]').data('original-value'));
+                            } else {
+                                $row.find('select[name="category[]"]').data('original-value', selectedCategory);
+                            }
+                        });
+                    } else {
+                        $row.find('select[name="category[]"]').data('original-value', selectedCategory);
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: response.error || 'Failed to check category PIC',
+                        icon: 'error'
+                    });
+                }
+            });
+        });
+
+        // Modifikasi handler edit untuk menyimpan nilai kategori awal
+        $(document).on('click', '.edit', function() {
+            var $row = $(this).closest('tr');
+            $row.find('input, textarea, select').prop('readonly', false);
+            // Simpan nilai kategori awal
+            $row.find('select[name="category[]"]').data('original-value', $row.find('select[name="category[]"]').val());
+            $(this).hide();
+            $row.find('.saveRow').show();
+        });
+
+        // Modifikasi saveRow untuk menambahkan konfirmasi tambahan jika kategori berubah
+        $(document).on('click', '.saveRow', function() {
+            var $row = $(this).closest('tr');
+            var newCategory = $row.find('select[name="category[]"]').val();
+            var originalCategory = $row.find('select[name="category[]"]').data('original-value');
+
+            if (newCategory !== originalCategory) {
+                checkCategoryPIC(newCategory, function(response) {
+                    if (response.pic_list && !response.pic_list.includes(niklogin)) {
+                        Swal.fire({
+                            title: 'Confirm Category Change',
+                            text: 'After saving, this item will be handled by another PIC. Are you sure you want to proceed?',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, save changes',
+                            cancelButtonText: 'No, cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                saveRowData($row);
+                            }
+                        });
+                    } else {
+                        saveRowData($row);
+                    }
+                });
+            } else {
+                saveRowData($row);
+            }
+        });
+
+        // Fungsi untuk menyimpan data row
+        function saveRowData($row) {
+            // Store original values before update
+            const originalValues = {
+                nama_barang: $row.find("input[name='nama_barang[]']").val(),
+                detail_specification: $row.find("textarea[name='detail_specification[]']").val(),
+                qty: $row.find("input[name='qty[]']").val(),
+                category: $row.find("select[name='category[]']").val(),
+                uom: $row.find("select[name='uom[]']").val(),
+                unit_price: $row.find("input[name='unit_price[]']").val(),
+                urgency_status: $row.find("select[name='urgency_status[]']").val(),
+                detail_notes: $row.find("textarea[name='detail_notes[]']").val()
+            };
+
+            var data = {
+                id: $row.find('.saveRow').data('id'),
+                id_proc_ch: $row.find("input[name='id_proc_ch[]']").val(),
+                nama_barang: $row.find("input[name='nama_barang[]']").val(),
+                detail_specification: $row.find("textarea[name='detail_specification[]']").val(),
+                qty: $row.find("input[name='qty[]']").val(),
+                category: $row.find("select[name='category[]']").val(),
+                uom: $row.find("select[name='uom[]']").val(),
+                unit_price: $row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
+                urgency_status: $row.find("select[name='urgency_status[]']").val(),
+                detail_notes: $row.find("textarea[name='detail_notes[]']").val(),
+                niklogin: niklogin,
+                idnik_pic: idnik_pic
+            };
+
+            // Check if urgency status changed to 'urgent'
             if (originalValues.urgency_status !== 'urgent' && data.urgency_status === 'urgent') {
                 Swal.fire({
                     title: 'Confirm Urgent Status',
@@ -648,7 +1558,9 @@ if (!$row) {
                             showConfirmButton: false,
                             timer: 1500
                         });
-                        loadData(() => applyDataLabels());
+                        loadData(function() {
+                            applyDataLabels();
+                        });
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -660,9 +1572,9 @@ if (!$row) {
                 },
                 error: function(xhr, status, error) {
                     console.error("AJAX Error:", {
-                        xhr,
-                        status,
-                        error
+                        xhr: xhr,
+                        status: status,
+                        error: error
                     });
                     Swal.fire({
                         icon: 'error',
@@ -673,114 +1585,8 @@ if (!$row) {
             });
         }
 
-        // Comment Functions
-        function loadComments() {
-            $.ajax({
-                url: 'function/get_comments.php',
-                type: 'GET',
-                data: {
-                    id_proc_ch: idProcCh
-                },
-                success: function(data) {
-                    $('#commentSection').html(data);
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error loading comments:", status, error);
-                }
-            });
-        }
-
-        // Event Handlers
-        $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
-            const $row = $(this).closest('tr');
-            const qty = parseInt($row.find("input[name='qty[]']").val()) || 0;
-            const price = parseInt($row.find("input[name='unit_price[]']").val().replace(/\./g, '')) || 0;
-            const total = qty * price;
-            $row.find('.totalHarga').text(formatRibuan(total));
-            updateTotalPrice();
-        });
-
-        $(document).on('input', '.price-input', function() {
-            const value = $(this).val().replace(/\./g, '');
-            $(this).val(formatRibuan(value));
-        });
-
-        $(document).on('change', 'select[name="category[]"]', function() {
-            const $row = $(this).closest('tr');
-            const selectedCategory = $(this).val();
-            const currentPIC = niklogin;
-
-            checkCategoryPIC(selectedCategory, function(response) {
-                if (response.success) {
-                    if (response.pic_list && !response.pic_list.includes(currentPIC)) {
-                        const picNames = response.pic_names.join(', ');
-                        Swal.fire({
-                            title: 'Warning!',
-                            html: `This category is assigned to: <br><b>${picNames}</b><br><br>After saving, this item will be handled by another PIC. Do you want to continue?`,
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonText: 'Yes, change category',
-                            cancelButtonText: 'No, keep current category'
-                        }).then((result) => {
-                            if (!result.isConfirmed) {
-                                $row.find('select[name="category[]"]').val($row.find('select[name="category[]"]').data('original-value'));
-                            } else {
-                                $row.find('select[name="category[]"]').data('original-value', selectedCategory);
-                            }
-                        });
-                    } else {
-                        $row.find('select[name="category[]"]').data('original-value', selectedCategory);
-                    }
-                } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: response.error || 'Failed to check category PIC',
-                        icon: 'error'
-                    });
-                }
-            });
-        });
-
-        $(document).on('click', '.edit', function() {
-            const $row = $(this).closest('tr');
-            $row.find('input, textarea, select').prop('readonly', false);
-            $row.find('select[name="category[]"]').data('original-value',
-                $row.find('select[name="category[]"]').val());
-            $(this).hide();
-            $row.find('.saveRow').show();
-        });
-
-        $(document).on('click', '.saveRow', function() {
-            const $row = $(this).closest('tr');
-            const newCategory = $row.find('select[name="category[]"]').val();
-            const originalCategory = $row.find('select[name="category[]"]').data('original-value');
-
-            if (newCategory !== originalCategory) {
-                checkCategoryPIC(newCategory, function(response) {
-                    if (response.pic_list && !response.pic_list.includes(niklogin)) {
-                        Swal.fire({
-                            title: 'Confirm Category Change',
-                            text: 'After saving, this item will be handled by another PIC. Are you sure you want to proceed?',
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonText: 'Yes, save changes',
-                            cancelButtonText: 'No, cancel'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                saveRowData($row);
-                            }
-                        });
-                    } else {
-                        saveRowData($row);
-                    }
-                });
-            } else {
-                saveRowData($row);
-            }
-        });
-
         $(document).on('click', '.remove', function() {
-            const id = $(this).data('id');
+            var id = $(this).data('id');
             if (!id) {
                 Swal.fire({
                     icon: 'error',
@@ -789,7 +1595,6 @@ if (!$row) {
                 });
                 return;
             }
-
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
@@ -817,7 +1622,9 @@ if (!$row) {
                                     showConfirmButton: false,
                                     timer: 1500
                                 });
-                                loadData(() => applyDataLabels());
+                                loadData(function() {
+                                    applyDataLabels();
+                                });
                             } else {
                                 Swal.fire({
                                     icon: 'error',
@@ -839,20 +1646,32 @@ if (!$row) {
             });
         });
 
-        // Handle form submissions
+        function loadComments() {
+            $.ajax({
+                url: 'function/get_comments.php',
+                type: 'GET',
+                data: {
+                    id_proc_ch: idProcCh
+                },
+                success: function(data) {
+                    $('#commentSection').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading comments:", status, error);
+                }
+            });
+        }
+
+        loadComments();
+
         $('#addCommentForm').on('submit', function(e) {
             e.preventDefault();
-            const $submitBtn = $(this).find('button[type="submit"]');
-            $submitBtn.prop('disabled', true);
-
-            const formData = new FormData(this);
-
+            var formData = $(this).serialize();
+            formData += '&niklogin=' + niklogin + '&idnik_pic=' + idnik_pic;
             $.ajax({
                 type: "POST",
                 url: "function/add_comments.php",
                 data: formData,
-                processData: false,
-                contentType: false,
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
@@ -865,7 +1684,6 @@ if (!$row) {
                         });
                         loadComments();
                         $('#addCommentForm')[0].reset();
-                        $('#filePreview').empty();
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -876,87 +1694,33 @@ if (!$row) {
                 },
                 error: function(xhr, status, error) {
                     console.error("AJAX Error:", status, error);
+                    console.error("Response Text:", xhr.responseText);
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
                         text: 'There was an error submitting the comment: ' + error
                     });
-                },
-                complete: function() {
-                    $submitBtn.prop('disabled', false);
                 }
             });
         });
 
-        // Save New Row Handler
-        $(document).on('click', '.saveNewRow', function() {
-            const $row = $(this).closest('tr');
-            const data = {
-                id_proc_ch: $row.find("input[name='id_proc_ch[]']").val(),
-                nama_barang: $row.find("input[name='nama_barang[]']").val(),
-                detail_specification: $row.find("textarea[name='detail_specification[]']").val(),
-                qty: $row.find("input[name='qty[]']").val(),
-                category: $row.find("select[name='category[]']").val(),
-                uom: $row.find("select[name='uom[]']").val(),
-                unit_price: $row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
-                detail_notes: $row.find("textarea[name='detail_notes[]']").val(),
-                niklogin: $(this).data('niklogin'),
-                idnik_pic: $(this).data('idnik-pic')
-            };
-
-            $.ajax({
-                type: "POST",
-                url: "function/insert_detail_purchase_request.php",
-                data: data,
-                success: function(response) {
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: response.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        loadData(() => applyDataLabels());
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'There was an error updating the row.'
-                    });
-                }
+        function updateTotalPrice() {
+            var total = 0;
+            $("#detail-purchase-request tbody tr").each(function() {
+                var qty = $(this).find("input[name='qty[]']").val();
+                var price = $(this).find("input[name='unit_price[]']").val().replace(/\./g, '');
+                var subtotal = (qty * price) || 0;
+                total += subtotal;
             });
-        });
+            $("input[name='total_price']").val('Rp ' + formatRibuan(total));
+            toggleClosedTicketButton();
+        }
 
-        // Ticket Status Update Handlers
         $('#closedTicketBtn').on('click', function() {
-            const formData = new FormData($('#updatePurchaseRequestForm')[0]);
+            var formData = new FormData($('#updatePurchaseRequestForm')[0]);
             formData.append('status', 'closed');
             formData.append('niklogin', niklogin);
             formData.append('idnik_pic', idnik_pic);
-
-            submitTicketUpdate(formData, 'Closed ticket successfully');
-        });
-
-        $('#updateTicketBtn').on('click', function() {
-            const formData = new FormData($('#updatePurchaseRequestForm')[0]);
-            formData.append('status', 'Open');
-            formData.append('niklogin', niklogin);
-            formData.append('idnik_pic', idnik_pic);
-
-            submitTicketUpdate(formData, 'Data updated successfully');
-        });
-
-        function submitTicketUpdate(formData, successMessage) {
             $.ajax({
                 type: "POST",
                 url: "function/update_purchase.php",
@@ -967,8 +1731,8 @@ if (!$row) {
                 success: function(response) {
                     if (response.status === 'success') {
                         Swal.fire({
-                            title: 'Success!',
-                            text: response.message || successMessage,
+                            title: 'Sukses!',
+                            text: response.message,
                             icon: 'success',
                             confirmButtonText: 'OK'
                         }).then((result) => {
@@ -979,7 +1743,7 @@ if (!$row) {
                     } else {
                         Swal.fire({
                             title: 'Error!',
-                            text: response.message || 'An error occurred while updating the ticket.',
+                            text: response.message,
                             icon: 'error',
                             confirmButtonText: 'OK'
                         });
@@ -989,25 +1753,66 @@ if (!$row) {
                     console.error(xhr.responseText);
                     Swal.fire({
                         title: 'Error!',
-                        text: 'An error occurred while updating the data.',
+                        text: 'Terjadi kesalahan saat mengupdate data.',
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });
                 }
             });
-        }
+        });
 
-        // Status change handler
+        $('#updateTicketBtn').on('click', function() {
+            var formData = new FormData($('#updatePurchaseRequestForm')[0]);
+            formData.append('status', 'Open');
+            formData.append('niklogin', niklogin);
+            formData.append('idnik_pic', idnik_pic);
+
+            $.ajax({
+                type: "POST",
+                url: "function/update_purchase.php",
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            title: 'Sukses!',
+                            text: 'Data berhasil diupdate.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = "index.php?page=PurchaseRequests";
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: response.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Terjadi kesalahan saat mengupdate data.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        });
+
+        applyDataLabels();
+        checkStatusAndToggleButton();
+
         $(document).on('change', '[name="status"]', function() {
             status = $(this).val();
             checkStatusAndToggleButton();
         });
-
-        // Initialize everything
-        loadData();
-        toggleClosedTicketButton();
-        applyDataLabels();
-        checkStatusAndToggleButton();
-        loadComments();
     });
 </script>

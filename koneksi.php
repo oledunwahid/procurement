@@ -1,5 +1,5 @@
 <?php
-$host = "124.153.18.151"; // server
+$host = "10.120.0.129"; // server
 $user = "emp"; // username
 $pass = "piwpiw"; // password
 $database = "emp"; // nama database

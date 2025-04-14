@@ -31,7 +31,7 @@ if ($cek > 0) {
 		}
 
 		// Hit auth/login endpoint untuk mendapatkan token
-		$api_url = 'http://localhost:3000/api/auth/login';
+		$api_url = 'https://maa-api.maagroup.co.id/api/auth/login';
 
 		$curl = curl_init();
 		curl_setopt_array($curl, [
