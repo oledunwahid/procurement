@@ -57,7 +57,7 @@
                 </li>
 
                 <!-- Administrator Access (if applicable) -->
-                <?php if (!empty($role) && array_intersect($role, ['1', '5'])) : ?>
+                <?php if (!empty($role) && array_intersect($role, ['1', '52', '51'])) : ?>
                     <li class="menu-title"><span data-key="t-menu">Admin Access</span></li>
                     <li class="nav-item">
                         <a class="nav-link menu-link<?= ($page == 'Administrator') ? ' active' : ''; ?>" href="#admin" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="admin">

@@ -8,8 +8,58 @@
 <?php
 $isAdmin = array_intersect([5], $role);
 $isSuperadmin = array_intersect([51], $role);
-// Query untuk mendapatkan data purchase requests
 
+// Function to count requests based on conditions
+function getTotal($koneksi, $condition, $niklogin, $isAdmin = false, $isSuperadmin = false)
+{
+    // Base SQL that handles filtering appropriately by role
+    $sql = "SELECT DISTINCT pp.id_proc_ch 
+            FROM proc_purchase_requests pp
+            LEFT JOIN proc_request_details prd ON pp.id_proc_ch = prd.id_proc_ch
+            LEFT JOIN proc_admin_category pac ON prd.category = pac.id_category
+            WHERE ($condition)";
+
+    // Add role-specific filtering
+    if ($isSuperadmin) {
+        // Superadmin sees all requests
+        $sql .= " AND 1=1";
+    } elseif ($isAdmin) {
+        // Admins only see requests from categories they manage
+        $sql .= " AND pac.idnik = '$niklogin'";
+    } else {
+        // Regular users only see their own requests
+        $sql .= " AND pp.nik_request = '$niklogin'";
+    }
+
+    $result = mysqli_query($koneksi, $sql);
+    if (!$result) {
+        // Handle query error
+        error_log("SQL Error in getTotal: " . mysqli_error($koneksi));
+        return 0;
+    }
+    return mysqli_num_rows($result);
+}
+
+// Apply correct filters based on user role
+$total = getTotal($koneksi, "1=1", $niklogin, $isAdmin, $isSuperadmin);
+$Created = getTotal($koneksi, "status = 'Created'", $niklogin, $isAdmin, $isSuperadmin);
+$Open = getTotal($koneksi, "status = 'Open'", $niklogin, $isAdmin, $isSuperadmin);
+$Closed = getTotal($koneksi, "status = 'Closed'", $niklogin, $isAdmin, $isSuperadmin);
+
+// Check if user has any existing "Created" requests to determine button text
+$hasCreatedRequests = false;
+$createdRequestId = "";
+if (!$isAdmin) {
+    $checkSql = "SELECT id_proc_ch FROM proc_purchase_requests WHERE nik_request = '$niklogin' AND status = 'Created' LIMIT 1";
+    $checkResult = mysqli_query($koneksi, $checkSql);
+    if ($checkResult && mysqli_num_rows($checkResult) > 0) {
+        $hasCreatedRequests = true;
+        $row = mysqli_fetch_assoc($checkResult);
+        $createdRequestId = $row['id_proc_ch'];
+    }
+}
+
+// Query untuk mendapatkan data purchase requests
 $sql = "SELECT DISTINCT
     pp.id_proc_ch,
     pp.title,
@@ -22,7 +72,8 @@ $sql = "SELECT DISTINCT
     user1.divisi AS divisi_request,
     GROUP_CONCAT(DISTINCT prd.category SEPARATOR ', ') AS categories,
     GROUP_CONCAT(DISTINCT pac.idnik) as pic_list,
-    (SELECT nama FROM user WHERE idnik = pp.proc_pic) AS pic_name
+    (SELECT nama FROM user WHERE idnik = pp.proc_pic) AS pic_name,
+    user1.lokasi AS lokasi_request
 FROM proc_purchase_requests AS pp
 LEFT JOIN user AS user1 ON pp.nik_request = user1.idnik
 LEFT JOIN proc_request_details AS prd ON pp.id_proc_ch = prd.id_proc_ch
@@ -35,38 +86,6 @@ WHERE (
 GROUP BY pp.id_proc_ch
 ORDER BY pp.created_request DESC";
 
-function getTotal($koneksi, $condition, $niklogin)
-{
-    $sql = "SELECT DISTINCT pp.id_proc_ch 
-            FROM proc_purchase_requests pp
-            LEFT JOIN proc_request_details prd ON pp.id_proc_ch = prd.id_proc_ch
-            LEFT JOIN proc_admin_category pac ON prd.category = pac.id_category
-            WHERE ($condition)
-            AND (
-                '$niklogin' IN (SELECT idnik FROM user_roles WHERE id_role = 51)  -- Superadmin
-                OR '$niklogin' IN (SELECT idnik FROM user_roles WHERE id_role = 5)  -- Admin
-                OR pp.nik_request = '$niklogin'  -- User biasa
-                OR pac.idnik = '$niklogin'  -- Admin kategori
-            )";
-
-    $result = mysqli_query($koneksi, $sql);
-    return mysqli_num_rows($result);
-}
-
-// Penggunaan function
-$total = ($isSuperadmin) ?
-    getTotal($koneksi, "1=1", $niklogin) : ($isAdmin ?
-        getTotal($koneksi, "1=1", $niklogin) :
-        getTotal($koneksi, "nik_request='$niklogin'", $niklogin));
-
-// Created Requests
-$Created = getTotal($koneksi, "status = 'Created'", $niklogin);
-
-// Open Requests
-$Open = getTotal($koneksi, "status = 'Open'", $niklogin);
-
-// Closed Requests
-$Closed = getTotal($koneksi, "status = 'Closed'", $niklogin);
 // Eksekusi query dan cek apakah berhasil
 $result = mysqli_query($koneksi, $sql);
 
@@ -183,7 +202,10 @@ if (!$result) {
                     <?php if (!$isAdmin) { ?>
                         <form action="function/insert_view_purchase_request.php" method="POST">
                             <input type="text" value="<?= $niklogin ?>" name="nik_request" hidden />
-                            <button class="btn btn-danger add-btn" name="add-purchase-request" type="submit"><i class="ri-add-line align-bottom me-1"></i> Create Price Request</button>
+                            <button class="btn btn-primary add-btn" name="add-purchase-request" type="submit">
+                                <i class="<?= $hasCreatedRequests ? 'ri-arrow-right-line' : 'ri-add-line' ?> align-bottom me-1"></i>
+                                <?= $hasCreatedRequests ? 'Continue Create Request' : 'Create Price Request' ?>
+                            </button>
                         </form>
                     <?php } ?>
                 </div>
@@ -201,6 +223,7 @@ if (!$result) {
                             <th>Requestor</th>
                             <th>Status</th>
                             <th>Division</th>
+                            <th>Location</th>
                             <?php if ($isSuperadmin) { ?>
                                 <th>PIC</th>
                             <?php } ?>
@@ -255,6 +278,7 @@ if (!$result) {
                                     <span class="<?= $statusClass ?>"><?= htmlspecialchars($row['status']) ?></span>
                                 </td>
                                 <td><?= htmlspecialchars($row['divisi_request']) ?></td>
+                                <td><?= htmlspecialchars($row['lokasi_request'] ?: 'N/A') ?></td>
                                 <?php if ($isSuperadmin) { ?>
                                     <td>
                                         <?php if ($pic_name) { ?>

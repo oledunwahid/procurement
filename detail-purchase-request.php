@@ -1079,161 +1079,26 @@ if (!$row) {
 
 <script>
     $(document).ready(function() {
-        var idProcCh = <?= json_encode($_GET['id']); ?>;
-        var status = <?= json_encode($row['status']); ?>;
+        // Define global variables
+        var idProcCh = $('input[name="id_proc_ch"]').val();
+        var status = $('input[name="status"]').val();
         var niklogin = $('input[name="niklogin"]').val();
         var idnik_pic = $('input[name="idnik_pic"]').val();
         var isAdmin = $('input[name="isAdmin"]').val() == '1';
 
-        $("<style>")
-            .prop("type", "text/css")
-            .html(`
-                textarea[name="detail_specification[]"] {
-                    min-height: 60px;
-                    overflow-y: hidden;
-                    resize: vertical;
-                    transition: height 0.1s ease-in-out;
-                    width: 100%;
-                }
-                #filePreview .alert {
-                    margin-bottom: 0.5rem;
-                    padding: 0.5rem 1rem;
-                }
-            `)
-            .appendTo("head");
-
-        // Fungsi auto-resize textarea
-        function autoResizeTextarea(element) {
-            element.style.height = 'auto';
-            element.style.height = (element.scrollHeight) + 'px';
+        // Utility Functions
+        function formatRibuan(angka) {
+            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
-
-        // Event handler untuk auto-resize textarea yang ada dan yang baru
-        $('textarea[name="detail_specification[]"]').each(function() {
-            autoResizeTextarea(this);
-        }).on('input', function() {
-            autoResizeTextarea(this);
-        });
-
-        $(document).on('input', 'textarea[name="detail_specification[]"]', function() {
-            autoResizeTextarea(this);
-        });
-
-        // File upload handler
-        $('#attachments').on('change', function() {
-            const files = Array.from(this.files);
-            const filePreview = $('#filePreview');
-            filePreview.empty();
-
-            files.forEach(file => {
-                const size = (file.size / 1024 / 1024).toFixed(2);
-                if (size > 5) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'File too large',
-                        text: `${file.name} is larger than 5MB`
-                    });
-                    this.value = '';
-                    return;
-                }
-
-                filePreview.append(`
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                        <strong>${file.name}</strong> (${size} MB)
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `);
-            });
-        });
-
-        // Override comment form submit untuk handle file upload
-        $('#addCommentForm').off('submit').on('submit', function(e) {
-            e.preventDefault();
-            var formData = new FormData(this);
-            formData.append('niklogin', niklogin);
-            formData.append('idnik_pic', idnik_pic);
-
-            $.ajax({
-                type: "POST",
-                url: "function/add_comments.php",
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Comment added successfully',
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        loadComments();
-                        $('#addCommentForm')[0].reset();
-                        $('#filePreview').empty();
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message || 'Failed to add comment'
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
-                    console.error("Response Text:", xhr.responseText);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'There was an error submitting the comment: ' + error
-                    });
-                }
-            });
-        });
 
         function showNoDataMessage() {
             var message = isAdmin ?
                 'No items found in this request.' :
                 'No items assigned to you in this request.';
-
             return `<tr class="no-data-row"><td colspan="10" class="text-center">${message}</td></tr>`;
         }
 
-        function loadData(callback) {
-            $.ajax({
-                url: 'function/fetch_detail_purchase_request.php',
-                type: 'GET',
-                data: {
-                    id_proc_ch: idProcCh,
-                    niklogin: niklogin
-                },
-                success: function(data) {
-                    if (!data.trim()) {
-                        // Jika data kosong
-                        $('#detail-purchase-request tbody').html(showNoDataMessage());
-                    } else {
-                        // Jika ada data
-                        $('#detail-purchase-request tbody').html(data);
-                    }
-                    applyDataLabels();
-                    updateTotalPrice();
-                    if (callback) callback();
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error loading data:", error);
-                    $('#detail-purchase-request tbody').html(
-                        `<tr><td colspan="10" class="text-center text-danger">Error loading data. Please try again.</td></tr>`
-                    );
-                }
-            });
-        }
-
-        function hasDetailRows() {
-            var tableRows = $('#detail-purchase-request tbody tr').not('.no-data-row');
-            return tableRows.length > 0;
-        }
-
+        // Data Loading & Table Management
         function loadData(callback) {
             console.log('Loading data...');
             $.ajax({
@@ -1253,15 +1118,15 @@ if (!$row) {
                         applyDataLabels();
                         updateTotalPrice();
                     } else {
-                        $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center">This Request Belongs to Other PIC</td></tr>');
+                        $('#detail-purchase-request tbody').html(showNoDataMessage());
                     }
                     if (callback) callback();
                 },
                 error: function(xhr, status, error) {
                     console.error('AJAX Error:', {
-                        xhr: xhr,
-                        status: status,
-                        error: error
+                        xhr,
+                        status,
+                        error
                     });
                     $('#detail-purchase-request tbody').html('<tr><td colspan="10" class="text-center text-danger">Error loading data</td></tr>');
                 }
@@ -1278,39 +1143,22 @@ if (!$row) {
         }
 
         function hasDetailRows() {
-            var tableRows = $('#detail-purchase-request tbody tr');
+            var tableRows = $('#detail-purchase-request tbody tr').not('.no-data-row');
             return tableRows.length > 0;
         }
 
-        function toggleClosedTicketButton() {
-            var hasRows = hasDetailRows();
-            var totalAmount = parseFloat($("input[name='total_price']").val().replace(/\./g, ''));
-
-            if (!hasRows || totalAmount === 0) {
-                $('#closedTicketBtn').prop('disabled', true);
-                $('#closedTicketBtn').html('<i class="ri-lock-line me-1"></i> Closed Ticket');
-            } else {
-                $('#closedTicketBtn').prop('disabled', false);
-                $('#closedTicketBtn').html('Closed Ticket');
-            }
+        // Price Calculations & Updates
+        function updateTotalPrice() {
+            var total = 0;
+            $("#detail-purchase-request tbody tr").each(function() {
+                var qty = parseInt($(this).find("input[name='qty[]']").val()) || 0;
+                var price = parseInt($(this).find("input[name='unit_price[]']").val().replace(/\./g, '')) || 0;
+                var subtotal = qty * price;
+                total += subtotal;
+            });
+            $("input[name='total_price']").val('Rp ' + formatRibuan(total));
+            toggleClosedTicketButton();
         }
-
-        function checkStatusAndToggleButton() {
-            if (status && status.trim().toLowerCase() === 'closed') {
-                $('#postCommentBtn').hide();
-                $('#commentText').prop('disabled', true);
-                $('#closedTicketInfo').show();
-                console.log("Ticket is closed. Comment form disabled.");
-            } else {
-                $('#postCommentBtn').show();
-                $('#commentText').prop('disabled', false);
-                $('#closedTicketInfo').hide();
-                console.log("Ticket is open. Comment form enabled.");
-            }
-        }
-
-        loadData();
-        toggleClosedTicketButton();
 
         $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
             var row = $(this).closest('tr');
@@ -1321,62 +1169,12 @@ if (!$row) {
             updateTotalPrice();
         });
 
-
         $(document).on('input', '.price-input', function() {
             var value = $(this).val().replace(/\./g, '');
             $(this).val(formatRibuan(value));
         });
 
-        $(document).on('click', '.saveNewRow', function() {
-            var row = $(this).closest('tr');
-            var data = {
-                id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
-                nama_barang: row.find("input[name='nama_barang[]']").val(),
-                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
-                qty: row.find("input[name='qty[]']").val(),
-                category: row.find("select[name='category[]']").val(),
-                uom: row.find("select[name='uom[]']").val(),
-                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
-                detail_notes: row.find("textarea[name='detail_notes[]']").val(),
-                niklogin: $(this).data('niklogin'),
-                idnik_pic: $(this).data('idnik-pic')
-            };
-
-            $.ajax({
-                type: "POST",
-                url: "function/insert_detail_purchase_request.php",
-                data: data,
-                success: function(response) {
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: response.message,
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        loadData(function() {
-                            applyDataLabels();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'There was an error updating the row.'
-                    });
-                }
-            });
-        });
-
+        // Category PIC Management
         function checkCategoryPIC(categoryId, callback) {
             console.log("Checking category:", categoryId);
             $.ajax({
@@ -1388,7 +1186,6 @@ if (!$row) {
                 success: function(response) {
                     console.log("Raw response:", response);
                     try {
-                        // Handle jika response bukan JSON
                         let parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
                         console.log("Parsed response:", parsedResponse);
                         callback(parsedResponse);
@@ -1416,86 +1213,208 @@ if (!$row) {
             });
         }
 
-        // Tambahkan event handler untuk perubahan kategori
-        $(document).on('change', 'select[name="category[]"]', function() {
-            var $row = $(this).closest('tr');
-            var selectedCategory = $(this).val();
-            var currentPIC = niklogin;
+        // Button State Management
+        function toggleClosedTicketButton() {
+            var hasRows = hasDetailRows();
+            var totalAmount = parseFloat($("input[name='total_price']").val().replace(/\./g, ''));
 
-            checkCategoryPIC(selectedCategory, function(response) {
-                if (response.success) {
-                    if (response.pic_list && !response.pic_list.includes(currentPIC)) {
-                        var picNames = response.pic_names.join(', ');
+            if (!hasRows || totalAmount === 0) {
+                $('#closedTicketBtn').prop('disabled', true);
+                $('#closedTicketBtn').html('<i class="ri-lock-line me-1"></i> Closed Ticket');
+            } else {
+                $('#closedTicketBtn').prop('disabled', false);
+                $('#closedTicketBtn').html('Closed Ticket');
+            }
+        }
+
+        function checkStatusAndToggleButton() {
+            if (status && status.trim().toLowerCase() === 'closed') {
+                $('#postCommentBtn').hide();
+                $('#commentText').prop('disabled', true);
+                $('#closedTicketInfo').show();
+            } else {
+                $('#postCommentBtn').show();
+                $('#commentText').prop('disabled', false);
+                $('#closedTicketInfo').hide();
+            }
+        }
+
+        // Comment System
+        function loadComments() {
+            $.ajax({
+                url: 'function/get_comments.php',
+                type: 'GET',
+                data: {
+                    id_proc_ch: idProcCh
+                },
+                success: function(data) {
+                    $('#commentSection').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading comments:", status, error);
+                }
+            });
+        }
+
+        // IMPORTANT - This is the only event handler for the comment form
+        // All other handlers should be removed
+        $('#addCommentForm').off('submit').on('submit', function(e) {
+            e.preventDefault();
+
+            // Show loading state
+            const $submitBtn = $(this).find('button[type="submit"]');
+            const originalBtnText = $submitBtn.html();
+            $submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Posting...');
+
+            // Use FormData for file uploads
+            var formData = new FormData(this);
+            formData.append('niklogin', niklogin);
+            formData.append('idnik_pic', idnik_pic);
+
+            // Debug log
+            console.log('Submitting comment, form data keys:', Array.from(formData.keys()));
+
+            $.ajax({
+                type: "POST",
+                url: "function/add_comments.php",
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    console.log('Comment submission response:', response);
+
+                    if (response.status === 'success') {
                         Swal.fire({
-                            title: 'Warning!',
-                            html: `This category is assigned to: <br><b>${picNames}</b><br><br>After saving, this item will be handled by another PIC. Do you want to continue?`,
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonText: 'Yes, change category',
-                            cancelButtonText: 'No, keep current category'
-                        }).then((result) => {
-                            if (!result.isConfirmed) {
-                                $row.find('select[name="category[]"]').val($row.find('select[name="category[]"]').data('original-value'));
-                            } else {
-                                $row.find('select[name="category[]"]').data('original-value', selectedCategory);
-                            }
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Comment added successfully',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+
+                        loadComments();
+                        $('#addCommentForm')[0].reset();
+                        $('#filePreview').empty();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to add comment'
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    console.error("Response Text:", xhr.responseText);
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'There was an error submitting the comment: ' + error
+                    });
+                },
+                complete: function() {
+                    // Reset button state
+                    $submitBtn.prop('disabled', false).html(originalBtnText);
+                }
+            });
+        });
+
+        // Event handler for file uploads
+        $('#attachments').on('change', function() {
+            const files = Array.from(this.files);
+            const filePreview = $('#filePreview');
+            filePreview.empty();
+
+            files.forEach(file => {
+                const size = (file.size / 1024 / 1024).toFixed(2);
+                if (size > 5) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File too large',
+                        text: `${file.name} is larger than 5MB`
+                    });
+                    this.value = '';
+                    return;
+                }
+
+                filePreview.append(`
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <strong>${file.name}</strong> (${size} MB)
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `);
+            });
+        });
+
+        // CRUD Operations
+        $(document).on('click', '.saveNewRow', function() {
+            var row = $(this).closest('tr');
+            var data = {
+                id_proc_ch: row.find("input[name='id_proc_ch[]']").val(),
+                nama_barang: row.find("input[name='nama_barang[]']").val(),
+                detail_specification: row.find("textarea[name='detail_specification[]']").val(),
+                qty: row.find("input[name='qty[]']").val(),
+                category: row.find("select[name='category[]']").val(),
+                uom: row.find("select[name='uom[]']").val(),
+                unit_price: row.find("input[name='unit_price[]']").val().replace(/\./g, ''),
+                detail_notes: row.find("textarea[name='detail_notes[]']").val(),
+                niklogin: niklogin,
+                idnik_pic: idnik_pic
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "function/insert_detail_purchase_request.php",
+                data: data,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                        loadData(function() {
+                            applyDataLabels();
                         });
                     } else {
-                        $row.find('select[name="category[]"]').data('original-value', selectedCategory);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to save data'
+                        });
                     }
-                } else {
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", status, error);
+                    console.log("Response:", xhr.responseText);
                     Swal.fire({
+                        icon: 'error',
                         title: 'Error',
-                        text: response.error || 'Failed to check category PIC',
-                        icon: 'error'
+                        text: 'There was an error saving the row.'
                     });
                 }
             });
         });
 
-        // Modifikasi handler edit untuk menyimpan nilai kategori awal
         $(document).on('click', '.edit', function() {
             var $row = $(this).closest('tr');
-            $row.find('input, textarea, select').prop('readonly', false);
-            // Simpan nilai kategori awal
+            $row.find('input, textarea, select').prop('readonly', false).prop('disabled', false);
             $row.find('select[name="category[]"]').data('original-value', $row.find('select[name="category[]"]').val());
             $(this).hide();
             $row.find('.saveRow').show();
         });
 
-        // Modifikasi saveRow untuk menambahkan konfirmasi tambahan jika kategori berubah
         $(document).on('click', '.saveRow', function() {
             var $row = $(this).closest('tr');
-            var newCategory = $row.find('select[name="category[]"]').val();
-            var originalCategory = $row.find('select[name="category[]"]').data('original-value');
-
-            if (newCategory !== originalCategory) {
-                checkCategoryPIC(newCategory, function(response) {
-                    if (response.pic_list && !response.pic_list.includes(niklogin)) {
-                        Swal.fire({
-                            title: 'Confirm Category Change',
-                            text: 'After saving, this item will be handled by another PIC. Are you sure you want to proceed?',
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonText: 'Yes, save changes',
-                            cancelButtonText: 'No, cancel'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                saveRowData($row);
-                            }
-                        });
-                    } else {
-                        saveRowData($row);
-                    }
-                });
-            } else {
-                saveRowData($row);
-            }
+            saveRowData($row);
         });
 
-        // Fungsi untuk menyimpan data row
         function saveRowData($row) {
-            // Store original values before update
             const originalValues = {
                 nama_barang: $row.find("input[name='nama_barang[]']").val(),
                 detail_specification: $row.find("textarea[name='detail_specification[]']").val(),
@@ -1522,7 +1441,6 @@ if (!$row) {
                 idnik_pic: idnik_pic
             };
 
-            // Check if urgency status changed to 'urgent'
             if (originalValues.urgency_status !== 'urgent' && data.urgency_status === 'urgent') {
                 Swal.fire({
                     title: 'Confirm Urgent Status',
@@ -1548,6 +1466,7 @@ if (!$row) {
                 type: "POST",
                 url: "function/update_detail_purchase.php",
                 data: data,
+                dataType: 'json',
                 success: function(response) {
                     console.log("Server response:", response);
                     if (response.status === 'success') {
@@ -1567,7 +1486,6 @@ if (!$row) {
                             title: 'Error',
                             text: response.message || 'An error occurred while updating the data'
                         });
-                        console.error("Error details:", response.debug_log);
                     }
                 },
                 error: function(xhr, status, error) {
@@ -1595,6 +1513,7 @@ if (!$row) {
                 });
                 return;
             }
+
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
@@ -1613,6 +1532,7 @@ if (!$row) {
                             niklogin: niklogin,
                             idnik_pic: idnik_pic
                         },
+                        dataType: 'json',
                         success: function(response) {
                             if (response.status === 'success') {
                                 Swal.fire({
@@ -1629,12 +1549,13 @@ if (!$row) {
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error',
-                                    text: response.message
+                                    text: response.message || 'Failed to delete item'
                                 });
                             }
                         },
                         error: function(xhr, status, error) {
                             console.error("AJAX Error:", status, error);
+                            console.log("Response:", xhr.responseText);
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
@@ -1646,81 +1567,29 @@ if (!$row) {
             });
         });
 
-        function loadComments() {
-            $.ajax({
-                url: 'function/get_comments.php',
-                type: 'GET',
-                data: {
-                    id_proc_ch: idProcCh
-                },
-                success: function(data) {
-                    $('#commentSection').html(data);
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error loading comments:", status, error);
-                }
-            });
-        }
-
-        loadComments();
-
-        $('#addCommentForm').on('submit', function(e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-            formData += '&niklogin=' + niklogin + '&idnik_pic=' + idnik_pic;
-            $.ajax({
-                type: "POST",
-                url: "function/add_comments.php",
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Comment added successfully',
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                        loadComments();
-                        $('#addCommentForm')[0].reset();
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message || 'Failed to add comment'
-                        });
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("AJAX Error:", status, error);
-                    console.error("Response Text:", xhr.responseText);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'There was an error submitting the comment: ' + error
-                    });
+        // Ticket Management
+        $('#closedTicketBtn').on('click', function() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This will close the ticket. Proceed?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, close it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    closeTicket();
                 }
             });
         });
 
-        function updateTotalPrice() {
-            var total = 0;
-            $("#detail-purchase-request tbody tr").each(function() {
-                var qty = $(this).find("input[name='qty[]']").val();
-                var price = $(this).find("input[name='unit_price[]']").val().replace(/\./g, '');
-                var subtotal = (qty * price) || 0;
-                total += subtotal;
-            });
-            $("input[name='total_price']").val('Rp ' + formatRibuan(total));
-            toggleClosedTicketButton();
-        }
-
-        $('#closedTicketBtn').on('click', function() {
+        function closeTicket() {
             var formData = new FormData($('#updatePurchaseRequestForm')[0]);
             formData.append('status', 'closed');
             formData.append('niklogin', niklogin);
             formData.append('idnik_pic', idnik_pic);
+
             $.ajax({
                 type: "POST",
                 url: "function/update_purchase.php",
@@ -1731,8 +1600,8 @@ if (!$row) {
                 success: function(response) {
                     if (response.status === 'success') {
                         Swal.fire({
-                            title: 'Sukses!',
-                            text: response.message,
+                            title: 'Success!',
+                            text: 'Ticket has been closed successfully.',
                             icon: 'success',
                             confirmButtonText: 'OK'
                         }).then((result) => {
@@ -1743,7 +1612,7 @@ if (!$row) {
                     } else {
                         Swal.fire({
                             title: 'Error!',
-                            text: response.message,
+                            text: response.message || 'Failed to close ticket',
                             icon: 'error',
                             confirmButtonText: 'OK'
                         });
@@ -1753,13 +1622,13 @@ if (!$row) {
                     console.error(xhr.responseText);
                     Swal.fire({
                         title: 'Error!',
-                        text: 'Terjadi kesalahan saat mengupdate data.',
+                        text: 'There was an error closing the ticket.',
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });
                 }
             });
-        });
+        }
 
         $('#updateTicketBtn').on('click', function() {
             var formData = new FormData($('#updatePurchaseRequestForm')[0]);
@@ -1777,8 +1646,8 @@ if (!$row) {
                 success: function(response) {
                     if (response.status === 'success') {
                         Swal.fire({
-                            title: 'Sukses!',
-                            text: 'Data berhasil diupdate.',
+                            title: 'Success!',
+                            text: 'Ticket has been updated successfully.',
                             icon: 'success',
                             confirmButtonText: 'OK'
                         }).then((result) => {
@@ -1789,7 +1658,7 @@ if (!$row) {
                     } else {
                         Swal.fire({
                             title: 'Error!',
-                            text: response.message,
+                            text: response.message || 'Failed to update ticket',
                             icon: 'error',
                             confirmButtonText: 'OK'
                         });
@@ -1799,7 +1668,7 @@ if (!$row) {
                     console.error(xhr.responseText);
                     Swal.fire({
                         title: 'Error!',
-                        text: 'Terjadi kesalahan saat mengupdate data.',
+                        text: 'There was an error updating the ticket.',
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });
@@ -1807,9 +1676,14 @@ if (!$row) {
             });
         });
 
+        // Initialization
+        loadData();
+        loadComments();
+        toggleClosedTicketButton();
         applyDataLabels();
         checkStatusAndToggleButton();
 
+        // Event listener for status changes
         $(document).on('change', '[name="status"]', function() {
             status = $(this).val();
             checkStatusAndToggleButton();
