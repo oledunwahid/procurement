@@ -101,3 +101,4 @@ Xiaomi smart kettle 2 pro model MJJYSH01-A 273x155x242mm, 220~240V~, 50/60Hz, 18
     <td data-label=\'Nama Barang:\'><textarea name=\'nama_barang[]\' class=\'form-control form-field-adjustable desc-input\' readonly>\" . htmlspecialchars($row[\'nama_barang\']) . \"</textarea></td>
 xsad
 asdadas
+sdsadas

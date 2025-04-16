@@ -1,5 +1,6 @@
 <!--datatable css-->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!--datatable responsive css-->
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css" />
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
@@ -174,6 +175,114 @@
     }
 </style>
 
+<style>
+    /* Price column styling */
+    .price-column {
+        min-width: 120px !important;
+        /* Ensures minimum width for price columns */
+        width: auto !important;
+        /* Allows column to grow based on content */
+        white-space: nowrap;
+        /* Prevents wrapping of price values */
+    }
+
+    .total-price-column {
+        min-width: 130px !important;
+        /* Slightly wider for total price columns */
+        width: auto !important;
+        white-space: nowrap;
+    }
+
+    /* Price cell styling */
+    .price-value {
+        font-family: 'Roboto Mono', monospace, sans-serif;
+        /* Monospace font for better number alignment */
+        text-align: right;
+        padding-right: 8px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: visible;
+        /* Allow content to overflow */
+    }
+
+    /* Tooltip styling for price values */
+    .price-tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: default;
+    }
+
+    .price-tooltip .tooltip-text {
+        visibility: hidden;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 4px;
+        padding: 5px 10px;
+        position: absolute;
+        z-index: 1000;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 14px;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    .price-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* Additional responsive styles */
+    @media screen and (max-width: 767px) {
+
+        /* Improve mobile table layout for price columns */
+        #detail-purchase-request td[data-label="Harga:"],
+        #detail-purchase-request td[data-label="Total Harga:"] {
+            text-align: right !important;
+            font-weight: bold;
+        }
+
+        .price-value {
+            width: 100%;
+            text-align: right;
+            display: inline-block;
+        }
+
+        /* Handle very large numbers on small screens */
+        .price-value-mobile {
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+    }
+
+    /* Print-friendly styles */
+    @media print {
+
+        .price-column,
+        .total-price-column {
+            min-width: auto !important;
+            width: auto !important;
+        }
+
+        .price-value {
+            font-family: serif;
+            /* Better for printing */
+        }
+
+        /* Ensure prices don't get cut off when printing */
+        #detail-purchase-request th,
+        #detail-purchase-request td {
+            white-space: nowrap;
+        }
+    }
+</style>
+
 <?php
 // Di awal file detail-purchase-request.php
 $id_proc_ch = $_GET['id'];
@@ -250,8 +359,8 @@ if (!$row) {
                                     <th width="6%">Qty</th>
                                     <th width="16%">Category</th>
                                     <th width="9%">Uom</th>
-                                    <th width="6%">Harga</th>
-                                    <th width="5%">Total Harga</th>
+                                    <th class="price-column">Harga</th>
+                                    <th class="total-price-column">Total Harga</th>
                                     <th width="5%">Urgency status</th>
                                     <th width="15%">Action</th>
                                     <th width="15%">Detail Notes</th>
@@ -1086,9 +1195,18 @@ if (!$row) {
         var idnik_pic = $('input[name="idnik_pic"]').val();
         var isAdmin = $('input[name="isAdmin"]').val() == '1';
 
-        // Utility Functions
+        // Enhanced Utility Functions
         function formatRibuan(angka) {
-            return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            // Handle empty or non-numeric values
+            if (!angka || isNaN(parseFloat(angka.toString().replace(/\./g, '')))) {
+                return '0';
+            }
+
+            // Remove existing formatting first
+            const cleanNumber = angka.toString().replace(/\./g, '');
+
+            // Format with thousand separators
+            return cleanNumber.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
 
         function showNoDataMessage() {
@@ -1096,6 +1214,38 @@ if (!$row) {
                 'No items found in this request.' :
                 'No items assigned to you in this request.';
             return `<tr class="no-data-row"><td colspan="10" class="text-center">${message}</td></tr>`;
+        }
+
+        // Initialize price tooltips for better visibility of large values
+        function initializePriceTooltips() {
+            $('.price-tooltip').each(function() {
+                var $this = $(this);
+                var value = $this.find('.price-value').text() || $this.find('.price-value').val();
+
+                // If tooltip doesn't exist, create it
+                if ($this.find('.tooltip-text').length === 0) {
+                    $this.append(`<span class="tooltip-text">Rp ${value}</span>`);
+                }
+            });
+        }
+
+        // Handle very large numbers with special styling
+        function handleLargeNumbers() {
+            $('.price-value').each(function() {
+                const value = $(this).is('input') ? $(this).val() : $(this).text();
+                const numericValue = parseInt(value.replace(/\./g, '')) || 0;
+
+                // If value is very large (over 100 million), add special styling
+                if (numericValue > 100000000) {
+                    $(this).addClass('very-large-number');
+
+                    // Update tooltip text to ensure it shows the full value
+                    const tooltipElement = $(this).closest('.price-tooltip').find('.tooltip-text');
+                    if (tooltipElement.length) {
+                        tooltipElement.text('Rp ' + formatRibuan(numericValue));
+                    }
+                }
+            });
         }
 
         // Data Loading & Table Management
@@ -1117,6 +1267,8 @@ if (!$row) {
                         $('#detail-purchase-request tbody').html(data);
                         applyDataLabels();
                         updateTotalPrice();
+                        initializePriceTooltips();
+                        handleLargeNumbers();
                     } else {
                         $('#detail-purchase-request tbody').html(showNoDataMessage());
                     }
@@ -1147,7 +1299,7 @@ if (!$row) {
             return tableRows.length > 0;
         }
 
-        // Price Calculations & Updates
+        // Enhanced Price Calculations & Updates
         function updateTotalPrice() {
             var total = 0;
             $("#detail-purchase-request tbody tr").each(function() {
@@ -1160,18 +1312,50 @@ if (!$row) {
             toggleClosedTicketButton();
         }
 
-        $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
-            var row = $(this).closest('tr');
+        // Enhanced row total calculation with tooltip update
+        function updateRowTotal(row) {
             var qty = parseInt(row.find("input[name='qty[]']").val()) || 0;
             var price = parseInt(row.find("input[name='unit_price[]']").val().replace(/\./g, '')) || 0;
             var total = qty * price;
-            row.find('.totalHarga').text(formatRibuan(total));
+
+            // Update total display
+            var totalElement = row.find('.totalHarga');
+            totalElement.text(formatRibuan(total));
+
+            // Update tooltip if it exists
+            var tooltipElement = totalElement.closest('.price-tooltip').find('.tooltip-text');
+            if (tooltipElement.length) {
+                tooltipElement.text('Rp ' + formatRibuan(total));
+            }
+
             updateTotalPrice();
+        }
+
+        $(document).on('input', "input[name='qty[]'], input[name='unit_price[]']", function() {
+            var row = $(this).closest('tr');
+            updateRowTotal(row);
         });
 
+        // Enhanced price input handler with caret position preservation
         $(document).on('input', '.price-input', function() {
+            // Store caret position
+            const caret = this.selectionStart;
+            const originalLength = this.value.length;
+
+            // Remove non-numeric characters except dots
             var value = $(this).val().replace(/\./g, '');
+
+            // Format with thousand separators
             $(this).val(formatRibuan(value));
+
+            // Calculate new caret position
+            const newPosition = caret + (this.value.length - originalLength);
+
+            // Restore caret position
+            this.setSelectionRange(Math.max(0, newPosition), Math.max(0, newPosition));
+
+            // Update row total
+            updateRowTotal($(this).closest('tr'));
         });
 
         // Category PIC Management
@@ -1216,7 +1400,7 @@ if (!$row) {
         // Button State Management
         function toggleClosedTicketButton() {
             var hasRows = hasDetailRows();
-            var totalAmount = parseFloat($("input[name='total_price']").val().replace(/\./g, ''));
+            var totalAmount = parseFloat($("input[name='total_price']").val().replace(/[^\d]/g, '')) || 0;
 
             if (!hasRows || totalAmount === 0) {
                 $('#closedTicketBtn').prop('disabled', true);
@@ -1479,6 +1663,8 @@ if (!$row) {
                         });
                         loadData(function() {
                             applyDataLabels();
+                            initializePriceTooltips();
+                            handleLargeNumbers();
                         });
                     } else {
                         Swal.fire({
@@ -1676,17 +1862,32 @@ if (!$row) {
             });
         });
 
+        // Apply responsive styling based on screen size
+        function applyResponsivePrice() {
+            if (window.innerWidth <= 767) {
+                $('.price-value').addClass('price-value-mobile');
+            } else {
+                $('.price-value').removeClass('price-value-mobile');
+            }
+        }
+
         // Initialization
         loadData();
         loadComments();
         toggleClosedTicketButton();
         applyDataLabels();
         checkStatusAndToggleButton();
+        applyResponsivePrice();
 
         // Event listener for status changes
         $(document).on('change', '[name="status"]', function() {
             status = $(this).val();
             checkStatusAndToggleButton();
+        });
+
+        // Event listener for window resize
+        $(window).on('resize', function() {
+            applyResponsivePrice();
         });
     });
 </script>

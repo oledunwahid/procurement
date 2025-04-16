@@ -65,6 +65,10 @@ while ($row = mysqli_fetch_assoc($result)) {
         $urgencySelectOptions .= str_replace("<option", "<option $selected", $option) . "</option>";
     }
 
+    // Format price and total price with tooltips for better visibility
+    $formattedPrice = nominal($row['unit_price']);
+    $formattedTotal = nominal($totalHarga);
+
     $output .= "<tr>
                     <td style='display:none;'><input type='text' name='id_proc_ch[]' class='form-control' value='" . $row['id_proc_ch'] . "' readonly /></td>
                     <td><input type='text' name='nama_barang[]' class='form-control' value='" . $row['nama_barang'] . "' readonly /></td>
@@ -80,8 +84,18 @@ while ($row = mysqli_fetch_assoc($result)) {
                             $uomSelectOptions
                         </select>
                     </td>
-                    <td><span name='unit_price[]' value='" . nominal($row['unit_price']) . "' readonly maxlength='11'></span>" . nominal($row['unit_price']) . "</td>
-                    <td><span class='totalHarga'><b>" . nominal($totalHarga) . "</b></span></td>
+                    <td class='price-cell'>
+                        <div class='price-tooltip'>
+                            <span name='unit_price[]' class='price-value' value='" . $formattedPrice . "' readonly maxlength='15'>" . $formattedPrice . "</span>
+                            <span class='tooltip-text'>Rp " . $formattedPrice . "</span>
+                        </div>
+                    </td>
+                    <td class='total-price-cell'>
+                        <div class='price-tooltip'>
+                            <span class='totalHarga price-value'><b>" . $formattedTotal . "</b></span>
+                            <span class='tooltip-text'>Rp " . $formattedTotal . "</span>
+                        </div>
+                    </td>
                     <td>
                         <select name='urgency_status[]' class='form-control' readonly>
                             $urgencySelectOptions
