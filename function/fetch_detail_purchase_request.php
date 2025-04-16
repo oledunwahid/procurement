@@ -3,6 +3,7 @@ include '../koneksi.php';
 
 $id_proc_ch = $_GET['id_proc_ch'];
 $niklogin = $_GET['niklogin'];
+$hasRole51 = isset($_GET['hasRole51']) && $_GET['hasRole51'] == '1';
 
 function nominal($angka)
 {
@@ -27,24 +28,41 @@ while ($categoryRow = mysqli_fetch_assoc($categoryResult)) {
     $categoryOptions .= "<option value='" . $categoryRow['id_category'] . "'>" . $categoryRow['nama_category'] . "</option>";
 }
 
-// Main query with urgency status
-$query = "SELECT ppr.*, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, 
-          prd.detail_specification, prd.detail_notes, prd.category, pc.nama_category,
-          prd.urgency_status
-          FROM proc_request_details prd
-          INNER JOIN proc_purchase_requests ppr ON prd.id_proc_ch = ppr.id_proc_ch
-          LEFT JOIN proc_category pc ON prd.category = pc.id_category
-          WHERE ppr.id_proc_ch = ? 
-          AND EXISTS (
-              SELECT 1 
-              FROM proc_admin_category pac 
-              WHERE pac.id_category = prd.category 
-              AND pac.idnik = ?
-          )
-          ORDER BY prd.id ASC";
+// Main query with urgency status - modified to check for role 51
+if ($hasRole51) {
+    // For users with role 51, show all items without category restrictions
+    $query = "SELECT ppr.*, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, 
+              prd.detail_specification, prd.detail_notes, prd.category, pc.nama_category,
+              prd.urgency_status
+              FROM proc_request_details prd
+              INNER JOIN proc_purchase_requests ppr ON prd.id_proc_ch = ppr.id_proc_ch
+              LEFT JOIN proc_category pc ON prd.category = pc.id_category
+              WHERE ppr.id_proc_ch = ? 
+              ORDER BY prd.id ASC";
 
-$stmt = mysqli_prepare($koneksi, $query);
-mysqli_stmt_bind_param($stmt, "ss", $id_proc_ch, $niklogin);
+    $stmt = mysqli_prepare($koneksi, $query);
+    mysqli_stmt_bind_param($stmt, "s", $id_proc_ch);
+} else {
+    // For regular users, maintain the category restrictions
+    $query = "SELECT ppr.*, prd.id, prd.nama_barang, prd.qty, prd.uom, prd.unit_price, 
+              prd.detail_specification, prd.detail_notes, prd.category, pc.nama_category,
+              prd.urgency_status
+              FROM proc_request_details prd
+              INNER JOIN proc_purchase_requests ppr ON prd.id_proc_ch = ppr.id_proc_ch
+              LEFT JOIN proc_category pc ON prd.category = pc.id_category
+              WHERE ppr.id_proc_ch = ? 
+              AND EXISTS (
+                  SELECT 1 
+                  FROM proc_admin_category pac 
+                  WHERE pac.id_category = prd.category 
+                  AND pac.idnik = ?
+              )
+              ORDER BY prd.id ASC";
+
+    $stmt = mysqli_prepare($koneksi, $query);
+    mysqli_stmt_bind_param($stmt, "ss", $id_proc_ch, $niklogin);
+}
+
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 

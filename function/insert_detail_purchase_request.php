@@ -18,6 +18,7 @@ try {
 
     $koneksi->begin_transaction();
 
+    // Get standard parameters
     $id_proc_ch = trim($_POST['id_proc_ch']);
     $nama_barang = trim($_POST['nama_barang'] ?? '');
     $qty = trim($_POST['qty'] ?? '');
@@ -26,9 +27,27 @@ try {
     $detail_specification = trim($_POST['detail_specification'] ?? '');
     $detail_notes = trim($_POST['detail_notes'] ?? '');
     $category = trim($_POST['category'] ?? '');
+    $niklogin = trim($_POST['niklogin'] ?? '');
+
+    // Check if user has role 51 access
+    $hasRole51 = isset($_POST['hasRole51']) && $_POST['hasRole51'] == '1';
 
     if (empty($nama_barang) || empty($qty) || empty($uom) || empty($category)) {
         throw new Exception('All required fields must be filled');
+    }
+
+    // Check user's access to this category if they don't have role 51
+    if (!$hasRole51 && !empty($niklogin)) {
+        // Check if user has access to this category
+        $accessCheck = $koneksi->prepare("SELECT COUNT(*) as count FROM proc_admin_category WHERE id_category = ? AND idnik = ?");
+        $accessCheck->bind_param("ss", $category, $niklogin);
+        $accessCheck->execute();
+        $accessResult = $accessCheck->get_result()->fetch_assoc();
+
+        if ($accessResult['count'] == 0) {
+            throw new Exception('You do not have permission to add items to this category');
+        }
+        $accessCheck->close();
     }
 
     $stmt = $koneksi->prepare("INSERT INTO proc_request_details (id_proc_ch, nama_barang, qty, uom, detail_specification, unit_price, detail_notes, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
