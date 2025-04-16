@@ -3,7 +3,7 @@
 <!--datatable responsive css-->
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css" />
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
-
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -159,7 +159,115 @@
         font-size: 0.8em;
     }
 </style>
+<style>
+    /* Add to your existing CSS section in detail-purchase-request.php */
 
+    /* Price column styling */
+    .price-column {
+        min-width: 120px !important;
+        /* Ensures minimum width for price columns */
+        width: auto !important;
+        /* Allows column to grow based on content */
+        white-space: nowrap;
+        /* Prevents wrapping of price values */
+    }
+
+    .total-price-column {
+        min-width: 130px !important;
+        /* Slightly wider for total price columns */
+        width: auto !important;
+        white-space: nowrap;
+    }
+
+    /* Price cell styling */
+    .price-value {
+        font-family: 'Roboto Mono', monospace, sans-serif;
+        /* Monospace font for better number alignment */
+        text-align: right;
+        padding-right: 8px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: visible;
+        /* Allow content to overflow */
+    }
+
+    /* Tooltip styling for price values */
+    .price-tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: default;
+    }
+
+    .price-tooltip .tooltip-text {
+        visibility: hidden;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 4px;
+        padding: 5px 10px;
+        position: absolute;
+        z-index: 1000;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 14px;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    .price-tooltip:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* Additional responsive styles */
+    @media screen and (max-width: 767px) {
+
+        /* Improve mobile table layout for price columns */
+        #detail-purchase-request td[data-label="Harga:"],
+        #detail-purchase-request td[data-label="Total Harga:"] {
+            text-align: right !important;
+            font-weight: bold;
+        }
+
+        .price-value {
+            width: 100%;
+            text-align: right;
+            display: inline-block;
+        }
+
+        /* Handle very large numbers on small screens */
+        .price-value-mobile {
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+    }
+
+    /* Print-friendly styles */
+    @media print {
+
+        .price-column,
+        .total-price-column {
+            min-width: auto !important;
+            width: auto !important;
+        }
+
+        .price-value {
+            font-family: serif;
+            /* Better for printing */
+        }
+
+        /* Ensure prices don't get cut off when printing */
+        #detail-purchase-request th,
+        #detail-purchase-request td {
+            white-space: nowrap;
+        }
+    }
+</style>
 
 <?php
 $id_proc_ch = $_GET['id'];

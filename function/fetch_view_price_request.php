@@ -63,38 +63,48 @@ while ($row = mysqli_fetch_assoc($result)) {
     $urgencyBadgeClass = $row['urgency_status'] === 'urgent' ? 'badge bg-danger' : 'badge bg-primary';
     $urgencyLabel = ucfirst($row['urgency_status'] ?? 'normal');
 
+    // Format price and total price with tooltips for better visibility
+    $formattedPrice = nominal($row['unit_price']);
+    $formattedTotal = nominal($totalHarga);
+
     $output .= "<tr>
-                     <td style='display:none;'>
-        <input type='text' name='id_proc_ch[]' class='form-control' value='" . htmlspecialchars($row['id_proc_ch']) . "' readonly />
-    </td>
-    <td>
-        <textarea name='nama_barang[]' class='form-control form-field-adjustable desc-input' rows='auto' style='resize:none;overflow:hidden;min-height:60px;' readonly>" . htmlspecialchars($row['nama_barang']) . "</textarea>
-    </td>
-    <td>
-        <textarea name='detail_specification[]' class='form-control form-field-adjustable desc-input' rows='auto' style='resize:none;overflow:hidden;min-height:60px;' readonly>" . htmlspecialchars($row['detail_specification']) . "</textarea>
-    </td>
-                    <td>
-                        <input type='number' name='qty[]' class='form-control' value='" . htmlspecialchars($row['qty']) . "' readonly maxlength='5' />
-                    </td>
-                    <td>
-                        <input type='hidden' name='category[]' value='" . htmlspecialchars($row['category']) . "' />
-                        <span class='form-control-plaintext'>" . htmlspecialchars($categoryName) . "</span>
-                    </td>
-                    <td>
-                        <input type='hidden' name='uom[]' value='" . htmlspecialchars($row['uom']) . "' />
-                        <span class='form-control-plaintext'>" . htmlspecialchars($row['uom']) . "</span>
-                    </td>
-                    <td>
-                        <span name='unit_price[]' value='" . nominal($row['unit_price']) . "' readonly maxlength='11'>" . nominal($row['unit_price']) . "</span>
-                    </td>
-                    <td>
-                        <span class='totalHarga'><b>" . nominal($totalHarga) . "</b></span>
-                    </td>
-                    <td>
-                        <input type='hidden' name='urgency_status[]' value='" . htmlspecialchars($row['urgency_status']) . "' />
-                        <span class='" . $urgencyBadgeClass . "'>" . $urgencyLabel . "</span>
-                    </td>
-                </tr>";
+        <td style='display:none;'>
+            <input type='text' name='id_proc_ch[]' class='form-control' value='" . htmlspecialchars($row['id_proc_ch']) . "' readonly />
+        </td>
+        <td>
+            <textarea name='nama_barang[]' class='form-control form-field-adjustable desc-input' rows='auto' style='resize:none;overflow:hidden;min-height:60px;' readonly>" . htmlspecialchars($row['nama_barang']) . "</textarea>
+        </td>
+        <td>
+            <textarea name='detail_specification[]' class='form-control form-field-adjustable desc-input' rows='auto' style='resize:none;overflow:hidden;min-height:60px;' readonly>" . htmlspecialchars($row['detail_specification']) . "</textarea>
+        </td>
+        <td>
+            <input type='number' name='qty[]' class='form-control' value='" . htmlspecialchars($row['qty']) . "' readonly maxlength='5' />
+        </td>
+        <td>
+            <input type='hidden' name='category[]' value='" . htmlspecialchars($row['category']) . "' />
+            <span class='form-control-plaintext'>" . htmlspecialchars($categoryName) . "</span>
+        </td>
+        <td>
+            <input type='hidden' name='uom[]' value='" . htmlspecialchars($row['uom']) . "' />
+            <span class='form-control-plaintext'>" . htmlspecialchars($row['uom']) . "</span>
+        </td>
+        <td class='price-cell'>
+            <div class='price-tooltip'>
+                <span name='unit_price[]' class='price-value' value='" . $formattedPrice . "' readonly maxlength='15'>" . $formattedPrice . "</span>
+                <span class='tooltip-text'>Rp " . $formattedPrice . "</span>
+            </div>
+        </td>
+        <td class='total-price-cell'>
+            <div class='price-tooltip'>
+                <span class='totalHarga price-value'><b>" . $formattedTotal . "</b></span>
+                <span class='tooltip-text'>Rp " . $formattedTotal . "</span>
+            </div>
+        </td>
+        <td>
+            <input type='hidden' name='urgency_status[]' value='" . htmlspecialchars($row['urgency_status']) . "' />
+            <span class='" . $urgencyBadgeClass . "'>" . $urgencyLabel . "</span>
+        </td>
+    </tr>";
 }
 
 echo $output;

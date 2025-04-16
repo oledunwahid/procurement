@@ -70,6 +70,10 @@ while ($row = mysqli_fetch_assoc($result)) {
     // Urgency status badge class
     $urgencyClass = $row['urgency_status'] === 'urgent' ? 'badge bg-danger' : 'badge bg-secondary';
 
+    // Format price and total price with tooltips for better visibility
+    $formattedPrice = nominal($row['unit_price']);
+    $formattedTotal = nominal($totalHarga);
+
     $output .= "<tr>
         <td style='display:none;'><input type='text' name='id_proc_ch[]' class='form-control' value='" . $row['id_proc_ch'] . "' readonly /></td>
         <td data-label='Nama Barang:'><textarea name='nama_barang[]' class='form-control form-field-adjustable desc-input' readonly>" . htmlspecialchars($row['nama_barang']) . "</textarea></td>
@@ -85,8 +89,18 @@ while ($row = mysqli_fetch_assoc($result)) {
                 $uomSelectOptions
             </select>
         </td>
-        <td data-label='Harga:'><input type='text' name='unit_price[]' class='form-control price-input' value='" . nominal($row['unit_price']) . "' readonly maxlength='11' /></td>
-        <td data-label='Total Harga:'><span class='totalHarga'><b>" . nominal($totalHarga) . "</b></span></td>
+        <td data-label='Harga:' class='price-cell'>
+            <div class='price-tooltip'>
+                <input type='text' name='unit_price[]' class='form-control price-input price-value' value='" . $formattedPrice . "' readonly maxlength='15' />
+                <span class='tooltip-text'>Rp " . $formattedPrice . "</span>
+            </div>
+        </td>
+        <td data-label='Total Harga:' class='total-price-cell'>
+            <div class='price-tooltip'>
+                <span class='totalHarga price-value'><b>" . $formattedTotal . "</b></span>
+                <span class='tooltip-text'>Rp " . $formattedTotal . "</span>
+            </div>
+        </td>
         <td data-label='Urgency Status:'>
             <select name='urgency_status[]' class='form-control' readonly>
                 <option value='normal' " . ($row['urgency_status'] === 'normal' ? 'selected' : '') . ">Normal</option>
